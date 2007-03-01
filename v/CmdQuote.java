@@ -106,4 +106,17 @@ public class CmdQuote implements Quote {
     public TokenStream tokens() {
         return _tokens;
     }
+
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("[");
+        Iterator<Term> i = _tokens.iterator();
+        while(i.hasNext()) {
+            sb.append(i.next().value());
+            if (i.hasNext())
+                sb.append(" ");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 }
