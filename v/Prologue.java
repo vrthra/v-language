@@ -58,8 +58,8 @@ public class Prologue {
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
 
-            Term action = p.pop();
             Term eaction = p.pop();
+            Term action = p.pop();
             Term cond = p.pop();
 
             if (cond.type == Type.TQuote) {
@@ -123,6 +123,43 @@ public class Prologue {
             p.push(t);
         }
     };
+
+    private static Cmd _concat = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+
+            Term next = p.pop();
+            Term first = p.pop();
+            // dequote both, append and push it back to stack.
+            Iterator<Term> fstream = first.qvalue().tokens().iterator();
+            Iterator<Term> nstream = next.qvalue().tokens().iterator();
+
+            // copy the rest of tokens to our own stream.
+            QuoteStream nts = new QuoteStream();
+            while (fstream.hasNext())
+                nts.add(fstream.next());
+            while (nstream.hasNext())
+                nts.add(nstream.next());
+            // we define it on the parent.
+            p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
+        }
+    };
+
+    private static Cmd _dequote = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+
+            Term first = p.pop();
+            // dequote both, append and push it back to stack.
+            Iterator<Term> fstream = first.qvalue().tokens().iterator();
+
+            // copy the rest of tokens to our own stream.
+            QuoteStream nts = new QuoteStream();
+            while (fstream.hasNext())
+                p.push(fstream.next());
+        }
+    };
+
 
     private static Cmd _add = new Cmd() {
         public void eval(Quote q) {
@@ -257,6 +294,8 @@ public class Prologue {
         q.def("?", _peek);
         q.def("??", _show);
         q.def("dup", _dup);
+        q.def("concat", _concat);
+        q.def("i", _dequote);
         q.def("+", _add);
         q.def("-", _sub);
         q.def("*", _mul);
