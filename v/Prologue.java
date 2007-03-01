@@ -124,6 +124,99 @@ public class Prologue {
         }
     };
 
+    private static Cmd _swap = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+            Term x = p.pop();
+            Term y = p.pop();
+            p.push(x);
+            p.push(y);
+        }
+    };
+
+    private static Cmd _lroll = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+            Term t = p.pop();
+            Iterator<Term> it = t.qvalue().tokens().iterator();
+            Term first = it.next();
+
+            // copy the rest of tokens to our own stream.
+            QuoteStream nts = new QuoteStream();
+            while (it.hasNext())
+                nts.add(it.next());
+            nts.add(first);
+            p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
+        }
+    };
+
+    private static Cmd _rroll = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+            Term t = p.pop();
+            Iterator<Term> it = t.qvalue().tokens().iterator();
+        
+            List<Term> lst = new LinkedList<Term>();
+            // copy the rest of tokens to our own stream.
+            QuoteStream nts = new QuoteStream();
+            while (it.hasNext())
+                lst.add(it.next());
+
+            nts.add(lst.remove(lst.size() -1));
+
+            for(Term e: lst)
+                nts.add(e);
+            p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
+        }
+    };
+
+    private static Cmd _map = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+
+            Term action = p.pop();
+            Term list = p.pop();
+
+            Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+            // copy the rest of tokens to our own stream.
+            QuoteStream nts = new QuoteStream();
+            while (fstream.hasNext()) {
+                // extract the relevant element from list,
+                Term t = fstream.next();
+                // push it on our current stack
+                p.push(t);
+                // apply the action
+                action.qvalue().eval(q);
+                // pop it back into a new quote
+                Term res = p.pop();
+                nts.add(res);
+            }
+            p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
+        }
+    };
+
+    private static Cmd _rev = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+
+            Term list = p.pop();
+
+            Iterator<Term> fstream = list.qvalue().tokens().iterator();
+            Stack<Term> st = new Stack<Term>();
+            // copy the rest of tokens to our own stream.
+            QuoteStream nts = new QuoteStream();
+            while (fstream.hasNext())
+                st.push(fstream.next());
+           
+            while(!st.empty()) 
+                nts.add(st.pop());
+            p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
+        }
+    };
+
+
+
     private static Cmd _concat = new Cmd() {
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
@@ -154,7 +247,6 @@ public class Prologue {
             Iterator<Term> fstream = first.qvalue().tokens().iterator();
 
             // copy the rest of tokens to our own stream.
-            QuoteStream nts = new QuoteStream();
             while (fstream.hasNext())
                 p.push(fstream.next());
         }
@@ -293,15 +385,23 @@ public class Prologue {
         //others
         q.def("?", _peek);
         q.def("??", _show);
+
         q.def("dup", _dup);
+        q.def("swap", _swap);
+        q.def("lroll", _lroll);
+        q.def("rroll", _rroll);
+        q.def("map", _map);
+        q.def("rev", _rev);
         q.def("concat", _concat);
         q.def("i", _dequote);
+
+        //arith
         q.def("+", _add);
         q.def("-", _sub);
         q.def("*", _mul);
         q.def("/", _div);
 
-        //binary
+        //bool
         q.def(">?", _gt);
     }
 }
