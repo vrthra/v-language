@@ -13,6 +13,7 @@ public class Lexer {
     public CharStream _stream = null;
     public Lexer(CharStream q) {
         _stream = q;
+        _stream.lexer(this);
     }
 
     private boolean isStringBoundary(char c) {
@@ -114,6 +115,10 @@ public class Lexer {
             default:
                 throw new VException("Invalid compound char (" + c + ")");
         }
+    }
+
+    public boolean closed() {
+        return _cstack.empty();
     }
 
     void copen() {

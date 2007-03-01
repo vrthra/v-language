@@ -88,16 +88,6 @@ public class CmdQuote implements Quote {
             throw new VException("Attempt to invoke undefined word (" + sym.value()+ ")");
         // Invoke the quote on our quote by passing us as the parent.
         q.eval(this);
-
-        if (_v!= null) {
-            if (stack().size() > 0) {
-                Object res = stack().peek();
-                if (res != _pres) {
-                    _v.outln(stack().peek());
-                    _pres = res;
-                }
-            }
-        }
     }
 
     V _v = null;

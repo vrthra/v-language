@@ -16,7 +16,7 @@ public class Prologue {
             while (it.hasNext())
                 nts.add(it.next());
             // we define it on the parent.
-            q.parent().def(symbol.val, new CmdQuote(nts));
+            q.def(symbol.val, new CmdQuote(nts));
         }
     };
 
@@ -100,6 +100,18 @@ public class Prologue {
             } else {
                 Term t = p.peek();
                 V.outln(t.value());
+            }
+        }
+    };
+
+    private static Cmd _show = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+            if (p.empty()) {
+                V.outln("");
+            } else {
+                for(Term t: p)
+                    V.outln(t.value());
             }
         }
     };
@@ -243,6 +255,7 @@ public class Prologue {
         
         //others
         q.def("?", _peek);
+        q.def("??", _show);
         q.def("dup", _dup);
         q.def("+", _add);
         q.def("-", _sub);

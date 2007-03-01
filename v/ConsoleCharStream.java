@@ -8,6 +8,11 @@ public class ConsoleCharStream implements CharStream {
         _reader = new BufferedReader(new InputStreamReader(System.in));
     }
 
+    Lexer _lexer = null;
+    public void lexer(Lexer l) {
+        _lexer = l;
+    }
+
     public BufferedReader reader() {
         return _reader;
     }
@@ -16,7 +21,10 @@ public class ConsoleCharStream implements CharStream {
     String read_nobuf() {
         try {
             ++_lineno; // starts at 1.
-            System.out.print("|");
+            if (_lexer.closed())
+                System.out.print("|");
+            else
+                System.out.print("");
             String out = reader().readLine();
             if (out == null) //^D
                 System.exit(0);
