@@ -14,7 +14,7 @@ enum Type {
     TClose
 };
 
-class Term <T> implements Token {
+class Term <T> extends Token {
     public Type type;
     public T val;
 

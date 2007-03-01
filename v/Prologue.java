@@ -8,11 +8,7 @@ public class Prologue {
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
             Term t = p.pop();
-            if (t.type != Type.TQuote)
-                throw new VException("Invalid use of '.' on " + t.value());
-            Term<Quote> tq = t;
-            Quote local = tq.val;
-            Iterator<Term> it = local.tokens().iterator();
+            Iterator<Term> it = t.qvalue().tokens().iterator();
             Term<String> symbol = it.next();
 
             // copy the rest of tokens to our own stream.
@@ -24,24 +20,22 @@ public class Prologue {
         }
     };
 
-
     private static Cmd _true = new Cmd() {
-        public void eval(Quote p) {
+        public void eval(Quote q) {
             Term t = new Term<Boolean>(Type.TBool, true);
-            p.stack().push(t);
+            q.stack().push(t);
         }
     };
 
     private static Cmd _false = new Cmd() {
-        public void eval(Quote p) {
+        public void eval(Quote q) {
             Term t = new Term<Boolean>(Type.TBool, false);
-            p.stack().push(t);
+            q.stack().push(t);
         }
     };
 
     // Control structures
     private static Cmd _if = new Cmd() {
-        @SuppressWarnings({"unchecked"})
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
 
@@ -50,27 +44,17 @@ public class Prologue {
 
             // execute the cond on the stack first.
             if (cond.type == Type.TQuote) {
-                Term<Quote> tq = cond;
-                Quote qv = tq.val;
-                qv.eval(q);
+                cond.qvalue().eval(q);
+                // and get it back from stack.
+                cond = p.pop();
             }
-
-            // and get it back from stack.
-            cond = p.pop();
-            if (cond.type != Type.TBool)
-                throw new VException("Type error if condition not a boolean");
-            Term<Boolean> bc = cond;
-            if (bc.val) {
-                // dequote the action and push it to stack.
-                Term<Quote> tq = action;
-                Quote qa = tq.val;
-                qa.eval(q);
-            }
+            // dequote the action and push it to stack.
+            if (cond.bvalue())
+                action.qvalue().eval(q);
         }
     };
 
     private static Cmd _ifte = new Cmd() {
-        @SuppressWarnings({"unchecked"})
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
 
@@ -78,35 +62,21 @@ public class Prologue {
             Term eaction = p.pop();
             Term cond = p.pop();
 
-            // execute the cond on the stack first.
             if (cond.type == Type.TQuote) {
-                Term<Quote> tq = cond;
-                Quote qv = tq.val;
-                qv.eval(q);
+                cond.qvalue().eval(q);
+                // and get it back from stack.
+                cond = p.pop();
             }
-
-            // and get it back from stack.
-            cond = p.pop();
-            if (cond.type != Type.TBool)
-                throw new VException("Type error if condition not a boolean");
-            Term<Boolean> bc = cond;
-            if (bc.val) {
-                // dequote the action and push it to stack.
-                Term<Quote> tq = action;
-                Quote qa = tq.val;
-                qa.eval(q);
-            } else {
-                // dequote the action and push it to stack.
-                Term<Quote> tq = eaction;
-                Quote qa = tq.val;
-                qa.eval(q);
-            }
+            // dequote the action and push it to stack.
+            if (cond.bvalue())
+                action.qvalue().eval(q);
+            else
+                eaction.qvalue().eval(q);
         }		
     };
 
     // Libraries
     private static Cmd _print = new Cmd() {
-        @SuppressWarnings("unchecked")
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
             Term t = p.pop();
@@ -115,11 +85,22 @@ public class Prologue {
     };
 
     private static Cmd _println = new Cmd() {
-        @SuppressWarnings("unchecked")
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
             Term t = p.pop();
             V.outln(t.value());
+        }
+    };
+
+    private static Cmd _peek = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+            if (p.empty()) {
+                V.outln("");
+            } else {
+                Term t = p.peek();
+                V.outln(t.value());
+            }
         }
     };
 
@@ -131,39 +112,24 @@ public class Prologue {
         }
     };
 
-    @SuppressWarnings("unchecked")
-    private static Integer getInt(Term t) {
-        Term<Integer> v = t;
-        return v.val;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Float getFloat(Term t) {
-        Term<Float> v = t;
-        return v.val;
-    }
-
-
     private static Cmd _add = new Cmd() {
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
             Term b = p.pop();
             Term a = p.pop();
             if (a.type == Type.TInt) {
-                int a1 = getInt(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Integer>(Type.TInt, a1 + getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Float>(Type.TFloat, a1 + getFloat(b)));
-                } else
-                    throw new VException("Type error(add)");
+                if (b.type == Type.TInt)
+                    p.push(new Term<Integer>(Type.TInt, a.ivalue() + b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat, a.ivalue() + b.fvalue()));
+                else
+                    throw new VException("Type error(+)");
             } else if (a.type == Type.TFloat) {
-                float a1 = getFloat(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Float>(Type.TFloat, a1 + getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Float>(Type.TFloat, a1 + getFloat(b)));
-                } else
+                if (b.type == Type.TInt)
+                    p.push(new Term<Float>(Type.TFloat, a.fvalue() + b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat, a.fvalue() + b.fvalue()));
+                else
                     throw new VException("Type error(add)");
             }
         }
@@ -175,24 +141,22 @@ public class Prologue {
             Term b = p.pop();
             Term a = p.pop();
             if (a.type == Type.TInt) {
-                int a1 = getInt(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Integer>(Type.TInt, a1 - getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Float>(Type.TFloat, a1 - getFloat(b)));
-                } else
-                    throw new VException("Type error(sub)");
+                if (b.type == Type.TInt)
+                    p.push(new Term<Integer>(Type.TInt, a.ivalue() - b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat, a.ivalue() - b.fvalue()));
+                else
+                    throw new VException("Type error(+)");
             } else if (a.type == Type.TFloat) {
-                float a1 = getFloat(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Float>(Type.TFloat, a1 - getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Float>(Type.TFloat, a1 - getFloat(b)));
-                } else
-                    throw new VException("Type error(sub)");
+                if (b.type == Type.TInt)
+                    p.push(new Term<Float>(Type.TFloat, a.fvalue() - b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat, a.fvalue() - b.fvalue()));
+                else
+                    throw new VException("Type error(add)");
             }
         }
-    };	
+    };
 
     private static Cmd _mul = new Cmd() {
         public void eval(Quote q) {
@@ -200,24 +164,22 @@ public class Prologue {
             Term b = p.pop();
             Term a = p.pop();
             if (a.type == Type.TInt) {
-                int a1 = getInt(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Integer>(Type.TInt, a1 * getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Float>(Type.TFloat, a1 * getFloat(b)));
-                } else
-                    throw new VException("Type error(mul)");
+                if (b.type == Type.TInt)
+                    p.push(new Term<Integer>(Type.TInt, a.ivalue() * b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat, a.ivalue() * b.fvalue()));
+                else
+                    throw new VException("Type error(+)");
             } else if (a.type == Type.TFloat) {
-                float a1 = getFloat(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Float>(Type.TFloat, a1 * getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Float>(Type.TFloat, a1 * getFloat(b)));
-                } else
-                    throw new VException("Type error(mul)");
+                if (b.type == Type.TInt)
+                    p.push(new Term<Float>(Type.TFloat, a.fvalue() * b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat, a.fvalue() * b.fvalue()));
+                else
+                    throw new VException("Type error(add)");
             }
         }
-    };	
+    };
 
     private static Cmd _div = new Cmd() {
         public void eval(Quote q) {
@@ -225,24 +187,22 @@ public class Prologue {
             Term b = p.pop();
             Term a = p.pop();
             if (a.type == Type.TInt) {
-                float a1 = getInt(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Float>(Type.TFloat, a1 / (float)getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Float>(Type.TFloat, a1 / getFloat(b)));
-                } else
-                    throw new VException("Type error(div)");
+                if (b.type == Type.TInt)
+                    p.push(new Term<Float>(Type.TFloat, (float)(a.ivalue() / (1.0 * b.ivalue()))));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat, a.ivalue() / b.fvalue()));
+                else
+                    throw new VException("Type error(+)");
             } else if (a.type == Type.TFloat) {
-                float a1 = getFloat(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Float>(Type.TFloat, a1 / (float)getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Float>(Type.TFloat, a1 / getFloat(b)));
-                } else
-                    throw new VException("Type error(div)");
+                if (b.type == Type.TInt)
+                    p.push(new Term<Float>(Type.TFloat, a.fvalue() / b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat, a.fvalue() / b.fvalue()));
+                else
+                    throw new VException("Type error(add)");
             }
         }
-    };	
+    };
 
     private static Cmd _gt = new Cmd() {
         public void eval(Quote q) {
@@ -250,20 +210,18 @@ public class Prologue {
             Term b = p.pop();
             Term a = p.pop();
             if (a.type == Type.TInt) {
-                int a1 = getInt(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Boolean>(Type.TBool, a1 > getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Boolean>(Type.TBool, a1 > getFloat(b)));
-                } else
+                if (b.type == Type.TInt)
+                    p.push(new Term<Boolean>(Type.TBool, a.ivalue() > b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Boolean>(Type.TBool, a.ivalue() > b.fvalue()));
+                else
                     throw new VException("Type error(div)");
             } else if (a.type == Type.TFloat) {
-                float a1 = getFloat(a);
-                if (b.type == Type.TInt) {
-                    p.push(new Term<Boolean>(Type.TBool, a1 > getInt(b)));
-                } else if (b.type == Type.TFloat) {
-                    p.push(new Term<Boolean>(Type.TBool, a1 > getFloat(b)));
-                } else
+                if (b.type == Type.TInt)
+                    p.push(new Term<Boolean>(Type.TBool, a.fvalue() > b.ivalue()));
+                else if (b.type == Type.TFloat)
+                    p.push(new Term<Boolean>(Type.TBool, a.fvalue() > b.fvalue()));
+                else
                     throw new VException("Type error(div)");
             }
         }
@@ -284,6 +242,7 @@ public class Prologue {
         q.def("println", _println);
         
         //others
+        q.def("?", _peek);
         q.def("dup", _dup);
         q.def("+", _add);
         q.def("-", _sub);

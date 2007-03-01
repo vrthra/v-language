@@ -62,6 +62,7 @@ public class CmdQuote implements Quote {
         _stack = parent.stack();
         Iterator<Term> stream = _tokens.iterator();
         while(true) {
+            try {
             if (canApply())
                 apply();
             else if (stream.hasNext())
@@ -70,6 +71,9 @@ public class CmdQuote implements Quote {
                 _stack.push(stream.next());
             else
                 break;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
