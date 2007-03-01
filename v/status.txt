@@ -167,7 +167,7 @@ condlinrec     [ [C1] [C2] .. [D] ] -> ...
     forms [[T]] or [[R1] [R2]]. For the former, executes T. For the latter
     executes R1, recurses, executes R2.
 
-cons     X A -> B 
+|cons     X A -> B 
     Aggregate B is A with a new member X (first member for sequences).
 
 construct     [P] [[P1] [P2] ..] -> R1 R2 ..
@@ -183,7 +183,7 @@ cos     F -> G
 cosh     F -> G 
     G is the hyperbolic cosine of F.
 
-dip     X [P] -> ... X 
+|dip     X [P] -> ... X 
     Saves X, executes P, pushes X back.
 
 div     I J -> K L 
@@ -247,7 +247,7 @@ float     R -> B
 floor     F -> G 
     G is the floor of F.
 
-fold     A V0 [P] -> V 
+|fold     A V0 [P] -> V 
     Starting with value V0, sequentially pushes members of aggregate A and
     combines with binary operator P to produce value V.
 

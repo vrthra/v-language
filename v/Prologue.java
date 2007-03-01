@@ -200,6 +200,32 @@ public class Prologue {
         }
     };
 
+    private static Cmd _fold = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+
+            Term action = p.pop();
+            Term init = p.pop();
+            Term list = p.pop();
+
+            Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+            // push the init value in expectation of the next val and action.
+            p.push(init);
+            // copy the rest of tokens to our own stream.
+            while (fstream.hasNext()) {
+                // extract the relevant element from list,
+                Term t = fstream.next();
+                // push it on our current stack
+                p.push(t);
+                // apply the action
+                action.qvalue().eval(q);
+                // pop it back into a new quote
+            }
+            // the result will be on the stack at the end of this cycle.
+        }
+    };
+
     private static Cmd _rev = new Cmd() {
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
@@ -219,7 +245,36 @@ public class Prologue {
         }
     };
 
+    private static Cmd _cons = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
 
+            Term next = p.pop();
+            Term first = p.pop();
+            // dequote both, append and push it back to stack.
+            Iterator<Term> fstream = first.qvalue().tokens().iterator();
+
+            // copy the rest of tokens to our own stream.
+            QuoteStream nts = new QuoteStream();
+            while (fstream.hasNext())
+                nts.add(fstream.next());
+            nts.add(next);
+            // we define it on the parent.
+            p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
+        }
+    };
+
+    private static Cmd _dip = new Cmd() {
+        public void eval(Quote q) {
+            Stack<Term> p = q.stack();
+
+            Term prog = p.pop();
+            Term saved = p.pop();
+            
+            prog.qvalue().eval(q);
+            p.push(saved);
+        }
+    };
 
     private static Cmd _concat = new Cmd() {
         public void eval(Quote q) {
@@ -246,13 +301,8 @@ public class Prologue {
         public void eval(Quote q) {
             Stack<Term> p = q.stack();
 
-            Term first = p.pop();
-            // dequote both, append and push it back to stack.
-            Iterator<Term> fstream = first.qvalue().tokens().iterator();
-
-            // copy the rest of tokens to our own stream.
-            while (fstream.hasNext())
-                p.push(fstream.next());
+            Term prog = p.pop();
+            prog.qvalue().eval(q);
         }
     };
 
@@ -465,6 +515,7 @@ public class Prologue {
 
         //io
         q.def("put", _print);
+        q.def("puts", _println);
         q.def("print", _print);
         q.def("println", _println);
 
@@ -480,8 +531,11 @@ public class Prologue {
         q.def("rroll", _rroll);
         q.def("rolldown", _rroll);
         q.def("map", _map);
+        q.def("fold", _fold);
         q.def("rev", _rev);
         q.def("concat", _concat);
+        q.def("cons", _cons);
+        q.def("dip", _dip);
         q.def("i", _dequote);
 
         //arith
