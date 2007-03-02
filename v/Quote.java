@@ -8,7 +8,7 @@ public interface Quote {
      * If not found in the current quote, look it up in parent quote.
      * */
     public abstract Quote lookup(String key);
-    
+
     public abstract HashMap<String,Quote> bindings();
 
     public abstract String id();

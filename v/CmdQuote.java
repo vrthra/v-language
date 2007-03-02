@@ -32,7 +32,7 @@ public class CmdQuote implements Quote {
         _id = _idcount;
         V.debug("Creating " + id() + " parent is " + _parent.id());
     }
-    
+
     static int _idcount = 0;
     int _id;
 
