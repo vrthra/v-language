@@ -673,7 +673,7 @@ unary3     X1 X2 X3 [P] -> R1 R2 R3
 unary4     X1 X2 X3 X4 [P] -> R1 R2 R3 R4
     Executes P four times, with Xi, returns Ri (i = 1..4).
 
-uncons     A -> F R 
+|uncons     A -> F R 
     F and R are the first and the rest of non-empty aggregate A.
 
 undeferror     -> I 
@@ -691,7 +691,7 @@ unswons     A -> R F
 user     X -> B 
     Tests whether X is a user-defined symbol.
 
-while     [B] [D] -> ... 
+|while     [B] [D] -> ... 
     While executing B yields true executes D.
 
 x     [P]i -> ... 

@@ -137,6 +137,27 @@ public class Prologue {
             }
         };
 
+        Cmd _while = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term action = p.pop();
+                Term cond = p.pop();
+                while(true) {
+                    if (cond.type == Type.TQuote) {
+                        cond.qvalue().eval(q);
+                        // and get it back from stack.
+                        cond = p.pop();
+                    }
+                    // dequote the action and push it to stack.
+                    if (cond.bvalue())
+                        action.qvalue().eval(q);
+                    else
+                        break;
+                }
+            }
+        };
+
         // Libraries
         Cmd _print = new Cmd(parent) {
             public void eval(Quote q) {
@@ -323,20 +344,36 @@ public class Prologue {
             }
         };
 
-        Cmd _cons = new Cmd(parent) {
+        Cmd _uncons = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
 
-                Term next = p.pop();
-                Term first = p.pop();
+                Term list = p.pop();
                 // dequote both, append and push it back to stack.
-                Iterator<Term> fstream = first.qvalue().tokens().iterator();
-
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+                p.push(fstream.next());
                 // copy the rest of tokens to our own stream.
                 QuoteStream nts = new QuoteStream();
                 while (fstream.hasNext())
                     nts.add(fstream.next());
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+            }
+        };
+
+        Cmd _cons = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term list = p.pop();
+                Term next = p.pop();
+                // dequote both, append and push it back to stack.
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+                // copy the rest of tokens to our own stream.
+                QuoteStream nts = new QuoteStream();
                 nts.add(next);
+                while (fstream.hasNext())
+                    nts.add(fstream.next());
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
         };
@@ -581,6 +618,7 @@ public class Prologue {
         //control structures
         parent.def("ifte", _ifte);
         parent.def("if", _if);
+        parent.def("while", _while);
 
         //io
         parent.def("put", _print);
@@ -606,6 +644,7 @@ public class Prologue {
         parent.def("rev", _rev);
         parent.def("concat", _concat);
         parent.def("cons", _cons);
+        parent.def("uncons", _uncons);
         parent.def("dip", _dip);
         parent.def("i", _dequote);
         parent.def("id", _id);
