@@ -3,9 +3,9 @@ package v;
 public class LexIterator extends QuoteIterator {
     // Console Iterator knows about compound quotes
     Lexer _lex = null;
-    public LexIterator(QuoteStream qs) {
+    public LexIterator(QuoteStream qs, CharStream cs) {
         super(qs);
-        _lex = new Lexer(new ConsoleCharStream());
+        _lex = new Lexer(cs);
     }
 
     public boolean hasNext() {
