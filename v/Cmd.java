@@ -1,14 +1,32 @@
 package v;
 
-import java.util.Stack;
+import java.util.*;
 
 public abstract class Cmd implements Quote {
+    public Quote _parent = null;
 
-    public Quote lookup(String key) {
-        throw new VException("Commands does not have a dict.");
+    public Cmd(Quote parent) {
+        _parent = parent;
+        _idcount++;
+        _id = _idcount;
+        V.debug("Creating " + id() + " parent is " + _parent.id());
+    }
+    
+    static int _idcount = 0;
+    int _id;
+    public String id() {
+        return "Cmd[" + _id + "]";
     }
 
-    public Stack<Term> stack() {
+    public HashMap<String,Quote> bindings() {
+        throw new VException("Commands does not have bindings.");
+    }
+
+    public Quote lookup(String key) {
+        return _parent.lookup(key);
+    }
+
+    public QStack stack() {
         throw new VException("Commands does not have a stack.");
     }
 

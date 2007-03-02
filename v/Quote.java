@@ -1,15 +1,19 @@
 package v;
 
-import java.util.Stack;
+import java.util.*;
 
 public interface Quote {
 
-    /* Try and fetch the definition of a symbol in the current scope.
-     * If not found in the current scope, look it up in parent scope.
+    /* Try and fetch the definition of a symbol in the current quote.
+     * If not found in the current quote, look it up in parent quote.
      * */
     public abstract Quote lookup(String key);
+    
+    public abstract HashMap<String,Quote> bindings();
 
-    public abstract Stack<Term> stack();
+    public abstract String id();
+
+    public abstract QStack stack();
 
     /* Evaluate the current stack
      * logic:

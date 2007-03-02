@@ -4,20 +4,29 @@ import java.util.*;
 
 public class V {
 
+    static QStack _stack = null;
     static void banner() {
         outln("\t|V|\t");
     }
 
+
     public static void main(final String[] args) {
         banner();
+        _stack = new QStack(); // our singleton eval stack.
         // Setup the world quote.
         Quote world = new Quote() {
             HashMap<String, Quote> _dict = new HashMap<String, Quote>();
-            public Stack<Term> stack() {
-                Stack<Term> st = new Stack<Term>();
+            {
                 for(String s : args)
-                    st.push(new Term<String>(Type.TString, s));
-                return st;
+                    _stack.push(new Term<String>(Type.TString, s));
+            }
+
+            public QStack stack() {
+                return _stack;
+            }
+
+            public String id() {
+                return "Quote[world]";
             }
 
             public void eval(Quote parent) {
@@ -40,11 +49,14 @@ public class V {
                 _dict.put(sym, q);
             }
 
+            public HashMap<String, Quote> bindings() {
+                return _dict;
+            }
 
         };
-        Prologue.init(world);
 
-        CmdQuote program = new CmdQuote(new LexStream());
+        Prologue.init(world);
+        CmdQuote program = new CmdQuote(new LexStream(), world);
         program.setout(new V());
         program.eval(world);
     }
@@ -57,8 +69,16 @@ public class V {
         System.out.print(var);
     }
 
-    @SuppressWarnings("unchecked")
     public void outln(Term term) {
         outln(term.value());
+    }
+
+    public static void debug(String s) {
+        if (_debug) outln(s);
+    }
+
+    static boolean _debug = false;
+    static void debug(boolean val) {
+        _debug = val;
     }
 }

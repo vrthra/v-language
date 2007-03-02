@@ -4,9 +4,11 @@ import java.util.*;
 
 public class QuoteStream implements TokenStream {
     List<Term> _terms = null;
+    Quote _scope = null;
     public QuoteStream() {
         _terms = new ArrayList<Term>();
     }
+
     public void add(Term t) {
         _terms.add(t);
     }
@@ -19,7 +21,14 @@ public class QuoteStream implements TokenStream {
         return _terms.size();
     }
 
-    @SuppressWarnings("unchecked")
+    public Quote scope() {
+        return _scope;
+    }
+
+    public void scope(Quote q) {
+        _scope = q;
+    }
+
     public Iterator<Term> iterator() {
         return new QuoteIterator(this);
     }

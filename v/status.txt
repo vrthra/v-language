@@ -67,7 +67,7 @@ acos     F -> G
 all     A [B] -> X 
     Applies test B to members of aggregate A, X = true if all pass.
 
-and     X Y -> Z 
+|and     X Y -> Z 
     Z is the intersection of sets X and Y, logical conjunction for truth
     values.
 
@@ -447,7 +447,7 @@ name     sym -> "sym"
 neg     I -> J 
     Integer J is the negative of integer I. Also supports float.
 
-not     X -> Y 
+|not     X -> Y 
     Y is the complement of set X, logical negation for truth values.
 
 null     X -> B 
@@ -463,7 +463,7 @@ of     I A -> X
 opcase     X [..[X Xs]..] -> [Xs] 
     Indexing on type of X, returns the list [Xs].
 
-or     X Y -> Z 
+|or     X Y -> Z 
     Z is the union of sets X and Y, logical disjunction for truth values.
 
 ord     C -> I 
@@ -701,3 +701,20 @@ xor     X Y -> Z
     Z is the symmetric difference of sets X and Y, logical exclusive
     disjunction for truth values.
 
+=====================================================
+differences from joy.
+
+The stack invariant combinators does not exist as of now.
+ie the ifte condition consumes values from the stack unlike joy
+which saves the stack state before execution of condition and restores it
+after it.
+
+So a recursive def of factorial looks like below:
+
+[fact
+    [dup 0 =]
+        [pop 1]
+        [dup 1 - fact *]
+    ifte].
+
+Notice how we have to do the [dup 0 =] instead of just [0 =] in the classic joy.

@@ -20,11 +20,24 @@ public class CmdQuote implements Quote {
     TokenStream _tokens = null;
 
     // Our stack.
-    Stack<Term> _stack = null;
+    QStack _stack = null;
 
-    public CmdQuote(TokenStream tokens) {
+    public CmdQuote(TokenStream tokens, Quote parent) {
+        // we capture the parent at creation time.
         _dict = new HashMap<String, Quote>();
         _tokens = tokens;
+        _tokens.scope(this); // set the scope for any future quotes
+        _parent = parent;
+        _idcount++;
+        _id = _idcount;
+        V.debug("Creating " + id() + " parent is " + _parent.id());
+    }
+    
+    static int _idcount = 0;
+    int _id;
+
+    public String id() {
+        return "CmdQuote[" + _id + "]";
     }
 
     /* Try and fetch the definition of a symbol in the current scope.
@@ -37,7 +50,11 @@ public class CmdQuote implements Quote {
         return _dict.get(key);
     }
 
-    public Stack<Term> stack() {
+    public HashMap<String, Quote> bindings() {
+        return _dict;
+    }
+
+    public QStack stack() {
         return _stack;
     }
 
@@ -57,12 +74,10 @@ public class CmdQuote implements Quote {
      * tokenstream and repeat the procedure. If it is a compound '['
      * then push the entire quote rather than the first one.
      * */
-    public void eval(Quote parent) {
-        _parent = parent;
-        _stack = parent.stack();
+    public void eval(Quote scope) {
+        _stack = scope.stack();
         Iterator<Term> stream = _tokens.iterator();
         while(true) {
-            try {
             if (canApply())
                 apply();
             else if (stream.hasNext())
@@ -71,9 +86,6 @@ public class CmdQuote implements Quote {
                 _stack.push(stream.next());
             else
                 break;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -84,8 +96,9 @@ public class CmdQuote implements Quote {
         if (sym.type() != Type.TSymbol)
             throw new VException("Attempt to apply NotSymbol");
         Quote q = lookup(sym.value());
-        if (q == null)
-            throw new VException("Attempt to invoke undefined word (" + sym.value()+ ")");
+        if (q == null) {
+            throw new VException("Attempt to invoke undefined word (" + sym.value()+ ") at " + id() + " and parent " + parent().id() );
+        }
         // Invoke the quote on our quote by passing us as the parent.
         q.eval(this);
     }
