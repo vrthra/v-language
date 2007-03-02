@@ -1,9 +1,41 @@
+=====================================================
+differences from joy.
+
+The stack invariant combinators does not exist as of now.
+ie the ifte condition consumes values from the stack unlike joy
+which saves the stack state before execution of condition and restores it
+after it.
+
+So a recursive def of factorial looks like below:
+
+[fact
+    [dup 0 =]
+        [pop 1]
+        [dup 1 - fact *]
+    ifte].
+
+Notice how we have to do the [dup 0 =] instead of just [0 =] in the classic joy.
+(the definition is accomplished by the word '.')
+
+V also allows internal definitions.
+ie
+
+[area
+    [pi 3.1415].
+    [sq dup *].
+    sq pi *].
+
+V strives to be as much homoiconic as possible so a V program that is invoked
+from the command line with args a b c is no different from this.
+|a b c [my v prog]i
+ie: the args are pushed to the stack, the quote i passed to stack and dequoted.
+=====================================================
 # From the joy page.
 # starting '|' indicates done functions.
 
 |?   X -> X
     Displays the last element in current stack.
-    (not in joy)
+    (not in joy?)
 
 |?? X -> X
     Displays the current stack.
@@ -701,20 +733,4 @@ xor     X Y -> Z
     Z is the symmetric difference of sets X and Y, logical exclusive
     disjunction for truth values.
 
-=====================================================
-differences from joy.
 
-The stack invariant combinators does not exist as of now.
-ie the ifte condition consumes values from the stack unlike joy
-which saves the stack state before execution of condition and restores it
-after it.
-
-So a recursive def of factorial looks like below:
-
-[fact
-    [dup 0 =]
-        [pop 1]
-        [dup 1 - fact *]
-    ifte].
-
-Notice how we have to do the [dup 0 =] instead of just [0 =] in the classic joy.
