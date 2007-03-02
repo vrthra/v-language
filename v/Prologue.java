@@ -479,6 +479,7 @@ public class Prologue {
                 }
             }
         };
+
         Cmd _gt = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -560,6 +561,14 @@ public class Prologue {
             }
         };
 
+        // Math
+        Cmd _sqrt = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                p.push(new Term<Integer>(Type.TInt,(int)Math.sqrt(p.pop().ivalue())));
+            }
+        };
+
         //meta
         parent.def(".", _def);
         parent.def("true", _true);
@@ -614,6 +623,9 @@ public class Prologue {
         parent.def("<", _lt);
         parent.def("<=", _lteq);
         parent.def(">=", _gteq);
+
+        //math
+        parent.def("sqrt", _sqrt);
     }
 }
 
