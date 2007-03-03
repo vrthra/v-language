@@ -84,6 +84,26 @@ public class Prologue {
             }
         };
 
+        // expects callable word as first arg and the quote where it is defined as second
+        Cmd _call = new Cmd(parent) {
+            @SuppressWarnings("unchecked")
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term t = p.pop();
+                Iterator<Term> it = t.qvalue().tokens().iterator();
+                Term<String> envsym = it.next();
+                Term<String> symbol = it.next();
+
+                //now get the closure
+                Quote body = q.lookup(envsym.svalue());
+                // fetch the method definition.
+                Quote f = body.lookup(symbol.svalue());
+                f.eval(q);
+            }
+        };
+
+
         Cmd _true = new Cmd(parent) {
             public void eval(Quote q) {
                 q.stack().push(new Term<Boolean>(Type.TBool, true));
@@ -107,15 +127,16 @@ public class Prologue {
 
                 if (cond.type != Type.TBool) {
                     // it should be eaction.
-                    eaction = cond;
+                    eaction = action;
+                    action = cond;
                     cond = p.pop();
                 }
 
                 // dequote the action and push it to stack.
                 if (cond.bvalue())
-                    action.qvalue().eval(q);
+                    action.qvalue().eval(q, true);
                 else if (eaction != null)
-                    eaction.qvalue().eval(q);
+                    eaction.qvalue().eval(q, true);
             }
         };
 
@@ -134,9 +155,9 @@ public class Prologue {
                 } This does not buy us any thing.*/
                 // dequote the action and push it to stack.
                 if (cond.bvalue())
-                    action.qvalue().eval(q);
+                    action.qvalue().eval(q, true);
                 else
-                    eaction.qvalue().eval(q);
+                    eaction.qvalue().eval(q, true);
             }
         };
 
@@ -154,7 +175,7 @@ public class Prologue {
                     }
                     // dequote the action and push it to stack.
                     if (cond.bvalue())
-                        action.qvalue().eval(q);
+                        action.qvalue().eval(q, true);
                     else
                         break;
                 }
@@ -293,7 +314,7 @@ public class Prologue {
                     // push it on our current stack
                     p.push(t);
                     // apply the action
-                    action.qvalue().eval(q);
+                    action.qvalue().eval(q, true);
                     // pop it back into a new quote
                     Term res = p.pop();
                     nts.add(res);
@@ -321,7 +342,7 @@ public class Prologue {
                     // push it on our current stack
                     p.push(t);
                     // apply the action
-                    action.qvalue().eval(q);
+                    action.qvalue().eval(q, true);
                     // pop it back into a new quote
                 }
                 // the result will be on the stack at the end of this cycle.
@@ -401,7 +422,7 @@ public class Prologue {
                 Term prog = p.pop();
                 Term saved = p.pop();
 
-                prog.qvalue().eval(q);
+                prog.qvalue().eval(q, true);
                 p.push(saved);
             }
         };
@@ -713,6 +734,7 @@ public class Prologue {
 
         //meta
         parent.def(".", _def);
+        parent.def("$", _call);
         parent.def("true", _true);
         parent.def("false", _false);
 
