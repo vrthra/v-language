@@ -8,13 +8,27 @@ public class LexIterator extends QuoteIterator {
         _lex = new Lexer(cs);
     }
 
+    Term _current = null;
     public boolean hasNext() {
+        if (_current == null)
+            _current = _lex.next();
+        if (_current == null)
+            return false;
         return true;
+    }
+
+    Term lex_next() {
+        if (_current != null) {
+            Term t = _current;
+            _current = null;
+            return t;
+        }
+        return _lex.next();
     }
 
     @SuppressWarnings("unchecked")
     public Term next() {
-        Term t = _lex.next();
+        Term t = lex_next();
         if (t.type == Type.TOpen)
             return compound(t);
         return t;
@@ -24,7 +38,9 @@ public class LexIterator extends QuoteIterator {
     private Term compound(Term<Character> open) {
         QuoteStream local = new QuoteStream();
         while(true) {
-            Term t = _lex.next();
+            Term t = lex_next();
+            if (t == null)
+                throw new VException("Still expecting compound to close.");
             if (t.type == Type.TClose) {
                 Term<Character> c = t;
                 if (c.val == Lexer.closeCompound(open.val))

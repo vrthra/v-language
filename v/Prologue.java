@@ -102,17 +102,20 @@ public class Prologue {
                 QStack p = q.stack();
 
                 Term action = p.pop();
+                Term eaction = null; // tentative.
                 Term cond = p.pop();
 
-                // execute the cond on the stack first.
-                if (cond.type == Type.TQuote) {
-                    cond.qvalue().eval(q);
-                    // and get it back from stack.
+                if (cond.type != Type.TBool) {
+                    // it should be eaction.
+                    eaction = cond;
                     cond = p.pop();
                 }
+
                 // dequote the action and push it to stack.
                 if (cond.bvalue())
                     action.qvalue().eval(q);
+                else if (eaction != null)
+                    eaction.qvalue().eval(q);
             }
         };
 
@@ -124,11 +127,11 @@ public class Prologue {
                 Term action = p.pop();
                 Term cond = p.pop();
 
-                if (cond.type == Type.TQuote) {
+                /*if (cond.type == Type.TQuote) {
                     cond.qvalue().eval(q);
                     // and get it back from stack.
                     cond = p.pop();
-                }
+                } This does not buy us any thing.*/
                 // dequote the action and push it to stack.
                 if (cond.bvalue())
                     action.qvalue().eval(q);
@@ -378,6 +381,19 @@ public class Prologue {
             }
         };
 
+        Cmd _unit = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term v = p.pop();
+                
+                QuoteStream nts = new QuoteStream();
+                nts.add(v);
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+            }
+        };
+
+
         Cmd _dip = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -415,7 +431,8 @@ public class Prologue {
                 QStack p = q.stack();
 
                 Term prog = p.pop();
-                prog.qvalue().eval(q);
+                V.debug("Dequote @ " + q.id() + ":" + parent.id() + " prog " + prog.qvalue().id());
+                prog.qvalue().eval(q, true); // apply on parent
             }
         };
 
@@ -606,6 +623,94 @@ public class Prologue {
             }
         };
 
+        // Predicates do not consume the element. 
+        Cmd _isbool = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TBool));
+            }
+        };
+
+        Cmd _issym = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TSymbol));
+            }
+        };
+
+        Cmd _islist = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TQuote));
+            }
+        };
+
+        Cmd _isstr = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TString));
+            }
+        };
+
+        Cmd _iszero = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool,
+                            (a.type == Type.TInt && a.ivalue() == 0)
+                             ||
+                            (a.type == Type.TFloat && a.fvalue() == 0)));
+            }
+        };
+
+        Cmd _isempty = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool, (a.type == Type.TQuote &&
+                                ((QuoteStream)a.qvalue()).size() == 0)));
+            }
+        };
+
+        Cmd _isnum = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool,
+                            a.type == Type.TInt || a.type == Type.TFloat));
+            }
+        };
+
+        Cmd _ischar = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TChar));
+            }
+        };
+
+        Cmd _use = new Cmd(parent) {
+            public void eval(Quote q) {
+                try {
+                    QStack p = q.stack();
+                    Term file = p.pop();
+
+                    CharStream cs = new FileCharStream(file.svalue() + ".v");
+
+                    CmdQuote module = new CmdQuote(new LexStream(cs), q);
+                    module.eval(q, true);
+                    V.debug("use @ " + q.id());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    V.outln("Error:" + e.getMessage());
+                }
+            }
+        };
+
         //meta
         parent.def(".", _def);
         parent.def("true", _true);
@@ -645,6 +750,7 @@ public class Prologue {
         parent.def("concat", _concat);
         parent.def("cons", _cons);
         parent.def("uncons", _uncons);
+        parent.def("unit", _unit);
         parent.def("dip", _dip);
         parent.def("i", _dequote);
         parent.def("id", _id);
@@ -663,8 +769,28 @@ public class Prologue {
         parent.def("<=", _lteq);
         parent.def(">=", _gteq);
 
+        //predicates
+        //The predicates do not consume stuff off the stack. They just
+        //peek and push the result. the reason for this is that we generally
+        //do -> if (x is yyy) then {do some thing with x} so it is more
+        //natural to let x be there in the stack than to pop it off.
+        parent.def("boolean?", _isbool);
+        parent.def("symbol?", _issym);
+        parent.def("list?", _islist);
+        parent.def("char?", _ischar);
+        parent.def("number?", _isnum);
+        parent.def("string?", _isstr);
+
+        parent.def("zero?", _iszero);
+        parent.def("empty?", _isempty);
+
+
         //math
         parent.def("sqrt", _sqrt);
+
+
+        //modules
+        parent.def("use", _use);
     }
 }
 

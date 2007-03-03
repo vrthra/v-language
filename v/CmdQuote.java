@@ -10,7 +10,7 @@ public class CmdQuote implements Quote {
      * defined words, a Token stream, a current stack
      * */
 
-    // The quote of the outside scope. Used for lookup purposes
+    // The quote of the parent scope during creation. Used for lookup purposes
     Quote _parent = null;
 
     // Our bindings
@@ -75,11 +75,15 @@ public class CmdQuote implements Quote {
      * then push the entire quote rather than the first one.
      * */
     public void eval(Quote scope) {
+        eval(scope, false);
+    }
+
+    public void eval(Quote scope, boolean on_parent) {
         _stack = scope.stack();
         Iterator<Term> stream = _tokens.iterator();
         while(true) {
             if (canApply())
-                apply();
+                apply(on_parent ? scope : this);
             else if (stream.hasNext())
                 // TokenStream returns entire quotes as a single term
                 // of type TQuote
@@ -90,7 +94,7 @@ public class CmdQuote implements Quote {
     }
 
     Object _pres = null;
-    public void apply() {
+    public void apply(Quote scope) {
         // pop the first token in the stack
         Token sym = _stack.pop();
         if (sym.type() != Type.TSymbol)
@@ -100,7 +104,8 @@ public class CmdQuote implements Quote {
             throw new VException("Attempt to invoke undefined word (" + sym.value()+ ") at " + id() + " and parent " + parent().id() );
         }
         // Invoke the quote on our quote by passing us as the parent.
-        q.eval(this);
+        V.debug("Using " + scope.id() + " val " + sym.value() );
+        q.eval(scope);
     }
 
     V _v = null;

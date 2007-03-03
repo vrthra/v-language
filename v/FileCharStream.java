@@ -41,10 +41,10 @@ public class FileCharStream implements CharStream {
         try {
             i = reader().read();
             if (i == -1)
-                System.exit(0);
+                return 0;
         } catch (Exception e) {
-            V.outln(e.getMessage());
-            System.exit(-1);
+            e.printStackTrace();
+            return 0;
         }
         return (char)i;
     }

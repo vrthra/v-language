@@ -29,7 +29,10 @@ public class V {
                     return "Quote[world]";
                 }
 
-                public void eval(Quote parent) {
+                public void eval(Quote scope, boolean on_parent) {
+                    throw new VException("Attempt to eval world.");
+                }
+                public void eval(Quote scope) {
                     throw new VException("Attempt to eval world.");
                 }
 

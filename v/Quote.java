@@ -22,7 +22,9 @@ public interface Quote {
      * tokenstream and repeat the procedure. If it is a compound '['
      * then push the entire quote rather than the first one.
      * */
-    public abstract void eval(Quote parent);
+    public abstract void eval(Quote scope);
+    
+    public abstract void eval(Quote scope, boolean on_parent);
 
     public abstract Quote parent();
 

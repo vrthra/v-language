@@ -97,7 +97,9 @@ public class Lexer {
             case '}':
                 cclose();
                 break;
-
+            case 0:
+                _has = false;
+                break;
             default: // word fetch until the next space.
                 if (c >= 32 && c <= 126)
                     word();
@@ -197,15 +199,22 @@ public class Lexer {
         }
     }
 
+    boolean _has = true;
+    public boolean hasNext() {
+        return _has;
+    }
+
     // get next symbol.
     public Term next() {
+        if (!hasNext())
+            return null;
         // do we have any thing on the stack?
         // if we have return it from there.
         // else run lex and try again.
-        if (_queue.size() == 0) {
+        if (_queue.size() != 0)
+            return _queue.removeFirst();
+        else 
             lex();
-            return next();
-        }
-        return _queue.removeFirst();
+        return next();
     }
 }
