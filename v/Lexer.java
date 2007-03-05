@@ -80,9 +80,12 @@ public class Lexer {
 
                 //string
             case '"':
-            case '\'':
             case '`':
                 string();
+                break;
+            
+            case '\'':
+                character();
                 break;
 
                 //compound.
@@ -176,6 +179,11 @@ public class Lexer {
                 break;
         }
     }
+
+    void character() {
+        add(new Term<Character>(Type.TChar, _stream.read()));
+    }
+
 
     void word() {
         _word.append(_stream.current());

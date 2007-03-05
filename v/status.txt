@@ -33,6 +33,32 @@ ie: the args are pushed to the stack, the quote i passed to stack and dequoted.
 Things that end with '&' are non destructive.
 ie:
     [1 2 3] first& => [1 2 3] 1
+    [1 2 3] length& => [1 2 3] 3
+
+the character is just 'x
+
+getting the roots
+
+[root
+    [a b c] let
+    [discr b dup * 4 a * c * - sqrt].
+    [root1 0 b - discr + 2 a * /].
+    [root2 0 b - discr - 2 a * /].
+    "root1 :" put root1 puts
+    "root2 :" put root2 puts
+].
+
+some points to mention here.
+the let makes use of a slightly dirty word '@',
+it defines things in the binding of its parent.
+let is defined as [rev [unit cons rev @ true] map pop]
+in prologue. the let can be used in any place, not just
+inside a word definition.
+
+the root1 root2 and discr are internal definitions created
+using '.'
+
+
 =====================================================
 # From the joy page.
 # starting '|' indicates done functions.
@@ -271,7 +297,7 @@ fgets     S -> S L
 file     F -> B 
     Tests whether F is a file.
 
-filter     A [B] -> A1 
+|filter     A [B] -> A1 
     Uses test B to filter aggregate A producing sametype aggregate A1.
 
 |first&     A -> F  (first in joy)

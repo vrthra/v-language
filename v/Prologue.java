@@ -503,6 +503,19 @@ public class Prologue {
             }
         };
 
+        Cmd _length = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term list = p.peek();
+                int count = 0;
+                for(Term t: list.qvalue().tokens())
+                    ++count;
+
+                p.push(new Term<Integer>(Type.TInt , count));
+            }
+        };
+
+
         Cmd _cons = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -917,6 +930,7 @@ public class Prologue {
         parent.def("unit", _unit);
         parent.def("first&", _first);
         parent.def("rest&", _rest);
+        parent.def("length&", _length);
        
         // construct destruct 
         parent.def("uncons", _uncons);
