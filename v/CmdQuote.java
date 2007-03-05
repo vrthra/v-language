@@ -58,7 +58,7 @@ public class CmdQuote implements Quote {
         return _stack;
     }
 
-    private boolean canApply() {
+    private boolean cando() {
         if (_stack.empty())
             return false;
         if (_stack.peek().type == Type.TSymbol)
@@ -82,8 +82,28 @@ public class CmdQuote implements Quote {
         _stack = scope.stack();
         Iterator<Term> stream = _tokens.iterator();
         while(true) {
-            if (canApply())
-                apply(on_parent ? scope : this);
+            if (cando())
+                dofunction(on_parent ? scope : this);
+            else if (stream.hasNext())
+                // TokenStream returns entire quotes as a single term
+                // of type TQuote
+                _stack.push(stream.next());
+            else
+                break;
+        }
+    }
+
+    // the difference between eval and apply is that eval evaluates 
+    // the current stack with out any preconditions, while apply
+    // uses the current quote as 'the function' ie, pushing at least
+    // one term into stack before starting eval.
+    public void apply(Quote scope, boolean on_parent) {
+        _stack = scope.stack();
+        Iterator<Term> stream = _tokens.iterator();
+        _stack.push(stream.next()); // use the current quote as a function
+        while(true) {
+            if (cando())
+                dofunction(on_parent ? scope : this);
             else if (stream.hasNext())
                 // TokenStream returns entire quotes as a single term
                 // of type TQuote
@@ -94,11 +114,11 @@ public class CmdQuote implements Quote {
     }
 
     Object _pres = null;
-    public void apply(Quote scope) {
+    public void dofunction(Quote scope) {
         // pop the first token in the stack
         Token sym = _stack.pop();
         if (sym.type() != Type.TSymbol)
-            throw new VException("Attempt to apply NotSymbol");
+            throw new VException("Attempt to apply NotSymbol(" + sym.value() + ")");
         Quote q = lookup(sym.value());
         if (q == null) {
             throw new VException("Attempt to invoke undefined word (" + sym.value()+ ") at " + id() + " and parent " + parent().id() );
@@ -106,6 +126,11 @@ public class CmdQuote implements Quote {
         // Invoke the quote on our quote by passing us as the parent.
         V.debug("Using " + scope.id() + " val " + sym.value() );
         q.eval(scope);
+    }
+
+    public void walk() { // no tokens are in lex stream.
+        while(cando())
+            dofunction(this);
     }
 
     V _v = null;

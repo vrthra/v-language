@@ -70,6 +70,10 @@ public class Prologue {
                 Term t = p.pop();
                 Iterator<Term> it = t.qvalue().tokens().iterator();
                 Term<String> symbol = it.next();
+                
+                /*Quote check = q.lookup(symbol.svalue());
+                if (check != null)
+                    throw new VException("Attempt to redefine (" + symbol.value() + ") -- we are pure.");*/
 
                 // copy the rest of tokens to our own stream.
                 QuoteStream nts = new QuoteStream();
@@ -313,8 +317,11 @@ public class Prologue {
                     Term t = fstream.next();
                     // push it on our current stack
                     p.push(t);
+
                     // apply the action
-                    action.qvalue().eval(q, true);
+                    // We dont do the walk here since the action is in the form of a quote.
+                    // we will have to dequote it, and walk one by one if we are to do this.
+                    ((CmdQuote)action.qvalue()).apply(q, true);
                     // pop it back into a new quote
                     Term res = p.pop();
                     nts.add(res);
@@ -342,7 +349,7 @@ public class Prologue {
                     // push it on our current stack
                     p.push(t);
                     // apply the action
-                    action.qvalue().eval(q, true);
+                    ((CmdQuote)action.qvalue()).apply(q, true);
                     // pop it back into a new quote
                 }
                 // the result will be on the stack at the end of this cycle.
@@ -376,10 +383,13 @@ public class Prologue {
                 // dequote both, append and push it back to stack.
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
                 p.push(fstream.next());
+                ((CmdQuote)q).walk();
+                
                 // copy the rest of tokens to our own stream.
                 QuoteStream nts = new QuoteStream();
                 while (fstream.hasNext())
                     nts.add(fstream.next());
+                    
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
         };
@@ -766,16 +776,22 @@ public class Prologue {
         parent.def("rollup", _lroll);
         parent.def("rroll", _rroll);
         parent.def("rolldown", _rroll);
+        parent.def("dip", _dip);
+        parent.def("id", _id);
+
+        //list
+        parent.def("rev", _rev);
+        parent.def("unit", _unit);
+       
+        // construct destruct 
+        parent.def("uncons", _uncons);
+        parent.def("cons", _cons);
+        parent.def("i", _dequote);
+        parent.def("concat", _concat);
+
+        // on list
         parent.def("map", _map);
         parent.def("fold", _fold);
-        parent.def("rev", _rev);
-        parent.def("concat", _concat);
-        parent.def("cons", _cons);
-        parent.def("uncons", _uncons);
-        parent.def("unit", _unit);
-        parent.def("dip", _dip);
-        parent.def("i", _dequote);
-        parent.def("id", _id);
 
         //arith
         parent.def("+", _add);
