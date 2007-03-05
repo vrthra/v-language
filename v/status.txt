@@ -29,6 +29,10 @@ V strives to be as much homoiconic as possible so a V program that is invoked
 from the command line with args a b c is no different from this.
 |a b c [my v prog]i
 ie: the args are pushed to the stack, the quote i passed to stack and dequoted.
+
+Things that end with '&' are non destructive.
+ie:
+    [1 2 3] first& => [1 2 3] 1
 =====================================================
 # From the joy page.
 # starting '|' indicates done functions.
@@ -270,7 +274,7 @@ file     F -> B
 filter     A [B] -> A1 
     Uses test B to filter aggregate A producing sametype aggregate A1.
 
-first     A -> F 
+|first&     A -> F  (first in joy)
     F is the first member of the non-empty aggregate A.
 
 float     R -> B 
@@ -528,7 +532,7 @@ putch     N ->
 putchars     "abc.." -> 
     Writes abc.. (without quotes)
 
-quit     -> 
+|quit     -> 
     Exit from V. also ^D
 
 rand     -> I 
@@ -537,8 +541,12 @@ rand     -> I
 rem     I J -> K 
     Integer K is the remainder of dividing I by J. Also supports float.
 
-rest     A -> R 
+|rest&     A -> R (rest in joy)
     R is the non-empty aggregate A with its first member removed.
+
+|reverse X Y Z -> Z Y X  (rotate in joy)
+    In joy, Interchanges X and Z
+    In V, reverse the entire list.
 
 |rolldown     X Y Z -> Y Z X 
     Moves Y and Z down, moves X up also lroll
@@ -551,9 +559,6 @@ rolldownd     X Y Z W -> Y Z X W
 
 rollupd     X Y Z W -> Z X Y W 
     As if defined by: rollupd == [rollup] dip
-
-rotate     X Y Z -> Z Y X 
-    Interchanges X and Z
 
 rotated     X Y Z W -> Z Y X W 
     As if defined by: rotated == [rotate] dip

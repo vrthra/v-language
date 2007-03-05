@@ -60,6 +60,26 @@ public class Prologue {
         return true;
     }
 
+    static final String _buff = "";
+    static void evaluate(Quote q, String buff) {
+        getdef(q, buff).eval(q, true);
+    }
+
+    static Quote compile(Quote q, Quote v) {
+        QuoteStream nts = new QuoteStream();
+        for(Term t:  v.tokens())
+            nts.add(t);
+
+        return new CmdQuote(nts, q);
+    }
+
+
+    static Quote getdef(Quote q, String buf) {
+        CharStream cs = new BuffCharStream(buf);
+        return compile(q, new CmdQuote(new LexStream(cs), q));
+    }
+
+
     public static void init(final Quote parent) {
         // accepts a quote as an argument.
         Cmd _def = new Cmd(parent) {
@@ -394,6 +414,36 @@ public class Prologue {
             }
         };
 
+        Cmd _first = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term list = p.peek();
+                // dequote both, append and push it back to stack.
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+                p.push(fstream.next());
+                ((CmdQuote)q).walk();
+            }
+        };
+
+        Cmd _rest = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term list = p.peek();
+                // dequote both, append and push it back to stack.
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+                fstream.next(); //loose first.
+                
+                // copy the rest of tokens to our own stream.
+                QuoteStream nts = new QuoteStream();
+                while (fstream.hasNext())
+                    nts.add(fstream.next());
+                    
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+            }
+        };
+
         Cmd _cons = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -703,9 +753,11 @@ public class Prologue {
                 QStack p = q.stack();
                 Term a = p.peek();
                 p.push(new Term<Boolean>(Type.TBool, (a.type == Type.TQuote &&
-                                ((QuoteStream)a.qvalue()).size() == 0)));
+                                ((QuoteStream)a.qvalue().tokens()).size() == 0)));
             }
         };
+
+        Quote _isnull = getdef(parent, "number? [zero?] [empty?] ifte");
 
         Cmd _isnum = new Cmd(parent) {
             public void eval(Quote q) {
@@ -737,8 +789,30 @@ public class Prologue {
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
                     e.printStackTrace();
-                    V.outln("Error:" + e.getMessage());
+                    V.outln("UError:" + e.getMessage());
                 }
+            }
+        };
+
+        Cmd _eval = new Cmd(parent) {
+            public void eval(Quote q) {
+                try {
+                    QStack p = q.stack();
+                    Term buff = p.pop();
+                    evaluate(q, buff.svalue());
+                    V.debug("eval @ " + q.id());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    V.outln("EError:" + e.getMessage());
+                }
+            }
+        };
+
+        Cmd _help = new Cmd(parent) {
+            public void eval(Quote q) {
+                HashMap <String,Quote> bind = parent.bindings();
+                for(String s : new TreeSet<String>(bind.keySet()))
+                    V.outln(s);
             }
         };
 
@@ -760,8 +834,6 @@ public class Prologue {
         //io
         parent.def("put", _print);
         parent.def("puts", _println);
-        parent.def("print", _print);
-        parent.def("println", _println);
 
         //others
         parent.def("?", _peek);
@@ -782,6 +854,8 @@ public class Prologue {
         //list
         parent.def("rev", _rev);
         parent.def("unit", _unit);
+        parent.def("first&", _first);
+        parent.def("rest&", _rest);
        
         // construct destruct 
         parent.def("uncons", _uncons);
@@ -821,7 +895,7 @@ public class Prologue {
 
         parent.def("zero?", _iszero);
         parent.def("empty?", _isempty);
-
+        parent.def("null?", _isnull);
 
         //math
         parent.def("sqrt", _sqrt);
@@ -829,6 +903,9 @@ public class Prologue {
 
         //modules
         parent.def("use", _use);
+        parent.def("eval", _eval);
+
+        parent.def("help", _help);
     }
 }
 
