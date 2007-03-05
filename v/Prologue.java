@@ -108,6 +108,34 @@ public class Prologue {
             }
         };
 
+        Cmd _defparent = new Cmd(parent) {
+            @SuppressWarnings("unchecked")
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term t = p.pop();
+                Iterator<Term> it = t.qvalue().tokens().iterator();
+                Term<String> symbol = it.next();
+                
+                /*Quote check = q.lookup(symbol.svalue());
+                if (check != null)
+                    throw new VException("Attempt to redefine (" + symbol.value() + ") -- we are pure.");*/
+
+                // copy the rest of tokens to our own stream.
+                QuoteStream nts = new QuoteStream();
+                while (it.hasNext())
+                    nts.add(it.next());
+
+                // we define it on the enclosing scope.
+                // so our new command's parent is actually q rather than
+                // _parent.
+                V.debug("Def [" + symbol.val + "] @ " + q.id() + ":" + parent.id());
+                q.parent().def(symbol.val, new CmdQuote(nts, q));
+            }
+        };
+
+        Quote _let = getdef(parent, "rev [unit cons rev @ true] map pop");
+
         // expects callable word as first arg and the quote where it is defined as second
         Cmd _call = new Cmd(parent) {
             @SuppressWarnings("unchecked")
@@ -818,9 +846,11 @@ public class Prologue {
 
         //meta
         parent.def(".", _def);
+        parent.def("@", _defparent);
         parent.def("$", _call);
         parent.def("true", _true);
         parent.def("false", _false);
+        parent.def("let", _let);
 
         parent.def("and", _and);
         parent.def("or", _or);
