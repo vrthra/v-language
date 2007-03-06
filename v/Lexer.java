@@ -81,10 +81,11 @@ public class Lexer {
                 //string
             case '"':
             case '`':
+            case '\'':
                 string();
                 break;
             
-            case '\'':
+            case '~':
                 character();
                 break;
 

@@ -35,7 +35,7 @@ ie:
     [1 2 3] first& => [1 2 3] 1
     [1 2 3] length& => [1 2 3] 3
 
-the character is just 'x
+the character is just ~x
 
 getting the roots
 
@@ -57,6 +57,33 @@ inside a word definition.
 
 the root1 root2 and discr are internal definitions created
 using '.'
+
+use help to see all the current bindings
+
+Using throw and shield
+=====================
+each invocation of shield takes a quote as a parameter.
+when throw is done, the shields are applied in the reverse order
+any shield that leaves a 'true' value in the stack will stop the
+propagation of throw down the stack.
+
+The stack is restored on a shield that left true.
+
+eg:
+
+|[cmdthrows
+        [dup puts 'false shield' puts false] shield
+        'hi there throw' throw
+].
+|[mycmd
+        [dup puts 'true shield' puts true] shield
+        cmdthrows
+].
+|mycmd
+=hi there throw
+=false shield
+=hi there throw
+=true shield
 
 
 =====================================================

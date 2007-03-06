@@ -114,18 +114,46 @@ public class CmdQuote implements Quote {
     }
 
     Object _pres = null;
+    @SuppressWarnings ("unchecked")
     public void dofunction(Quote scope) {
-        // pop the first token in the stack
-        Token sym = _stack.pop();
-        if (sym.type() != Type.TSymbol)
-            throw new VException("Attempt to apply NotSymbol(" + sym.value() + ")");
-        Quote q = lookup(sym.value());
-        if (q == null) {
-            throw new VException("Attempt to invoke undefined word (" + sym.value()+ ") at " + id() + " and parent " + parent().id() );
+        try {
+            // pop the first token in the stack
+            Token sym = _stack.pop();
+            if (sym.type() != Type.TSymbol)
+                throw new VException("Attempt to apply NotSymbol(" + sym.value() + ")");
+            Quote q = lookup(sym.value());
+            if (q == null) {
+                throw new VException("Attempt to invoke undefined word (" + sym.value()+ ") at " + id() + " and parent " + parent().id() );
+            }
+            // Invoke the quote on our quote by passing us as the parent.
+            V.debug("Using " + scope.id() + " val " + sym.value() );
+            q.eval(scope);
+        } catch (VException e) {
+            // do we have a $shield defined?
+            Cmd q = (Cmd)_dict.get("$shield");
+            if (q == null)
+                throw e;
+            Stack<Shield> stack = (Stack<Shield>)q.store().get("$info");
+            if (stack.empty())
+                throw e;
+            Shield current = stack.pop();
+
+            while (current != null) {
+                Token error = _stack.peek();
+                // apply shield
+                current.quote.eval(scope);
+                if(_stack.pop().bvalue()) {
+                    //restore the stack and continue.
+                    _stack = current.stack;
+                    return;
+                }
+                if (!stack.empty())
+                    current = stack.pop();
+                else
+                    current = null;
+            }
+            throw e;
         }
-        // Invoke the quote on our quote by passing us as the parent.
-        V.debug("Using " + scope.id() + " val " + sym.value() );
-        q.eval(scope);
     }
 
     public void walk() { // no tokens are in lex stream.
@@ -161,5 +189,10 @@ public class CmdQuote implements Quote {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    HashMap<String, Object> _store = new HashMap<String, Object>();
+    public HashMap<String, Object> store() {
+        return _store;
     }
 }

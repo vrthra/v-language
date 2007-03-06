@@ -12,6 +12,11 @@ public abstract class Cmd implements Quote {
         V.debug("Creating " + id() + " parent is " + _parent.id());
     }
 
+    HashMap<String, Object> _store = new HashMap<String, Object>();
+    public HashMap<String,Object> store() {
+        return _store;
+    }
+
     static int _idcount = 0;
     int _id;
     public String id() {

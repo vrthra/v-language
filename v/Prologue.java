@@ -1,5 +1,18 @@
 package v;
 import java.util.*;
+
+class Shield {
+    // current stack
+    QStack stack;
+    Quote quote;
+    Shield(Stack<Term> s, Quote q) {
+        stack = new QStack();
+        for(Term t: s)
+            stack.push(t);
+        quote = q;
+    }
+};
+
 public class Prologue {
     private static void pstack(QStack p) {
         for(Term t: p)
@@ -61,7 +74,7 @@ public class Prologue {
     }
 
     static final String _buff = "";
-    static void evaluate(Quote q, String buff) {
+    public static void evaluate(Quote q, String buff) {
         getdef(q, buff).eval(q, true);
     }
 
@@ -131,6 +144,36 @@ public class Prologue {
                 // _parent.
                 V.debug("Def [" + symbol.val + "] @ " + q.id() + ":" + parent.id());
                 q.parent().def(symbol.val, new CmdQuote(nts, q));
+            }
+        };
+
+        Cmd _shield = new Cmd(parent) {
+            @SuppressWarnings("unchecked")
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term t = p.pop();
+                // save the stack.
+                // we can also have multiple shields
+                // Try and get the $shield if any
+                Cmd shield = (Cmd)q.bindings().get("$shield");
+                Shield s = new Shield(p,t.qvalue());
+                if (shield == null) {
+                    shield = new Cmd(q){public void eval(Quote q){}};
+                    shield.store().put("$info", new Stack<Shield>());
+                    q.bindings().put("$shield", shield);
+                }
+                Stack<Shield> stack = (Stack<Shield>)shield.store().get("$info");
+                stack.push(s);
+                V.debug("Shield @ " + q.id() + ":" + parent.id());
+            }
+        };
+
+        Cmd _throw = new Cmd(parent) {
+            @SuppressWarnings("unchecked")
+            public void eval(Quote q) {
+                // throw
+                throw new VException("Error( " + q.stack().peek().value() + " )" );
             }
         };
 
@@ -895,6 +938,8 @@ public class Prologue {
         parent.def("true", _true);
         parent.def("false", _false);
         parent.def("let", _let);
+        parent.def("shield", _shield);
+        parent.def("throw", _throw);
 
         parent.def("and", _and);
         parent.def("or", _or);
