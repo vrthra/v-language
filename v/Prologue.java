@@ -92,32 +92,61 @@ public class Prologue {
         return compile(q, new CmdQuote(new LexStream(cs), q));
     }
 
+    @SuppressWarnings("unchecked")
+    static Map.Entry<String, CmdQuote> splitdef(Quote qval, Quote q) {
+        HashMap<String, CmdQuote> map = new HashMap<String, CmdQuote>();
+        Iterator<Term> it = (Iterator<Term>)qval.tokens().iterator();
+        Term<String> symbol = it.next();
+
+        /*Quote check = q.lookup(symbol.svalue());
+          if (check != null)
+          throw new VException("Attempt to redefine (" + symbol.value() + ") -- we are pure.");*/
+
+        // copy the rest of tokens to our own stream.
+        QuoteStream nts = new QuoteStream();
+        while (it.hasNext())
+            nts.add(it.next());
+
+        // we define it on the enclosing scope.
+        // so our new command's parent is actually q rather than
+        // _parent.
+        map.put(symbol.val, new CmdQuote(nts, q)); 
+        return map.entrySet().iterator().next();
+    }
+
 
     public static void init(final Quote parent) {
         // accepts a quote as an argument.
         Cmd _def = new Cmd(parent) {
-            @SuppressWarnings("unchecked")
             public void eval(Quote q) {
                 // eval is passed in the quote representing the current scope.
                 QStack p = q.stack();
                 Term t = p.pop();
-                Iterator<Term> it = t.qvalue().tokens().iterator();
-                Term<String> symbol = it.next();
+                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
+                String symbol = entry.getKey();
                 
-                /*Quote check = q.lookup(symbol.svalue());
-                if (check != null)
-                    throw new VException("Attempt to redefine (" + symbol.value() + ") -- we are pure.");*/
-
-                // copy the rest of tokens to our own stream.
-                QuoteStream nts = new QuoteStream();
-                while (it.hasNext())
-                    nts.add(it.next());
-
                 // we define it on the enclosing scope.
                 // so our new command's parent is actually q rather than
                 // _parent.
-                V.debug("Def [" + symbol.val + "] @ " + q.id() + ":" + parent.id());
-                q.def(symbol.val, new CmdQuote(nts, q));
+                V.debug("Def [" + symbol + "] @ " + q.id() + ":" + parent.id());
+                q.def(symbol, entry.getValue());
+            }
+        };
+
+        Cmd _defmodule = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term t = p.pop();
+                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
+                String symbol = entry.getKey();
+                
+                // we define it on the enclosing scope.
+                // so our new command's parent is actually q rather than
+                // _parent.
+                V.debug("Def [" + symbol + "] @ " + q.id() + ":" + parent.id());
+                q.def(symbol, entry.getValue());
+                p.push(new Term<String>(Type.TSymbol, symbol));
             }
         };
 
@@ -127,23 +156,25 @@ public class Prologue {
                 // eval is passed in the quote representing the current scope.
                 QStack p = q.stack();
                 Term t = p.pop();
-                Iterator<Term> it = t.qvalue().tokens().iterator();
-                Term<String> symbol = it.next();
                 
-                /*Quote check = q.lookup(symbol.svalue());
-                if (check != null)
-                    throw new VException("Attempt to redefine (" + symbol.value() + ") -- we are pure.");*/
+                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
+                String symbol = entry.getKey();
+
+                V.debug("DefP [" + symbol + "] @ " + q.id() + ":" + parent.id());
+                q.parent().def(symbol, entry.getValue());
+            }
+        };
+
+        Cmd _words = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
 
                 // copy the rest of tokens to our own stream.
                 QuoteStream nts = new QuoteStream();
-                while (it.hasNext())
-                    nts.add(it.next());
-
-                // we define it on the enclosing scope.
-                // so our new command's parent is actually q rather than
-                // _parent.
-                V.debug("Def [" + symbol.val + "] @ " + q.id() + ":" + parent.id());
-                q.parent().def(symbol.val, new CmdQuote(nts, q));
+                for(String s: q.bindings().keySet())
+                    nts.add(new Term<String>(Type.TSymbol,s));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
         };
 
@@ -891,6 +922,15 @@ public class Prologue {
             }
         };
 
+        /* stdlib.v
+         * [stdlib 
+         *      [qsort  xxx yyy].
+         *      [binsearch aaa bbb].
+         * ]
+         *
+         * 'stdlib' use
+         * [1 7 3 2 2] stdlib:qsort
+         * */
         Cmd _use = new Cmd(parent) {
             public void eval(Quote q) {
                 try {
@@ -900,7 +940,9 @@ public class Prologue {
                     CharStream cs = new FileCharStream(file.svalue() + ".v");
 
                     CmdQuote module = new CmdQuote(new LexStream(cs), q);
-                    module.eval(q, true);
+                    module.eval(q,true);
+                    for(String s: module.bindings().keySet())
+                        V.outln(s);
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -933,8 +975,10 @@ public class Prologue {
 
         //meta
         parent.def(".", _def);
+        parent.def("module", _defmodule);
         parent.def("@", _defparent);
         parent.def("$", _call);
+        parent.def("$words", _words);
         parent.def("true", _true);
         parent.def("false", _false);
         parent.def("let", _let);
@@ -1020,7 +1064,6 @@ public class Prologue {
 
         //math
         parent.def("sqrt", _sqrt);
-
 
         //modules
         parent.def("use", _use);

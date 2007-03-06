@@ -45,8 +45,17 @@ public class CmdQuote implements Quote {
      * */
     public Quote lookup(String key) {
         // look it up ourselves.
-        if (!_dict.containsKey(key))
+        if (!_dict.containsKey(key)) {
+            //  check if it matches xxxx:yyy
+            int i = key.indexOf(':');
+            if (i != -1) {
+                Quote q = _dict.get(key.substring(0, i));
+                Quote val = q.bindings().get(key.substring(i + 1));
+                if (val != null)
+                    return val;
+            }
             return _parent.lookup(key);
+        }
         return _dict.get(key);
     }
 

@@ -85,6 +85,23 @@ eg:
 =hi there throw
 =true shield
 
+Namespaces and modules
+---------------------
+V provides support for calling an internal definition thru ':'
+[myfunct
+    [internal 1 dup *].
+].
+
+myfunct:internal or [myfunct internal] $ will invoke the internal inside
+the myfunct. V makes use of the same for modules.
+a definition of module looks like
+
+[std
+    [qsort xxx].
+    [binsearch xxx].
+] module
+usable as std:qsort
+
 
 =====================================================
 # From the joy page.
