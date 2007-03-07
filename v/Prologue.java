@@ -308,6 +308,201 @@ public class Prologue {
             }
         };
 
+        /* The genrec combinator takes four program parameters in addition to
+         * whatever data parameters it needs. Fourth from the top is an
+         * if-part, followed by a then-part. If the if-part yields true, then
+         * the then-part is executed and the combinator terminates. The other
+         * two parameters are the rec1-part and the rec2part. If the if-part
+         * yields false, the rec1-part is executed. Following that the four
+         * program parameters and the combinator are again pushed onto the
+         * stack bundled up in a quoted form. Then the rec2-part is executed,
+         * where it will find the bundled form. Typically it will then execute
+         * the bundled form, either with i or with app2, or some other combinator.*/
+        Cmd _genrec = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term rec2 = p.pop();
+                Term rec1 = p.pop();
+                Term thenp = p.pop();
+                Term tifp = p.pop();
+
+                // evaluate if and pop it back.
+                tifp.qvalue().eval(q);
+                Term ifp = p.pop();
+
+                // dequote the action and push it to stack.
+                if (ifp.bvalue()) {
+                    thenp.qvalue().eval(q, true);
+                    return;
+                } else {
+                    rec1.qvalue().eval(q, true);
+                    QuoteStream nts = new QuoteStream();
+                    nts.add(tifp);
+                    nts.add(thenp);
+                    nts.add(rec1);
+                    nts.add(rec2);
+                    nts.add(new Term<String>(Type.TSymbol, "genrec"));
+                    p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+                    rec2.qvalue().eval(q, true);
+                }
+            }
+        };
+
+        Cmd _linrec = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term rec2 = p.pop();
+                Term rec1 = p.pop();
+                Term thenp = p.pop();
+                Term tifp = p.pop();
+
+                // evaluate if and pop it back.
+                tifp.qvalue().eval(q);
+                Term ifp = p.pop();
+
+                // dequote the action and push it to stack.
+                if (ifp.bvalue()) {
+                    thenp.qvalue().eval(q, true);
+                    return;
+                } else {
+                    rec1.qvalue().eval(q, true);
+                    QuoteStream nts = new QuoteStream();
+                    nts.add(tifp);
+                    nts.add(thenp);
+                    nts.add(rec1);
+                    nts.add(rec2);
+                    nts.add(new Term<String>(Type.TSymbol, "linrec"));
+                    (new CmdQuote(nts, q)).eval(q, true);
+                    rec2.qvalue().eval(q, true);
+                }
+            }
+        };
+
+        Cmd _binrec = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term rec2 = p.pop();
+                Term rec1 = p.pop();
+                Term thenp = p.pop();
+                Term tifp = p.pop();
+
+                // evaluate if and pop it back.
+                tifp.qvalue().eval(q);
+                Term ifp = p.pop();
+
+                // dequote the action and push it to stack.
+                if (ifp.bvalue()) {
+                    thenp.qvalue().eval(q, true);
+                } else {
+                    rec1.qvalue().eval(q, true);
+                    Term nvl = p.pop();
+                    QuoteStream nts = new QuoteStream();
+                    nts.add(tifp);
+                    nts.add(thenp);
+                    nts.add(rec1);
+                    nts.add(rec2);
+                    nts.add(new Term<String>(Type.TSymbol, "binrec"));
+                    Quote nq = new CmdQuote(nts, q);
+                    nq.eval(q, true);
+                    p.push(nvl);
+                    nq.eval(q, true);
+                    rec2.qvalue().eval(q, true);
+                }
+            }
+        };
+
+        Cmd _tailrec = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term rec = p.pop();
+                Term thenp = p.pop();
+                Term tifp = p.pop();
+
+                // evaluate if and pop it back.
+                tifp.qvalue().eval(q);
+                Term ifp = p.pop();
+
+                // dequote the action and push it to stack.
+                if (ifp.bvalue()) {
+                    thenp.qvalue().eval(q, true);
+                } else {
+                    rec.qvalue().eval(q, true);
+                    QuoteStream nts = new QuoteStream();
+                    nts.add(tifp);
+                    nts.add(thenp);
+                    nts.add(rec);
+                    nts.add(new Term<String>(Type.TSymbol, "tailrec"));
+                    Quote nq = new CmdQuote(nts, q);
+                    nq.eval(q, true);
+                }
+            }
+        };
+
+        Cmd _primrec = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term rec = p.pop();
+                Term thenp = p.pop();
+                Term param = p.peek();
+
+                QuoteStream nts = new QuoteStream();
+                switch (param.type) {
+                    case TInt:
+                        // evaluate if and pop it back.
+                        if (param.ivalue() == 0) {
+                            p.pop();
+                            thenp.qvalue().eval(q, true);
+                            return;
+                        } else {
+                            nts.add(new Term<String>(Type.TSymbol, "dup"));
+                            nts.add(new Term<String>(Type.TSymbol, "pred"));
+                        }
+                        break;
+                    case TFloat:
+                        // evaluate if and pop it back.
+                        if (param.fvalue() == 0) {
+                            p.pop();
+                            thenp.qvalue().eval(q, true);
+                            return;
+                        } else {
+                            nts.add(new Term<String>(Type.TSymbol, "dup"));
+                            nts.add(new Term<String>(Type.TSymbol, "pred"));
+                        }
+                        break;
+                    case TQuote:
+                        int i = 0;
+                        for(Term t: param.qvalue().tokens())
+                            ++i;
+                        if (i == 0) {
+                            p.pop();
+                            thenp.qvalue().eval(q, true);
+                            return;
+                        } else {
+                            nts.add(new Term<String>(Type.TSymbol, "rest&"));
+                        }
+                        break;
+                    default:
+                        throw new VException("wrong datatype for primrec");
+                }
+                Quote nq = new CmdQuote(nts, q);
+                nq.eval(q, true);
+                // have the next param on stack now. apply primrec on it.
+                QuoteStream n = new QuoteStream();
+                n.add(thenp);
+                n.add(rec);
+                n.add(new Term<String>(Type.TSymbol, "primrec"));
+                nq = new CmdQuote(n, q);
+                nq.eval(q, true);
+                rec.qvalue().eval(q, true);
+
+            }
+        };
+
         // Libraries
         Cmd _print = new Cmd(parent) {
             public void eval(Quote q) {
@@ -723,14 +918,14 @@ public class Prologue {
                     else if (b.type == Type.TFloat)
                         p.push(new Term<Float>(Type.TFloat, a.ivalue() * b.fvalue()));
                     else
-                        throw new VException("Type error(*)");
+                        throw new VException("Type error(*)" + a.value() + " " + b.value());
                 } else if (a.type == Type.TFloat) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Float>(Type.TFloat, a.fvalue() * b.ivalue()));
                     else if (b.type == Type.TFloat)
                         p.push(new Term<Float>(Type.TFloat, a.fvalue() * b.fvalue()));
                     else
-                        throw new VException("Type error(*)");
+                        throw new VException("Type error(*)" + a.value() + " " + b.value());
                 }
             }
         };
@@ -847,6 +1042,22 @@ public class Prologue {
             }
         };
 
+        Cmd _pred = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                p.push(new Term<Integer>(Type.TInt,p.pop().ivalue()-1));
+            }
+        };
+
+        Cmd _succ = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                p.push(new Term<Integer>(Type.TInt,p.pop().ivalue()+1));
+            }
+        };
+
+
+
         // Predicates do not consume the element. 
         Cmd _isbool = new Cmd(parent) {
             public void eval(Quote q) {
@@ -902,6 +1113,8 @@ public class Prologue {
 
         Quote _isnull = getdef(parent, "number? [zero?] [empty?] ifte");
 
+        Quote _issmall = getdef(parent, "dup zero? swap 1 = or");
+
         Cmd _isnum = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -938,8 +1151,6 @@ public class Prologue {
 
                     CmdQuote module = new CmdQuote(new LexStream(cs), q);
                     module.eval(q,true);
-                    for(String s: module.bindings().keySet())
-                        V.outln(s);
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -1058,9 +1269,19 @@ public class Prologue {
         parent.def("zero?", _iszero);
         parent.def("empty?", _isempty);
         parent.def("null?", _isnull);
+        parent.def("small?", _issmall);
 
         //math
         parent.def("sqrt", _sqrt);
+        parent.def("pred", _pred);
+        parent.def("succ", _succ);
+
+        // recursion
+        parent.def("genrec", _genrec);
+        parent.def("linrec", _linrec);
+        parent.def("binrec", _binrec);
+        parent.def("tailrec", _tailrec);
+        parent.def("primrec", _primrec);
 
         //modules
         parent.def("use", _use);

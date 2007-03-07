@@ -14,6 +14,15 @@
 
 3 area puts
 
+[fib 
+    [small?]
+    [] 
+    [pred dup pred]
+    [+]
+    binrec].
+
+5 fib
+
 [root
     # define our parameters (In classical concatanative languages, the internal
     # definitions are not used, but it makes our lives easier).
