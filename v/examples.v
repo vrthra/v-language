@@ -1,4 +1,19 @@
-# Quadratic equation.
+[fact 
+    zero?
+        [pop 1]
+        [dup 1 - fact *]
+    ifte].
+
+5 fact puts
+'hello' puts
+
+[area
+  [pi 3.1415].
+  [sq dup *].
+  sq pi *].
+
+3 area puts
+
 [root
     # define our parameters (In classical concatanative languages, the internal
     # definitions are not used, but it makes our lives easier).

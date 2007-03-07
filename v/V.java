@@ -28,6 +28,10 @@ public class V {
                 return "Quote[world]";
             }
 
+            public Quote clone() {
+                throw new VException("Attempt to clone world.");
+            }
+
             public void eval(Quote scope, boolean on_parent) {
                 throw new VException("Attempt to eval world.");
             }

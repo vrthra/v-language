@@ -33,6 +33,10 @@ public class CmdQuote implements Quote {
         V.debug("Creating " + id() + " parent is " + _parent.id());
     }
 
+    public Quote clone() {
+        return new CmdQuote(_tokens,_parent);
+    }
+
     static int _idcount = 0;
     int _id;
 
@@ -45,17 +49,8 @@ public class CmdQuote implements Quote {
      * */
     public Quote lookup(String key) {
         // look it up ourselves.
-        if (!_dict.containsKey(key)) {
-            //  check if it matches xxxx:yyy
-            int i = key.indexOf(':');
-            if (i != -1) {
-                Quote q = _dict.get(key.substring(0, i));
-                Quote val = q.bindings().get(key.substring(i + 1));
-                if (val != null)
-                    return val;
-            }
+        if (!_dict.containsKey(key))
             return _parent.lookup(key);
-        }
         return _dict.get(key);
     }
 
@@ -134,6 +129,7 @@ public class CmdQuote implements Quote {
             if (q == null) {
                 throw new VException("Attempt to invoke undefined word (" + sym.value()+ ") at " + id() + " and parent " + parent().id() );
             }
+            q = q.clone();
             // Invoke the quote on our quote by passing us as the parent.
             V.debug("Using " + scope.id() + " val " + sym.value() );
             q.eval(scope);

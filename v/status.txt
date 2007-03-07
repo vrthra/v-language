@@ -2,19 +2,19 @@
 differences from joy.
 
 The stack invariant combinators does not exist as of now.
-ie the ifte condition consumes values from the stack unlike joy
+ie the ifte condition consumes a bool value from the stack unlike joy
 which saves the stack state before execution of condition and restores it
 after it.
 
 So a recursive def of factorial looks like below:
 
 [fact
-    [dup 0 =]
+    zero?
         [pop 1]
         [dup 1 - fact *]
-    ifte].
+    if].
 
-Notice how we have to do the [dup 0 =] instead of just [0 =] in the classic joy.
+Notice how we do the zero? instead of [0 =] in the classic joy.
 (the definition is accomplished by the word '.')
 
 V also allows internal definitions.
@@ -30,7 +30,7 @@ from the command line with args a b c is no different from this.
 |a b c [my v prog]i
 ie: the args are pushed to the stack, the quote i passed to stack and dequoted.
 
-Things that end with '&' are non destructive.
+Things that end with '&' are non destructive (they dont consume values from stack).
 ie:
     [1 2 3] first& => [1 2 3] 1
     [1 2 3] length& => [1 2 3] 3
@@ -41,7 +41,8 @@ getting the roots
 
 [root
     [a b c] let
-    [discr b dup * 4 a * c * - sqrt].
+    [sqr dup *].
+    [discr b sqr 4 a * c * - sqrt].
     [root1 0 b - discr + 2 a * /].
     [root2 0 b - discr - 2 a * /].
     "root1 :" put root1 puts
@@ -84,24 +85,6 @@ eg:
 =false shield
 =hi there throw
 =true shield
-
-Namespaces and modules
----------------------
-V provides support for calling an internal definition thru ':'
-[myfunct
-    [internal 1 dup *].
-].
-
-myfunct:internal or [myfunct internal] $ will invoke the internal inside
-the myfunct. V makes use of the same for modules.
-a definition of module looks like
-
-[std
-    [qsort xxx].
-    [binsearch xxx].
-] module
-usable as std:qsort
-
 
 =====================================================
 # From the joy page.

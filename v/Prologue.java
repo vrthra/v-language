@@ -133,7 +133,7 @@ public class Prologue {
             }
         };
 
-        Cmd _defmodule = new Cmd(parent) {
+/*        Cmd _defmodule = new Cmd(parent) {
             public void eval(Quote q) {
                 // eval is passed in the quote representing the current scope.
                 QStack p = q.stack();
@@ -148,7 +148,7 @@ public class Prologue {
                 q.def(symbol, entry.getValue());
                 p.push(new Term<String>(Type.TSymbol, symbol));
             }
-        };
+        };*/
 
         Cmd _defparent = new Cmd(parent) {
             @SuppressWarnings("unchecked")
@@ -211,7 +211,7 @@ public class Prologue {
         Quote _let = getdef(parent, "rev [unit cons rev @ true] map pop");
 
         // expects callable word as first arg and the quote where it is defined as second
-        Cmd _call = new Cmd(parent) {
+        /*Cmd _call = new Cmd(parent) {
             @SuppressWarnings("unchecked")
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -227,7 +227,7 @@ public class Prologue {
                 Quote f = body.lookup(symbol.svalue());
                 f.eval(q);
             }
-        };
+        };*/
 
 
         Cmd _true = new Cmd(parent) {
@@ -975,9 +975,9 @@ public class Prologue {
 
         //meta
         parent.def(".", _def);
-        parent.def("module", _defmodule);
+        /*parent.def("module", _defmodule);*/
         parent.def("@", _defparent);
-        parent.def("$", _call);
+        /*parent.def("$", _call);*/
         parent.def("$words", _words);
         parent.def("true", _true);
         parent.def("false", _false);

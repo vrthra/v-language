@@ -31,4 +31,6 @@ public interface Quote {
     public abstract void def(String sym, Quote q);
 
     public abstract TokenStream tokens();
+
+    public abstract Quote clone();
 }

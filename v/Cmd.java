@@ -12,10 +12,15 @@ public abstract class Cmd implements Quote {
         V.debug("Creating " + id() + " parent is " + _parent.id());
     }
 
+    public Quote clone() {
+        return this; // there is no danger of saving state for cmd.
+    }
+
     HashMap<String, Object> _store = new HashMap<String, Object>();
     public HashMap<String,Object> store() {
         return _store;
     }
+
 
     static int _idcount = 0;
     int _id;
