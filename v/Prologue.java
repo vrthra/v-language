@@ -502,8 +502,7 @@ public class Prologue {
                     // push it on our current stack
                     p.push(t);
                     // apply the action
-                    ((CmdQuote)action.qvalue()).apply(q, true);
-                    // pop it back into a new quote
+                    action.qvalue().eval(q, true);
                 }
                 // the result will be on the stack at the end of this cycle.
             }
