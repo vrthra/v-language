@@ -205,7 +205,7 @@ binary     X Y [P] -> R
     Executes P, which leaves R on top of the stack. No matter how many
     parameters this consumes, exactly two are removed from the stack.
 
-binrec     [B] [T] [R1] [R2] -> ... 
+|binrec     [B] [T] [R1] [R2] -> ... 
     Executes P. If that yields true, executes T. Else uses R1 to produce two
     intermediates, recurses on both, then executes R2 to combines their
     results.
@@ -213,7 +213,7 @@ binrec     [B] [T] [R1] [R2] -> ...
 body     U -> [P] 
     Quotation [P] is the body of user-defined symbol U.
 
-branch     B [T] [F] -> ... 
+|branch     B [T] [F] -> ...  (If in V)
     If B is true, then executes T else executes F.
 
 case     X [..[X Y]..] -> Y i 
@@ -222,7 +222,7 @@ case     X [..[X Y]..] -> Y i
 ceil     F -> G 
     G is the float ceiling of F.
 
-char     X -> B 
+|char?     X -> B 
     Tests whether X is a character.
 
 choice     B T F -> X 
@@ -398,7 +398,7 @@ fwrite     S L -> S
 gc     -> 
     Initiates garbage collection.
 
-genrec     [B] [T] [R1] [R2] -> ... 
+|genrec     [B] [T] [R1] [R2] -> ... 
     Executes B, if that yields true executes T. Else executes R1 and then
     [[B] [T] [R1] [R2] genrec] R2.
 
@@ -483,11 +483,11 @@ ldexp     F I -> G
 leaf     X -> B 
     Tests whether X is not a list.
 
-linrec     [P] [T] [R1] [R2] -> ... 
+|linrec     [P] [T] [R1] [R2] -> ... 
     Executes P. If that yields true, executes T. Else executes R1, recurses,
     executes R2.
 
-list     X -> B 
+|list?     X -> B 
     Tests whether X is a list.
 
 localtime     I -> T 
@@ -567,10 +567,10 @@ popd     Y Z -> Z
 pow     F G -> H 
     H is F raised to the Gth power.
 
-pred     M -> N 
+|pred     M -> N 
     Numeric N is the predecessor of numeric M.
 
-primrec     X [I] [C] -> R 
+|primrec     X [I] [C] -> R 
     Executes I to obtain an initial value R0. For integer X uses increasing
     positive integers to X, combines by C for new R. For aggregate X uses
     successive members and combines by C for new R.
@@ -657,7 +657,7 @@ some     A [B] -> X
 split     A [B] -> A1 A2 
     Uses test B to split aggregate A into sametype aggregates A1 and A2 .
 
-sqrt     F -> G 
+|sqrt     F -> G 
     G is the square root of F.
 
 srand     I -> 
@@ -683,7 +683,7 @@ strftime     T S1 -> S2
     Formats a list T in the format of localtime or gmtime using string S1 and
     pushes the result S2.
 
-string     X -> B 
+|string?     X -> B 
     Tests whether X is a string.
 
 strtod     S -> R 
@@ -693,7 +693,7 @@ strtol     S I -> J
     String S is converted to the integer J using base I. If I = 0, assumes
     base 10, but leading "0" means base 8 and leading "0x" means base 16.
 
-succ     M -> N 
+|succ     M -> N 
     Numeric N is the successor of numeric M.
 
 |swap     X Y -> Y X 
@@ -710,7 +710,7 @@ system     "command" ->
     execution of another program. When that has finished, the process returns
     to V.
 
-tailrec     [P] [T] [R1] -> ... 
+|tailrec     [P] [T] [R1] -> ... 
     Executes P. If that yields true, executes T. Else executes R1, recurses.
 
 take     A N -> B 
