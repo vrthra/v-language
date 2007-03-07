@@ -34,3 +34,13 @@
 #Usage 
 2 4 -30 root
 
+[cmdthrows
+        [dup puts 'false shield' puts false] shield
+        'hi there throw' throw
+].
+[mycmd
+        [dup puts 'true shield' puts true] shield
+        cmdthrows
+].
+mycmd
+
