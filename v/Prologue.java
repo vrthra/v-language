@@ -443,7 +443,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    ((CmdQuote)action.qvalue()).apply(q, true);
+                    action.qvalue().eval(q, true);
                     // pop it back into a new quote
                     Term res = p.pop();
                     nts.add(res);
@@ -472,7 +472,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    ((CmdQuote)action.qvalue()).apply(q, true);
+                    action.qvalue().eval(q, true);
                     // pop it back into a new quote
                     Term res = p.pop();
                     if (res.bvalue())
@@ -536,7 +536,6 @@ public class Prologue {
                 // dequote both, append and push it back to stack.
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
                 p.push(fstream.next());
-                ((CmdQuote)q).walk();
                 
                 // copy the rest of tokens to our own stream.
                 QuoteStream nts = new QuoteStream();
@@ -555,7 +554,6 @@ public class Prologue {
                 // dequote both, append and push it back to stack.
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
                 p.push(fstream.next());
-                ((CmdQuote)q).walk();
             }
         };
 

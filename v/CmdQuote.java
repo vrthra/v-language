@@ -85,15 +85,10 @@ public class CmdQuote implements Quote {
     public void eval(Quote scope, boolean on_parent) {
         _stack = scope.stack();
         Iterator<Term> stream = _tokens.iterator();
-        while(true) {
+        while(stream.hasNext()) {
+            _stack.push(stream.next());
             if (cando())
                 dofunction(on_parent ? scope : this);
-            else if (stream.hasNext())
-                // TokenStream returns entire quotes as a single term
-                // of type TQuote
-                _stack.push(stream.next());
-            else
-                break;
         }
     }
 
@@ -105,15 +100,12 @@ public class CmdQuote implements Quote {
         _stack = scope.stack();
         Iterator<Term> stream = _tokens.iterator();
         _stack.push(stream.next()); // use the current quote as a function
-        while(true) {
+        while(stream.hasNext()) {
+            // TokenStream returns entire quotes as a single term
+            // of type TQuote
+            _stack.push(stream.next());
             if (cando())
                 dofunction(on_parent ? scope : this);
-            else if (stream.hasNext())
-                // TokenStream returns entire quotes as a single term
-                // of type TQuote
-                _stack.push(stream.next());
-            else
-                break;
         }
     }
 
