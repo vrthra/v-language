@@ -1,5 +1,6 @@
 [show dup puts].
 'hello' puts
+#=========================================
 [fact 
     zero?
         [pop 1]
@@ -10,6 +11,55 @@
 5 fact show
 [120 !=] ['fact failed' throw ] if
 pop
+#=========================================
+[gfact
+    [null?]
+    [succ]
+    [dup pred]
+    [i *]
+    genrec].
+
+'5 gfact(120):' put
+5 gfact show
+[120 !=] ['gfact failed' throw ] if
+pop
+#=========================================
+[lfact
+    [null?]
+    [succ]
+    [dup pred]
+    [*]
+    linrec].
+
+'5 lfact(120):' put
+5 lfact show
+[120 !=] ['lfact failed' throw ] if
+pop
+#=========================================
+[t-last
+    [rest& null?]
+    [first]
+    [rest]
+    tailrec].
+
+'t-last(5):' put
+0 [3 2 1 5] t-last show
+[5 !=] ['t-last failed' throw ] if
+pop
+[0 !=] ['t-last failed' throw ] if
+pop
+#=========================================
+[pfact
+    [1]
+    [*]
+    primrec].
+
+'5 pfact(120):' put
+5 pfact show
+[120 !=] ['pfact failed' throw ] if
+pop
+
+#=========================================
 
 [area
   [pi 3.1415].
@@ -20,6 +70,7 @@ pop
 3 area show
 [28.2735 !=] ['area failed' throw ] if
 pop
+#=========================================
 
 [fib 
     [small?]
@@ -27,10 +78,12 @@ pop
     [pred dup pred]
     [+]
     binrec].
+
 '6 fib(8):' put
 6 fib show
 [8 !=] ['fib failed' throw ] if
 pop
+#=========================================
 
 [qsort
     [small?]
@@ -40,6 +93,7 @@ pop
     binrec].
 [0 9 6 7 8 4 6 2] qsort uncons puts
 [0 !=] ['qsort failed' throw ] if
+#=========================================
 
 
 [root
@@ -69,6 +123,7 @@ pop
 pop
 [3.0 !=] ['root2 failed' throw ] if
 pop
+#=========================================
 
 [cmdthrows
         [dup puts 'false shield' puts false] shield

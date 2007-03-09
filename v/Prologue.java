@@ -909,22 +909,26 @@ public class Prologue {
             }
         };
 
+        Quote _first_i = getdef(parent, "dup first");
+
         Cmd _first = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
 
-                Term list = p.peek();
+                Term list = p.pop();
                 // dequote both, append and push it back to stack.
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
                 p.push(fstream.next());
             }
         };
 
+        Quote _rest_i = getdef(parent, "dup rest");
+
         Cmd _rest = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
 
-                Term list = p.peek();
+                Term list = p.pop();
                 // dequote both, append and push it back to stack.
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
                 fstream.next(); //loose first.
@@ -938,10 +942,12 @@ public class Prologue {
             }
         };
 
+        Quote _size_i = getdef(parent, "dup size");
+
         Cmd _size = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term list = p.peek();
+                Term list = p.pop();
                 int count = 0;
                 for(Term t: list.qvalue().tokens())
                     ++count;
@@ -969,17 +975,7 @@ public class Prologue {
             }
         };
 
-        Cmd _unit = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term v = p.pop();
-                
-                QuoteStream nts = new QuoteStream();
-                nts.add(v);
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
-            }
-        };
+        Quote _unit = getdef(parent, "[] cons");
 
 
         Cmd _dip = new Cmd(parent) {
@@ -1395,8 +1391,10 @@ public class Prologue {
         //list
         parent.def("rev", _rev);
         parent.def("unit", _unit);
-        parent.def("first&", _first);
-        parent.def("rest&", _rest);
+        parent.def("first&", _first_i);
+        parent.def("first", _first);
+        parent.def("rest&", _rest_i);
+        parent.def("rest", _rest);
         parent.def("size&", _size);
        
         // construct destruct 
