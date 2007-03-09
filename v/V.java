@@ -79,21 +79,8 @@ public class V {
                         super.dofunction(scope);
                     } catch (Exception e) {
                         outln(e.getMessage());
-                        out("[");
-                        for(Term t: _stack) {
-                            switch (t.type) {
-                                case TString:
-                                    out("'" + t.svalue() + "' ");
-                                    break;
-                                case TChar:
-                                    out("~" + t.svalue() + " ");
-                                    break;
-                                default:
-                                    out(t.value() + " ");
-                            }
-                        }
+                        _stack.dump();
                         _stack.clear();
-                        outln("]");
                         V.debug(e);
                     }
                 }

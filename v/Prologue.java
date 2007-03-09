@@ -3,22 +3,15 @@ import java.util.*;
 
 class Shield {
     // current stack
-    QStack stack;
+    Node<Term> stack;
     Quote quote;
     Shield(QStack s, Quote q) {
-        stack = new QStack();
-        for(Term t: s)
-            stack.push(t);
+        stack = s.now;
         quote = q;
     }
 };
 
 public class Prologue {
-    private static void pstack(QStack p) {
-        for(Term t: p)
-            V.debug("=" + t.value());
-    }
-
     private static boolean and(Term a, Term b) {
         return a.bvalue() && b.bvalue();
     }
@@ -535,12 +528,7 @@ public class Prologue {
         Cmd _show = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                if (p.empty()) {
-                    V.outln("");
-                } else {
-                    for(Term t: p)
-                        V.outln(t.value());
-                }
+                p.dump();
             }
         };
 

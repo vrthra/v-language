@@ -141,7 +141,7 @@ public class CmdQuote implements Quote {
                 current.quote.eval(scope);
                 if(_stack.pop().bvalue()) {
                     //restore the stack and continue.
-                    _stack = current.stack;
+                    _stack.now(current.stack);
                     return;
                 }
                 if (!stack.empty())
