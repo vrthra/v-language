@@ -58,7 +58,7 @@ public class QStack {
             l.addFirst(current.data);
             current = current.link;
         }
-        V.out("[");
+        V.out("(");
         boolean first = true;
         for(Term t: l) {
             if (first) first = false;
@@ -74,7 +74,7 @@ public class QStack {
                     V.out(t.value());
             }
         }
-        V.outln("]");
+        V.outln(")");
     }
 
 }
