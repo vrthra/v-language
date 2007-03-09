@@ -619,13 +619,14 @@ public class Prologue {
             }
         };
 
+        // this map is not a stack invariant. specifically 
+        // 1 2 3 4  [a b c d] [[] cons cons] map => [[4 a] [3 b] [2 c] [1 d]]
         Cmd _map = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
 
                 Term action = p.pop();
                 Term list = p.pop();
-                Node<Term> n = p.now;
 
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
 
@@ -645,7 +646,39 @@ public class Prologue {
                     Term res = p.pop();
                     nts.add(res);
                 }
-                p.now = n;
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+            }
+        };
+
+        // map is a stack invariant. specifically 
+        // 1 2 3 4  [a b c d] [[] cons cons] map => [[4 a] [4 b] [4 c] [4 d]]
+        Cmd _map_i = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term action = p.pop();
+                Term list = p.pop();
+
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+                // copy the rest of tokens to our own stream.
+                QuoteStream nts = new QuoteStream();
+                while (fstream.hasNext()) {
+                    // extract the relevant element from list,
+                    Term t = fstream.next();
+                    Node<Term> n = p.now;
+                    // push it on our current stack
+                    p.push(t);
+
+                    // apply the action
+                    // We dont do the walk here since the action is in the form of a quote.
+                    // we will have to dequote it, and walk one by one if we are to do this.
+                    action.qvalue().eval(q, true);
+                    // pop it back into a new quote
+                    Term res = p.pop();
+                    p.now = n;
+                    nts.add(res);
+                }
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
         };
@@ -656,7 +689,6 @@ public class Prologue {
 
                 Term action = p.pop();
                 Term list = p.pop();
-                Node<Term> n = p.now;
 
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
 
@@ -680,7 +712,42 @@ public class Prologue {
                     else
                         nts2.add(t);
                 }
-                p.now = n;
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2, q)));
+            }
+        };
+
+        Cmd _split_i = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term action = p.pop();
+                Term list = p.pop();
+
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+                // copy the rest of tokens to our own stream.
+                QuoteStream nts1 = new QuoteStream();
+                QuoteStream nts2 = new QuoteStream();
+                while (fstream.hasNext()) {
+                    // extract the relevant element from list,
+                    Term t = fstream.next();
+                    // push it on our current stack
+                    Node<Term> n = p.now;
+                    p.push(t);
+
+                    // apply the action
+                    // We dont do the walk here since the action is in the form of a quote.
+                    // we will have to dequote it, and walk one by one if we are to do this.
+                    action.qvalue().eval(q, true);
+                    // pop it back into a new quote
+                    Term res = p.pop();
+                    p.now = n;
+                    if (res.bvalue())
+                        nts1.add(t);
+                    else
+                        nts2.add(t);
+                }
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1, q)));
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2, q)));
             }
@@ -692,7 +759,6 @@ public class Prologue {
 
                 Term action = p.pop();
                 Term list = p.pop();
-                Node<Term> n = p.now;
 
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
 
@@ -713,13 +779,71 @@ public class Prologue {
                     if (res.bvalue())
                         nts.add(t);
                 }
-                p.now = n;
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+            }
+        };
+
+        Cmd _filter_i = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term action = p.pop();
+                Term list = p.pop();
+
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+                // copy the rest of tokens to our own stream.
+                QuoteStream nts = new QuoteStream();
+                while (fstream.hasNext()) {
+                    // extract the relevant element from list,
+                    Term t = fstream.next();
+                    // push it on our current stack
+                    Node<Term> n = p.now;
+                    p.push(t);
+
+                    // apply the action
+                    // We dont do the walk here since the action is in the form of a quote.
+                    // we will have to dequote it, and walk one by one if we are to do this.
+                    action.qvalue().eval(q, true);
+                    // pop it back into a new quote
+                    Term res = p.pop();
+                    p.now = n;
+                    if (res.bvalue())
+                        nts.add(t);
+                }
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
         };
 
 
         Cmd _fold = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term action = p.pop();
+                Term init = p.pop();
+                Term list = p.pop();
+
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+                // push the init value in expectation of the next val and action.
+                p.push(init);
+                // copy the rest of tokens to our own stream.
+                while (fstream.hasNext()) {
+                    // extract the relevant element from list,
+                    Term t = fstream.next();
+                    // push it on our current stack
+                    p.push(t);
+                    // apply the action
+                    action.qvalue().eval(q, true);
+                }
+                Term res = p.pop();
+                p.push(res);
+                // the result will be on the stack at the end of this cycle.
+            }
+        };
+
+        Cmd _fold_i = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
 
@@ -1157,7 +1281,7 @@ public class Prologue {
 
         Quote _isnull = getdef(parent, "number? [zero?] [empty?] ifte");
 
-        Quote _issmall = getdef(parent, "dup zero? swap 1 = or");
+        Quote _issmall = getdef(parent, "zero? swap 1 = or");
 
         Cmd _isnum = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1281,9 +1405,13 @@ public class Prologue {
 
         // on list
         parent.def("map", _map);
+        parent.def("map&", _map_i);
         parent.def("filter", _filter);
+        parent.def("filter&", _filter_i);
         parent.def("split", _split);
+        parent.def("split&", _split_i);
         parent.def("fold", _fold);
+        parent.def("fold&", _fold_i);
 
         //arith
         parent.def("+", _add);
