@@ -4,3 +4,6 @@ all:
 
 run:
 	(cd pkg && java -jar v.jar)
+test:
+	cd pkg && java -jar v.jar ../v/examples.v
+

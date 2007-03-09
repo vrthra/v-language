@@ -27,14 +27,14 @@ public class Prologue {
             else if (b.type == Type.TFloat)
                 return a.ivalue() > b.fvalue();
             else
-                throw new VException("Type error(>)");
+                throw new VException("Type error(>)" + a.value() + " " + b.value());
         } else if (a.type == Type.TFloat) {
             if (b.type == Type.TInt)
                 return a.fvalue() > b.ivalue();
             else if (b.type == Type.TFloat)
                 return a.fvalue() > b.fvalue();
             else
-                throw new VException("Type error(>)");
+                throw new VException("Type error(>)" + a.value() + " " + b.value());
         }
         return false;
     }
@@ -43,15 +43,15 @@ public class Prologue {
         switch(a.type) {
             case TInt:
                 if (b.type != Type.TInt)
-                    throw new VException("Type error(=)");
+                    throw new VException("Type error(=)" + a.value() + " " + b.value());
                 return a.ivalue() == b.ivalue();
             case TFloat:
-                if (b.type != Type.TInt)
-                    throw new VException("Type error(=)");
+                if (b.type != Type.TFloat)
+                    throw new VException("Type error(=)" + a.value() + " " + b.value());
                 return a.fvalue() == b.fvalue();
             case TString:
                 if (b.type != Type.TString)
-                    throw new VException("Type error(=)");
+                    throw new VException("Type error(=)" + a.value() + " " + b.value());
                 return a.svalue().equals(b.svalue());
             default:
                 return a.value().equals(b.value());
@@ -144,7 +144,6 @@ public class Prologue {
         };*/
 
         Cmd _defparent = new Cmd(parent) {
-            @SuppressWarnings("unchecked")
             public void eval(Quote q) {
                 // eval is passed in the quote representing the current scope.
                 QStack p = q.stack();
@@ -194,9 +193,7 @@ public class Prologue {
         };
 
         Cmd _throw = new Cmd(parent) {
-            @SuppressWarnings("unchecked")
             public void eval(Quote q) {
-                // throw
                 throw new VException("Error( " + q.stack().peek().value() + " )" );
             }
         };
@@ -241,21 +238,19 @@ public class Prologue {
                 QStack p = q.stack();
 
                 Term action = p.pop();
-                Term eaction = null; // tentative.
                 Term cond = p.pop();
 
-                if (cond.type != Type.TBool) {
-                    // it should be eaction.
-                    eaction = action;
-                    action = cond;
+                if (cond.type == Type.TQuote) {
+                    Node<Term> n = p.now;
+                    cond.qvalue().eval(q);
+                    // and get it back from stack.
                     cond = p.pop();
+                    p.now = n;
                 }
 
                 // dequote the action and push it to stack.
                 if (cond.bvalue())
                     action.qvalue().eval(q, true);
-                else if (eaction != null)
-                    eaction.qvalue().eval(q, true);
             }
         };
 
@@ -267,11 +262,13 @@ public class Prologue {
                 Term action = p.pop();
                 Term cond = p.pop();
 
-                /*if (cond.type == Type.TQuote) {
+                if (cond.type == Type.TQuote) {
+                    Node<Term> n = p.now;
                     cond.qvalue().eval(q);
                     // and get it back from stack.
                     cond = p.pop();
-                } This does not buy us any thing.*/
+                    p.now = n;
+                }
                 // dequote the action and push it to stack.
                 if (cond.bvalue())
                     action.qvalue().eval(q, true);
@@ -288,9 +285,11 @@ public class Prologue {
                 Term cond = p.pop();
                 while(true) {
                     if (cond.type == Type.TQuote) {
+                        Node<Term> n = p.now;
                         cond.qvalue().eval(q);
                         // and get it back from stack.
                         cond = p.pop();
+                        p.now = n;
                     }
                     // dequote the action and push it to stack.
                     if (cond.bvalue())
@@ -321,8 +320,10 @@ public class Prologue {
                 Term tifp = p.pop();
 
                 // evaluate if and pop it back.
+                Node<Term> n = p.now;
                 tifp.qvalue().eval(q);
                 Term ifp = p.pop();
+                p.now = n;
 
                 // dequote the action and push it to stack.
                 if (ifp.bvalue()) {
@@ -352,8 +353,10 @@ public class Prologue {
                 Term tifp = p.pop();
 
                 // evaluate if and pop it back.
+                Node<Term> n = p.now;
                 tifp.qvalue().eval(q);
                 Term ifp = p.pop();
+                p.now = n;
 
                 // dequote the action and push it to stack.
                 if (ifp.bvalue()) {
@@ -383,8 +386,10 @@ public class Prologue {
                 Term tifp = p.pop();
 
                 // evaluate if and pop it back.
+                Node<Term> n = p.now;
                 tifp.qvalue().eval(q);
                 Term ifp = p.pop();
+                p.now = n;
 
                 // dequote the action and push it to stack.
                 if (ifp.bvalue()) {
@@ -416,8 +421,10 @@ public class Prologue {
                 Term tifp = p.pop();
 
                 // evaluate if and pop it back.
+                Node<Term> n = p.now;
                 tifp.qvalue().eval(q);
                 Term ifp = p.pop();
+                p.now = n;
 
                 // dequote the action and push it to stack.
                 if (ifp.bvalue()) {
@@ -535,6 +542,12 @@ public class Prologue {
         Cmd _qdebug = new Cmd(parent) {
             public void eval(Quote q) {
                 V.outln("Quote[c:" + q.id() + "^" + q.id() + "]");
+                q.stack().dump();                QStack p = q.stack();
+
+                for(String s: q.bindings().keySet())
+                    V.out(":" + s + " ");
+                V.outln("\n________________");
+ 
             }
         };
 
@@ -612,6 +625,7 @@ public class Prologue {
 
                 Term action = p.pop();
                 Term list = p.pop();
+                Node<Term> n = p.now;
 
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
 
@@ -631,6 +645,7 @@ public class Prologue {
                     Term res = p.pop();
                     nts.add(res);
                 }
+                p.now = n;
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
         };
@@ -641,6 +656,7 @@ public class Prologue {
 
                 Term action = p.pop();
                 Term list = p.pop();
+                Node<Term> n = p.now;
 
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
 
@@ -664,6 +680,7 @@ public class Prologue {
                     else
                         nts2.add(t);
                 }
+                p.now = n;
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1, q)));
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2, q)));
             }
@@ -675,6 +692,7 @@ public class Prologue {
 
                 Term action = p.pop();
                 Term list = p.pop();
+                Node<Term> n = p.now;
 
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
 
@@ -695,6 +713,7 @@ public class Prologue {
                     if (res.bvalue())
                         nts.add(t);
                 }
+                p.now = n;
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
         };
@@ -708,6 +727,7 @@ public class Prologue {
                 Term init = p.pop();
                 Term list = p.pop();
 
+                Node<Term> n = p.now;
                 Iterator<Term> fstream = list.qvalue().tokens().iterator();
 
                 // push the init value in expectation of the next val and action.
@@ -721,6 +741,9 @@ public class Prologue {
                     // apply the action
                     action.qvalue().eval(q, true);
                 }
+                Term res = p.pop();
+                p.now = n;
+                p.push(res);
                 // the result will be on the stack at the end of this cycle.
             }
         };
@@ -879,7 +902,6 @@ public class Prologue {
 
         Cmd _id = new Cmd(parent) {
             public void eval(Quote q) {
-                // dummy. x id == x
             }
         };
 
@@ -894,14 +916,14 @@ public class Prologue {
                     else if (b.type == Type.TFloat)
                         p.push(new Term<Float>(Type.TFloat, a.ivalue() + b.fvalue()));
                     else
-                        throw new VException("Type error(+)");
+                        throw new VException("Type error(+)" + a.value() + " " + b.value());
                 } else if (a.type == Type.TFloat) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Float>(Type.TFloat, a.fvalue() + b.ivalue()));
                     else if (b.type == Type.TFloat)
                         p.push(new Term<Float>(Type.TFloat, a.fvalue() + b.fvalue()));
                     else
-                        throw new VException("Type error(+)");
+                        throw new VException("Type error(+)" + a.value() + " " + b.value());
                 }
             }
         };
@@ -917,14 +939,14 @@ public class Prologue {
                     else if (b.type == Type.TFloat)
                         p.push(new Term<Float>(Type.TFloat, a.ivalue() - b.fvalue()));
                     else
-                        throw new VException("Type error(-)");
+                        throw new VException("Type error(-)" + a.value() + " " + b.value());
                 } else if (a.type == Type.TFloat) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Float>(Type.TFloat, a.fvalue() - b.ivalue()));
                     else if (b.type == Type.TFloat)
                         p.push(new Term<Float>(Type.TFloat, a.fvalue() - b.fvalue()));
                     else
-                        throw new VException("Type error(-)");
+                        throw new VException("Type error(-)" + a.value() + " " + b.value());
                 }
             }
         };
@@ -963,14 +985,14 @@ public class Prologue {
                     else if (b.type == Type.TFloat)
                         p.push(new Term<Float>(Type.TFloat, a.ivalue() / b.fvalue()));
                     else
-                        throw new VException("Type error(/)");
+                        throw new VException("Type error(/)" + a.value() + " " + b.value());
                 } else if (a.type == Type.TFloat) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Float>(Type.TFloat, a.fvalue() / b.ivalue()));
                     else if (b.type == Type.TFloat)
                         p.push(new Term<Float>(Type.TFloat, a.fvalue() / b.fvalue()));
                     else
-                        throw new VException("Type error(/)");
+                        throw new VException("Type error(/)" + a.value() + " " + b.value());
                 }
             }
         };

@@ -12,6 +12,7 @@ public class V {
 
     public static void main(final String[] args) {
         _stack = new QStack(); // our singleton eval stack.
+        final boolean interactive = args.length == 0 ? true : false;
         // Setup the world quote.
         Quote world = new Quote() {
             HashMap<String, Quote> _dict = new HashMap<String, Quote>();
@@ -75,14 +76,16 @@ public class V {
 
             CmdQuote program = new CmdQuote(new LexStream(cs), world){
                 public void dofunction(Quote scope) {
-                    try {
-                        super.dofunction(scope);
-                    } catch (Exception e) {
-                        outln(e.getMessage());
-                        _stack.dump();
-                        _stack.clear();
-                        V.debug(e);
-                    }
+                    if (interactive) {
+                        try {
+                            super.dofunction(scope);
+                        } catch (Exception e) {
+                            outln(">" + e.getMessage());
+                            _stack.dump();
+                            _stack.clear();
+                            V.debug(e);
+                        }
+                    } else super.dofunction(scope);
                 }
             };
             program.setout(new V());
