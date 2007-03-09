@@ -635,6 +635,40 @@ public class Prologue {
             }
         };
 
+        Cmd _split = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term action = p.pop();
+                Term list = p.pop();
+
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+                // copy the rest of tokens to our own stream.
+                QuoteStream nts1 = new QuoteStream();
+                QuoteStream nts2 = new QuoteStream();
+                while (fstream.hasNext()) {
+                    // extract the relevant element from list,
+                    Term t = fstream.next();
+                    // push it on our current stack
+                    p.push(t);
+
+                    // apply the action
+                    // We dont do the walk here since the action is in the form of a quote.
+                    // we will have to dequote it, and walk one by one if we are to do this.
+                    action.qvalue().eval(q, true);
+                    // pop it back into a new quote
+                    Term res = p.pop();
+                    if (res.bvalue())
+                        nts1.add(t);
+                    else
+                        nts2.add(t);
+                }
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2, q)));
+            }
+        };
+
         Cmd _filter = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1226,6 +1260,7 @@ public class Prologue {
         // on list
         parent.def("map", _map);
         parent.def("filter", _filter);
+        parent.def("split", _split);
         parent.def("fold", _fold);
 
         //arith
