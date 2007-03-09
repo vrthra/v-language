@@ -5,7 +5,7 @@ class Shield {
     // current stack
     QStack stack;
     Quote quote;
-    Shield(Stack<Term> s, Quote q) {
+    Shield(QStack s, Quote q) {
         stack = new QStack();
         for(Term t: s)
             stack.push(t);

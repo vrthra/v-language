@@ -1,24 +1,33 @@
 package v;
 import java.util.*;
 
-public class QStack extends Stack<Term> {
+public class QStack implements Iterable<Term> {
+    Stack<Term> _stack = null;
     public QStack() {
-        super();
+        _stack = new Stack<Term>();
     }
 
     public Term push(Term t) {
-        return super.push(t);
+        return _stack.push(t);
     }
 
     public Term pop() {
-        return super.pop();
+        return _stack.pop();
     }
 
     public boolean empty() {
-        return super.empty();
+        return _stack.empty();
+    }
+
+    public void clear() {
+        _stack.clear();
     }
 
     public Term peek() {
-        return super.peek();
+        return _stack.peek();
+    }
+
+    public Iterator<Term> iterator() {
+        return _stack.iterator();
     }
 }
