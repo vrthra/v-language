@@ -938,7 +938,7 @@ public class Prologue {
             }
         };
 
-        Cmd _length = new Cmd(parent) {
+        Cmd _size = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
                 Term list = p.peek();
@@ -1028,6 +1028,8 @@ public class Prologue {
             public void eval(Quote q) {
             }
         };
+
+        Quote _x = getdef(parent, "dup i");
 
         Cmd _add = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1281,7 +1283,7 @@ public class Prologue {
 
         Quote _isnull = getdef(parent, "number? [zero?] [empty?] ifte");
 
-        Quote _issmall = getdef(parent, "zero? swap 1 = or");
+        Quote _issmall = getdef(parent, "[list?] [size& swap pop zero? swap 1 = or] [zero? swap 1 = or] ifte");
 
         Cmd _isnum = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1395,12 +1397,13 @@ public class Prologue {
         parent.def("unit", _unit);
         parent.def("first&", _first);
         parent.def("rest&", _rest);
-        parent.def("length&", _length);
+        parent.def("size&", _size);
        
         // construct destruct 
         parent.def("uncons", _uncons);
         parent.def("cons", _cons);
         parent.def("i", _dequote);
+        parent.def("x", _x);
         parent.def("concat", _concat);
 
         // on list

@@ -32,6 +32,16 @@ pop
 [8 !=] ['fib failed' throw ] if
 pop
 
+[qsort
+    [small?]
+    []
+    [uncons [>] split&]
+    [[swap] dip cons concat]
+    binrec].
+[0 9 6 7 8 4 6 2] qsort uncons puts
+[0 !=] ['qsort failed' throw ] if
+
+
 [root
     # define our parameters (In classical concatanative languages, the internal
     # definitions are not used, but it makes our lives easier).
