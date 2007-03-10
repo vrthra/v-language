@@ -54,7 +54,7 @@ public class QStack {
     public void dump() {
         LinkedList<Term> l = new LinkedList<Term>();
         Node<Term> current = now;
-        while(current.link != null) {
+        while(current != null && current.link != null) {
             l.addFirst(current.data);
             current = current.link;
         }
