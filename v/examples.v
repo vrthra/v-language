@@ -12,8 +12,7 @@
     fn put ' : ' put
     fn i
     expected i not [msg throw] if
-    msg put ' success' puts
-    ].
+    msg put ' success' puts].
 
 #=========================================
 'Starting tests...' puts
@@ -103,20 +102,17 @@
     [root2 0 b - discr - 2 a * /].
 
     [] " root1: " << root1 << " root2: " << root2 << rev show
-    root1 root2
-].
+    root1 root2].
 
 [-5.0 = swap 3.0 = and] [2 4 -30 roots] 'roots' test
 #=========================================
 
 [cmdthrows
         [dup puts 'false shield' puts false] shield
-        'hi there throw' throw
-].
+        'hi there throw' throw].
 [mycmd
         [dup puts 'true shield' puts true] shield
-        cmdthrows
-].
+        cmdthrows].
 mycmd
 
 "--------Success-----------" puts
