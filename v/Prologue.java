@@ -1281,6 +1281,8 @@ public class Prologue {
             }
         };
 
+        Quote _isleaf = getdef(parent, "list? not");
+
         Cmd _islist = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1479,6 +1481,7 @@ public class Prologue {
         parent.def("boolean?", _isbool);
         parent.def("symbol?", _issym);
         parent.def("list?", _islist);
+        parent.def("leaf?", _isleaf);
         parent.def("char?", _ischar);
         parent.def("number?", _isnum);
         parent.def("string?", _isstr);
