@@ -1,5 +1,5 @@
 # definition of show.
-[debug? false].
+[debug? true].
 [show
     [q] let
     debug?
@@ -17,6 +17,13 @@
 #=========================================
 'Starting tests...' puts
 '=========================================' puts
+# basic stack operations
+[333 =] [111  222 +] ' simple addition ' test
+[21 =] [1  2  +  3  4  +  *] ' operations on stack (1)' test
+[true =] [2  2  +  2  2  *  =] ' operations on stack (2)' test
+[true =] [6  6  *  5  7  *  >] ' operations on stack (3)' test
+[false =] [true  false  or  true  and  not] 'boolean operations' test
+#=========================================
 [fact 
     zero?
         [pop 1]
@@ -92,8 +99,9 @@
     [a b c] let
 
     [<< swap cons].
+    [! [unit i] map].
 
-    [] " a: " << a << " b: " << b << " c: " << c << rev show
+    [" a: " a " b: " b " c: " c]! show
     
     [discr b dup * 4 a * c * - sqrt].
     [] " discr: " << discr << rev show

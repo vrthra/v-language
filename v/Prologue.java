@@ -619,6 +619,30 @@ public class Prologue {
             }
         };
 
+        Cmd _step = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term action = p.pop();
+                Term list = p.pop();
+
+                Iterator<Term> fstream = list.qvalue().tokens().iterator();
+
+                while (fstream.hasNext()) {
+                    // extract the relevant element from list,
+                    Term t = fstream.next();
+                    // push it on our current stack
+                    p.push(t);
+
+                    // apply the action
+                    // We dont do the walk here since the action is in the form of a quote.
+                    // we will have to dequote it, and walk one by one if we are to do this.
+                    action.qvalue().eval(q, true);
+                }
+            }
+        };
+
+
         // this map is not a stack invariant. specifically 
         // 1 2 3 4  [a b c d] [[] cons cons] map => [[4 a] [3 b] [2 c] [1 d]]
         Cmd _map = new Cmd(parent) {
@@ -1405,6 +1429,7 @@ public class Prologue {
         parent.def("concat", _concat);
 
         // on list
+        parent.def("step", _step);
         parent.def("map", _map);
         parent.def("map&", _map_i);
         parent.def("filter", _filter);
