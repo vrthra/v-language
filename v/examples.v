@@ -1,16 +1,30 @@
-[show dup puts].
-'hello' puts
+# definition of show.
+[debug? false].
+[show
+    [q] let
+    debug?
+    [ q [put 1] map "" puts ]
+    if].
+
+[test
+    [expected fn msg] let
+    expected put ' ' put
+    fn put ' : ' put
+    fn i
+    expected i not [msg throw] if
+    msg put ' success' puts
+    ].
+
 #=========================================
+'Starting tests...' puts
+'=========================================' puts
 [fact 
     zero?
         [pop 1]
         [dup 1 - fact *]
     ifte].
 
-'5 fact(120):' put
-5 fact show
-[120 !=] ['fact failed' throw ] if
-pop
+[120 =] [5 fact] '(ifte) fact ' test
 #=========================================
 [gfact
     [null?]
@@ -19,10 +33,7 @@ pop
     [i *]
     genrec].
 
-'5 gfact(120):' put
-5 gfact show
-[120 !=] ['gfact failed' throw ] if
-pop
+[120 =] [5 gfact] '(genrec) gfact ' test
 #=========================================
 [lfact
     [null?]
@@ -31,10 +42,7 @@ pop
     [*]
     linrec].
 
-'5 lfact(120):' put
-5 lfact show
-[120 !=] ['lfact failed' throw ] if
-pop
+[120 =] [5 lfact] '(linrec) lfact ' test
 #=========================================
 [t-last
     [rest& null?]
@@ -42,36 +50,22 @@ pop
     [rest]
     tailrec].
 
-'t-last(5):' put
-0 [3 2 1 5] t-last show
-[5 !=] ['t-last failed' throw ] if
-pop
-[0 !=] ['t-last failed' throw ] if
-pop
+[5 = swap 0 = and] [0 [3 2 1 5] t-last] '(tailrec) t-last' test
 #=========================================
 [pfact
     [1]
     [*]
     primrec].
 
-'5 pfact(120):' put
-5 pfact show
-[120 !=] ['pfact failed' throw ] if
-pop
-
+[120 =] [5 pfact] '(primrec) pfact ' test
 #=========================================
-
 [area
   [pi 3.1415].
   [sq dup *].
   sq pi *].
 
-'3 area(28.2735):' put
-3 area show
-[28.2735 !=] ['area failed' throw ] if
-pop
+[28.2735 =] [3 area] '(internal def) area ' test
 #=========================================
-
 [fib 
     [small?]
     [] 
@@ -79,10 +73,7 @@ pop
     [+]
     binrec].
 
-'6 fib(8):' put
-6 fib show
-[8 !=] ['fib failed' throw ] if
-pop
+[8 =] [6 fib] '(binrec) fib' test
 #=========================================
 
 [qsort
@@ -91,38 +82,31 @@ pop
     [uncons [>] split&]
     [[swap] dip cons concat]
     binrec].
-[0 9 6 7 8 4 6 2] qsort uncons puts
-[0 !=] ['qsort failed' throw ] if
+
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort] '(binrec) fib' test
 #=========================================
 
 
-[root
+[roots
     # define our parameters (In classical concatanative languages, the internal
     # definitions are not used, but it makes our lives easier).
     [a b c] let
 
-    "a:" put a put " b:" put b put " c:" put c puts
-    # define the discriminent
-    [discr b dup * 4 a * c * - sqrt].
-    "D:" put discr puts
+    [<< swap cons].
 
-    # and fetch the roots.
+    [] " a: " << a << " b: " << b << " c: " << c << rev show
+    
+    [discr b dup * 4 a * c * - sqrt].
+    [] " discr: " << discr << rev show
+
     [root1 0 b - discr + 2 a * /].
     [root2 0 b - discr - 2 a * /].
 
-    # output results
-    "root1 :" put root1 show
-    "root2 :" put root2 show
-    root1
-    root2
+    [] " root1: " << root1 << " root2: " << root2 << rev show
+    root1 root2
 ].
 
-#Usage 
-2 4 -30 root
-[-5.0 !=] ['root1 failed' throw ] if
-pop
-[3.0 !=] ['root2 failed' throw ] if
-pop
+[-5.0 = swap 3.0 = and] [2 4 -30 roots] 'roots' test
 #=========================================
 
 [cmdthrows

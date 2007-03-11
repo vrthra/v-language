@@ -34,6 +34,8 @@ public class QStack {
     }
 
     public Term pop() {
+        if (now == null)
+            throw new VException("Empty Stack.");
         Term t = now.data;
         now = now.link;
         return t;
