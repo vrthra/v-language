@@ -1257,6 +1257,22 @@ public class Prologue {
             }
         };
 
+        Cmd _isinteger = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TInt));
+            }
+        };
+
+        Cmd _isfloat = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.peek();
+                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TFloat));
+            }
+        };
+
         Cmd _issym = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1458,6 +1474,8 @@ public class Prologue {
         //peek and push the result. the reason for this is that we generally
         //do -> if (x is yyy) then {do some thing with x} so it is more
         //natural to let x be there in the stack than to pop it off.
+        parent.def("integer?", _isinteger);
+        parent.def("float?", _isfloat);
         parent.def("boolean?", _isbool);
         parent.def("symbol?", _issym);
         parent.def("list?", _islist);
