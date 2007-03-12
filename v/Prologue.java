@@ -126,23 +126,6 @@ public class Prologue {
             }
         };
 
-/*        Cmd _defmodule = new Cmd(parent) {
-            public void eval(Quote q) {
-                // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
-                Term t = p.pop();
-                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
-                String symbol = entry.getKey();
-                
-                // we define it on the enclosing scope.
-                // so our new command's parent is actually q rather than
-                // _parent.
-                V.debug("Def [" + symbol + "] @ " + q.id() + ":" + parent.id());
-                q.def(symbol, entry.getValue());
-                p.push(new Term<String>(Type.TSymbol, symbol));
-            }
-        };*/
-
         Cmd _defparent = new Cmd(parent) {
             public void eval(Quote q) {
                 // eval is passed in the quote representing the current scope.
@@ -219,6 +202,33 @@ public class Prologue {
             }
         };*/
 
+        Cmd _abort = new Cmd(parent) {
+            public void eval(Quote q) {
+                q.stack().clear();
+            }
+        };
+
+        Cmd _abs = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term v = p.pop();
+                if (v.type == Type.TInt)
+                    p.push(new Term<Integer>(Type.TInt,Math.abs(v.ivalue())));
+                else if (v.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat,Math.abs(v.fvalue())));
+            }
+        };
+
+        Cmd _acos = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term v = p.pop();
+                if (v.type == Type.TInt)
+                    p.push(new Term<Float>(Type.TFloat,(float)Math.acos(v.ivalue())));
+                else if (v.type == Type.TFloat)
+                    p.push(new Term<Float>(Type.TFloat,(float)Math.acos(v.fvalue())));
+            }
+        };
 
         Cmd _true = new Cmd(parent) {
             public void eval(Quote q) {
@@ -776,6 +786,11 @@ public class Prologue {
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2, q)));
             }
         };
+
+        Quote _all = getdef(parent, "map true [and] fold");
+        Quote _all_i = getdef(parent, "map& true [and] fold");
+        Quote _some = getdef(parent, "map false [or] fold");
+        Quote _some_i = getdef(parent, "map& false [or] fold");
 
         Cmd _filter = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1420,6 +1435,9 @@ public class Prologue {
         parent.def("???", _qdebug);
         parent.def("debug", _debug);
 
+        parent.def("abort", _abort);
+        parent.def("abs", _abs);
+        parent.def("acos", _acos);
         parent.def("dup", _dup);
         parent.def("pop", _pop);
         parent.def("swap", _swap);
@@ -1437,7 +1455,8 @@ public class Prologue {
         parent.def("first", _first);
         parent.def("rest&", _rest_i);
         parent.def("rest", _rest);
-        parent.def("size&", _size);
+        parent.def("size&", _size_i);
+        parent.def("size", _size);
        
         // construct destruct 
         parent.def("uncons", _uncons);
@@ -1452,6 +1471,10 @@ public class Prologue {
         parent.def("map&", _map_i);
         parent.def("filter", _filter);
         parent.def("filter&", _filter_i);
+        parent.def("all", _all);
+        parent.def("all&", _all_i);
+        parent.def("some", _some);
+        parent.def("some&", _some_i);
         parent.def("split", _split);
         parent.def("split&", _split_i);
         parent.def("fold", _fold);

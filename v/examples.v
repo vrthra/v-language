@@ -24,6 +24,11 @@
 [true =] [6  6  *  5  7  *  >] ' operations on stack (3)' test
 [false =] [true  false  or  true  and  not] 'boolean operations' test
 #=========================================
+# list operations.
+[[5 4 3 2 1] =] [[1 2 3 4 5] rev] 'list reverse' test
+[[peter paul mary jane] =] [[peter paul]  [mary jane]  concat] 'list reverse' test
+
+#=========================================
 [fact 
     zero?
         [pop 1]
