@@ -128,4 +128,112 @@
         cmdthrows].
 mycmd
 
+#=========================================
+# stack shufflers that can be used for data structures
+# the common format is [x1 x2 x3 ... : y1 y2 y3] V
+# where the portions before ':' are the template for
+# stack and portions after it are the template for result.
+# the x1 x2 etc are symbols that gets bound to what
+# is available on the stack. If these symbols repeat
+# on the left side, then they are replaced on the
+# body of left quote.
+# list destructuring is also possible this way.
+# ie: [1 2] [[a b] : a b] V => 1 2 on the stack.
+# '_' is used to ignore the value on the stack
+# '*' is used to indicate that there are 0 or more elements
+# left. and *xxx can be used to name them.
+# so [1 2 3 4 5] [[a *rest] : *rest a] V => 2 3 4 5 1 on the stack.
+# it can also be done on tail.
+# so [1 2 3 4 5] [[*rest a] : a *rest] V => 5 1 2 3 4 on the stack.
+#=========================================
+# basic
+# 1 2 3 [a b c : a b c] => 1 2 3
+[
+    [1 2 3] =
+]
+[
+    1 2 3 [a b c : a b c] V unit cons cons
+] 'V(basci)' test
+
+# reverse
+# 1 2 3 [a b c : c b a] => 3 2 1
+[
+    [3 2 1] =
+]
+[
+    1 2 3 [a b c : c b a] V unit cons cons
+] 'V(reverse)' test
+
+#list
+# 1 2 3 [a b c : [a b c]] => [1 2 3]
+[
+    [1 2 3] =
+]
+[
+    1 2 3 [a b c : [a b c]] V
+] 'V(list:1)' test
+
+# 1 2 3 [a b c : a [a b] a] => 1 [1 2] 1
+[
+    [1 [1 2] 1] =
+]
+[
+    1 2 3 [a b c : a [a b] a] V unit cons cons
+] 'V(list:2)' test
+
+# with extra data
+# 1 2 3 [a b c : a [5 5] a] => 1 [5 5] 1
+[
+    [1 [5 5] 1] =
+]
+[
+    1 2 3 [a b c : a [5 5] a] V unit cons cons
+] 'V(prefilled)' test
+
+# more interesting stuff.
+# ignore some parts.
+# [1 2] 3 [[_ b] c : [b c]] => [2 3]
+[
+    [2 3] =
+]
+[
+    [1 2] 3 [[_ b] c : [b c]] V
+] 'V(_)' test
+
+# slurp
+# [1 2 4 5 6] 3 [[a *] b : [a b]] => [1 3]
+[
+    [1 3] =
+]
+[
+    [1 2 4 5 6] 3 [[a *] b : [a b]] V
+] 'V(*)' test
+
+# rev slurp
+# [1 2 4 5 6] 3 [[* a] b : [a b]] => [6 3]
+[
+    [6 3] =
+]
+[
+    [1 2 4 5 6] 3 [[* a] b : [a b]] V
+] 'V(rev*)' test
+
+# named slurp
+# [1 2 4 5 6] 3 [[a *rest] b : [*rest b]] => [2 4 5 6 3]
+[
+    [2 4 5 6 3] =
+]
+[
+    [1 2 4 5 6] 3 [[a *rest] b : [*rest b]] V
+] 'V(named *)' test
+
+# named reverse slurp
+# [1 2 4 5 6] 3 [[*rest a] b : [[b *rest] a]] => [[3 1 2 4 5] 6]
+[
+    [[3 1 2 4 5] 6] =
+]
+[
+    [1 2 4 5 6] 3 [[*rest a] b : [[b *rest] a]] V
+] 'V(named rev *)' test
+
 "--------Success-----------" puts

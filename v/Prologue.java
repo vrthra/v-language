@@ -107,6 +107,128 @@ public class Prologue {
         return map.entrySet().iterator().next();
     }
 
+    static Term next(Iterator<Term> t) {
+        return t.next();
+    }
+
+    static QuoteStream evalres(TokenStream res, HashMap<String, Term> symbols, Quote q) {
+        QuoteStream r = new QuoteStream();
+        Iterator<Term> rstream = res.iterator();
+        while(rstream.hasNext()) {
+            Term t = rstream.next();
+            switch(t.type) {
+
+                case TQuote:
+                    QuoteStream nq = evalres(t.qvalue().tokens(), symbols, q);
+                    r.add(new Term<Quote>(Type.TQuote, new CmdQuote(nq, q)));
+                    break;
+                case TSymbol:
+                    // do we have it in our symbol table? if yes, replace, else just push it in.
+                    /*V.outln("?" + t.svalue());
+                    for(String s: symbols.keySet()) {
+                        V.outln("-" + s + "+" + symbols.get(s).value());
+                    }*/
+                    String sym = t.svalue();
+                    if (symbols.containsKey(sym)) {
+                        // does it look like *xxx ?? 
+                        if (sym.charAt(0) == '*') {
+                            // expand it.
+                            Term star = symbols.get(sym);
+                            for(Term x : star.qvalue().tokens()) {
+                                r.add(x);
+                            }
+                        } else
+                            r.add(symbols.get(sym));
+                    }
+                    break;
+                default:
+                    // just push it in.
+                    r.add(t);
+            }
+        }
+        return r;
+    }
+
+    static void evaltmpl(TokenStream tmpl, TokenStream elem, HashMap<String, Term> symbols, Quote q) {
+        //Take each point in tmpl, and proess elements accordingly.
+        Iterator<Term> tstream = tmpl.iterator();
+        Iterator<Term> estream = elem.iterator();
+        while(tstream.hasNext()) {
+            Term t = tstream.next();
+            switch (t.type) {
+                case TSymbol:
+                    // _ means any one
+                    // * means any including nil unnamed.
+                    // *a means any including nil but named with symbol '*a'
+                    String value = t.value();
+                    if (value.charAt(0) == '_') {
+                        // eat one from estream and continue.
+                        next(estream);
+                        break;
+                    } else if (value.charAt(0) == '*') {
+                        QuoteStream nlist = new QuoteStream();
+                        // * is all. but before we slurp, check the next element
+                        // in the template. If there is not any, then slurp. If there
+                        // is one, then slurp until last but one, and leave it.
+                        if (tstream.hasNext()) {
+                            Term tmplterm = tstream.next();
+                            Term lastelem = null;
+
+                            // slurp till last but one.
+                            while(estream.hasNext()) {
+                                lastelem = next(estream);
+                                if (estream.hasNext())
+                                    nlist.add(lastelem);
+                            }
+
+                            switch (tmplterm.type) {
+                                case TSymbol:
+                                    // assign value in symbols.
+                                    symbols.put(tmplterm.svalue(), lastelem);
+                                    break;
+                                case TQuote:
+                                    evaltmpl(tmplterm.qvalue().tokens(), lastelem.qvalue().tokens(), symbols, q);
+                                    break;
+                                default:
+                                    if (tmplterm.value().equals(lastelem.value()))
+                                        break;
+                                    else
+                                        throw new VException("shuffle failed assert"
+                                                + tmplterm.value() + ":" + lastelem.value() );
+                            }
+
+                        } else {
+                            // we can happily slurp now.
+                            while(estream.hasNext())
+                                nlist.add(next(estream));
+                        }
+                        if (value.length() > 1) { // do we have a named list?
+                            symbols.put(value, new Term<Quote>(Type.TQuote, new CmdQuote(nlist, q)));
+                        }
+                    } else {
+                        Term e = next(estream);
+                        symbols.put(t.value(), e);
+                    }
+                    break;
+
+
+                case TQuote:
+                    // evaluate this portion again in evaltmpl.
+                    Term et = next(estream);
+                    evaltmpl(t.qvalue().tokens(), et.qvalue().tokens(), symbols, q);
+                    break;
+                default:
+                    //make sure both matches. TODO:
+                    Term eterm = next(estream);
+                    if (t.value().equals(eterm.value()))
+                        break;
+                    else
+                        throw new VException("shuffle failed assert"
+                                + t.value() + ":" + eterm.value() );
+
+            }
+        }
+    }
 
     public static void init(final Quote parent) {
         // accepts a quote as an argument.
@@ -137,6 +259,74 @@ public class Prologue {
 
                 V.debug("DefP [" + symbol + "] @ " + q.id() + ":" + parent.id());
                 q.parent().def(symbol, entry.getValue());
+            }
+        };
+
+        // a b c [a b c : [a b c]] V
+        // [a b c] [[a b c] : a b c] V
+        // [a b c] [[a _] : [a a]] V -- _ indicates any value.
+        // [a b c] [[a *b] : [a a]] V -- * indicates an addressible list.
+        //
+        // a b c d e f [a *b : [a b]] V => a b c d [e f] -- we ignore the
+        // *x on the first level and treat it as just an element.
+
+        Cmd _shuffle = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term v = p.pop();
+                Iterator<Term> fstream = v.qvalue().tokens().iterator();
+
+                // iterate through the quote, and find where ':' is then split it
+                // into two half and analyze the first.
+                QuoteStream tmpl = new QuoteStream();
+                while (fstream.hasNext()) {
+                    Term t = fstream.next();
+                    if (t.type == Type.TSymbol && t.value().equals(":"))
+                        break;
+                    tmpl.add(t);
+                }
+                
+                QuoteStream res = new QuoteStream();
+                while (fstream.hasNext()) {
+                    Term t = fstream.next();
+                    res.add(t);
+                }
+
+                // collect as much params as there is from stack as there is in the template
+                // first level.
+                QuoteStream elem = new QuoteStream();
+                fstream = tmpl.iterator();
+                LinkedList<Term> st = new LinkedList<Term>();
+                while (fstream.hasNext()) {
+                    Term t = fstream.next();
+                    Term e = p.pop();
+                    st.addFirst(e);
+                }
+                for (Term e: st)
+                    elem.add(e);
+                
+                HashMap<String, Term> symbols = new HashMap<String, Term>();
+                /*V.outln(".......tmpl....");
+                for(Term t: tmpl)
+                    V.outln(t.value());
+                V.outln(".......res....");
+                for(Term t: res)
+                    V.outln(t.value());
+                V.outln(".......elem....");
+                for(Term t: elem)
+                    V.outln(t.value());*/
+                //Now take each elem and its pair templ and extract the symbols and their meanings.
+                evaltmpl(tmpl, elem, symbols, q);
+                /*for (String s : symbols.keySet()) {
+                    V.outln(s + ":" + symbols.get(s).value());
+                }*/
+
+                // now go over the quote we were just passed and replace each symbol with what we
+                // have if we do have a definition.
+                QuoteStream resstream = evalres(res, symbols, q);
+                CmdQuote qs = new CmdQuote(resstream, q);
+                qs.eval(q);
             }
         };
 
@@ -1408,6 +1598,7 @@ public class Prologue {
         parent.def(".", _def);
         /*parent.def("module", _defmodule);*/
         parent.def("@", _defparent);
+        parent.def("V", _shuffle);
         /*parent.def("$", _call);*/
         parent.def("$words", _words);
         parent.def("true", _true);
