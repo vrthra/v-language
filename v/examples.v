@@ -243,41 +243,41 @@ mycmd
 ]
 [
     ["I am here" length] java
-] 'V (java)' test
+] 'V (java primitive)' test
 
 [
     100 =
 ]
 [
     [-100 java.lang.Math abs] java
-] 'V (java)' test
+] 'V (java static method)' test
 
 [
     integer?
 ]
 [
     [java.util.Date new] java unit [getDay] concat java
-] 'V (java)' test
+] 'V (java constructor)' test
 
 [
     'abc' =
 ]
 [
     [[~a ~b ~c] java.lang.String new] java
-] 'V (java)' test
+] 'V (java array)' test
 
 [
     '0.002' =
 ]
 [
     [v.V version$] java
-] 'V (java)' test
+] 'V (java field read access)' test
 
 [
     '0.001' =
 ]
 [
     ['0.001' v.V version$] java
-] 'V (java)' test
+] 'V (java field write access)' test
 
 "--------Success-----------" puts
