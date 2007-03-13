@@ -13,6 +13,14 @@ public abstract class Token {
             throw new VException("Invalid type(bool) for " + value());
         }
     }
+    public char cvalue() {
+        try {
+            Term<Character> v = (Term<Character>)this;
+            return v.val;
+        } catch (Exception e) {
+            throw new VException("Invalid type(bool) for " + value());
+        }
+    }
     public int ivalue() {
         try {
             Term<Integer> v = (Term<Integer>)this;
@@ -43,6 +51,14 @@ public abstract class Token {
             return v.val;
         } catch (Exception e) {
             throw new VException("Invalid type(quote) for " + value());
+        }
+    }
+    public Object ovalue() {
+        try {
+            Term<Object> v = (Term<Object>)this;
+            return v.val;
+        } catch (Exception e) {
+            throw new VException("Invalid type(object) for " + value());
         }
     }
 }

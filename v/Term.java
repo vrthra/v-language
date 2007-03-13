@@ -1,19 +1,5 @@
 package v;
 
-enum Type {
-    TSymbol,
-    TQuote,
-    TString,
-    TInt,
-    TFloat,
-    TChar,
-    TBool,
-
-    // ----------- Used only in lexer
-    TOpen,
-    TClose
-};
-
 public class Term <T> extends Token {
     public Type type;
     public T val;
@@ -24,6 +10,10 @@ public class Term <T> extends Token {
     }
 
     public String value() {
+        if (type == Type.TObject)
+            return "{" + val.toString() + "}";
+        if (type == Type.TChar)
+            return '~' + val.toString();
         return val.toString();
     }
 

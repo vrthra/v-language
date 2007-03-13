@@ -1,5 +1,6 @@
 package v;
 import java.util.*;
+import v.java.*;
 
 class Shield {
     // current stack
@@ -262,6 +263,27 @@ public class Prologue {
             }
         };
 
+        // [a b c obj method] java
+        Cmd _java = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term v = p.pop();
+                LinkedList<Term> st = new LinkedList<Term>();
+                for(Term t: v.qvalue().tokens())
+                    st.addFirst(t);
+
+                Iterator<Term> i = st.iterator();
+                Term method = i.next();
+                Term object = i.next();
+                QuoteStream qs = new QuoteStream();
+                while(i.hasNext())
+                    qs.add(i.next());
+                Term res = Helper.invoke(object, method, new CmdQuote(qs, q));
+                p.push(res);
+            }
+        };
+ 
         // a b c [a b c : [a b c]] V
         // [a b c] [[a b c] : a b c] V
         // [a b c] [[a _] : [a a]] V -- _ indicates any value.
@@ -1599,6 +1621,7 @@ public class Prologue {
         /*parent.def("module", _defmodule);*/
         parent.def("@", _defparent);
         parent.def("V", _shuffle);
+        parent.def("java", _java);
         /*parent.def("$", _call);*/
         parent.def("$words", _words);
         parent.def("true", _true);

@@ -236,4 +236,34 @@ mycmd
     [1 2 4 5 6] 3 [[*rest a] b : [[b *rest] a]] V
 ] 'V(named rev *)' test
 
+#=======================================
+#java
+[
+    9 =
+]
+[
+    ["I am here" length] java
+] 'V (java)' test
+
+[
+    100 =
+]
+[
+    [-100 java.lang.Math abs] java
+] 'V (java)' test
+
+[
+    integer?
+]
+[
+    [java.util.Date new] java unit [getDay] concat java
+] 'V (java)' test
+
+[
+    'abc' =
+]
+[
+    [[~a ~b ~c] java.lang.String new] java
+] 'V (java)' test
+
 "--------Success-----------" puts
