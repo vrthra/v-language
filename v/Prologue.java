@@ -420,17 +420,7 @@ public class Prologue {
             }
         };
 
-        Cmd _abs = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                Term v = p.pop();
-                if (v.type == Type.TInt)
-                    p.push(new Term<Integer>(Type.TInt,Math.abs(v.ivalue())));
-                else if (v.type == Type.TFloat)
-                    p.push(new Term<Float>(Type.TFloat,Math.abs(v.fvalue())));
-            }
-        };
-
+        Quote _abs = getdef(parent, "unit [java.lang.Math abs] concat java");
         Cmd _acos = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
