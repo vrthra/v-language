@@ -117,7 +117,7 @@ public class CmdQuote implements Quote {
             Token sym = _stack.pop();
             if (sym.type() != Type.TSymbol)
                 throw new VException("Attempt to apply NotSymbol(" + sym.value() + ")");
-            Quote q = lookup(sym.value());
+            Quote q = scope.lookup(sym.value());
             if (q == null) {
                 throw new VException("Attempt to invoke undefined word (" + sym.value()+ ") at " + id() + " and parent " + parent().id() );
             }

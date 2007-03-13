@@ -26,8 +26,23 @@
 #=========================================
 # list operations.
 [[5 4 3 2 1] =] [[1 2 3 4 5] reverse] 'list reverse' test
-[[peter paul mary jane] =] [[peter paul]  [mary jane]  concat] 'list reverse' test
+[[peter paul mary jane] =] [[peter paul]  [mary jane]  concat] 'list concat' test
 
+#internal definitions
+#=========================================
+[int1
+    [myfunct dup +].
+    [1 2 3 4] [myfunct] map
+].
+
+[[2 4 6 8] =] [int1] 'internal (1)' test
+#=========================================
+[int2
+    [myfunct 3 >].
+    [1 2 3 4] [myfunct] filter
+].
+
+[[4] =] [int2] 'internal (2)' test
 #=========================================
 [fact 
     zero?
