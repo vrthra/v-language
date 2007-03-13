@@ -25,7 +25,7 @@
 [false =] [true  false  or  true  and  not] 'boolean operations' test
 #=========================================
 # list operations.
-[[5 4 3 2 1] =] [[1 2 3 4 5] rev] 'list reverse' test
+[[5 4 3 2 1] =] [[1 2 3 4 5] reverse] 'list reverse' test
 [[peter paul mary jane] =] [[peter paul]  [mary jane]  concat] 'list reverse' test
 
 #=========================================
@@ -109,12 +109,12 @@
     [" a: " a " b: " b " c: " c]! show
     
     [discr b dup * 4 a * c * - sqrt].
-    [] " discr: " << discr << rev show
+    [] " discr: " << discr << reverse show
 
     [root1 0 b - discr + 2 a * /].
     [root2 0 b - discr - 2 a * /].
 
-    [] " root1: " << root1 << " root2: " << root2 << rev show
+    [] " root1: " << root1 << " root2: " << root2 << reverse show
     root1 root2].
 
 [-5.0 = swap 3.0 = and] [2 4 -30 roots] 'roots' test
@@ -209,14 +209,14 @@ mycmd
     [1 2 4 5 6] 3 [[a *] b : [a b]] V
 ] 'V(*)' test
 
-# rev slurp
+# reverse slurp
 # [1 2 4 5 6] 3 [[* a] b : [a b]] => [6 3]
 [
     [6 3] =
 ]
 [
     [1 2 4 5 6] 3 [[* a] b : [a b]] V
-] 'V(rev*)' test
+] 'V(reverse*)' test
 
 # named slurp
 # [1 2 4 5 6] 3 [[a *rest] b : [*rest b]] => [2 4 5 6 3]
@@ -234,7 +234,7 @@ mycmd
 ]
 [
     [1 2 4 5 6] 3 [[*rest a] b : [[b *rest] a]] V
-] 'V(named rev *)' test
+] 'V(named reverse *)' test
 
 #=======================================
 #java

@@ -389,11 +389,11 @@ public class Prologue {
 
         Cmd _throw = new Cmd(parent) {
             public void eval(Quote q) {
-                throw new VException("Error( " + q.stack().peek().value() + " )" );
+                throw new VException("Error(" + q.stack().peek().value() + ")" );
             }
         };
 
-        Quote _let = getdef(parent, "rev [unit cons rev @ true] map pop");
+        Quote _let = getdef(parent, "reverse [unit cons reverse @ true] map pop");
 
         // expects callable word as first arg and the quote where it is defined as second
         /*Cmd _call = new Cmd(parent) {
@@ -1123,7 +1123,7 @@ public class Prologue {
             }
         };
 
-        Cmd _rev = new Cmd(parent) {
+        Cmd _reverse = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
 
@@ -1663,7 +1663,7 @@ public class Prologue {
         parent.def("id", _id);
 
         //list
-        parent.def("rev", _rev);
+        parent.def("reverse", _reverse);
         parent.def("unit", _unit);
         parent.def("first&", _first_i);
         parent.def("first", _first);
