@@ -68,7 +68,7 @@ public class Helper {
             case TString:
                 return String.class;
             case TObject:
-                return Object.class;
+                return t.ovalue().getClass();
             case TQuote:
                 return getArrayType(t);
             default:
