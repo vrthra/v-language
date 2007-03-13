@@ -295,4 +295,13 @@ mycmd
     ['0.001' v.V version$] java
 ] 'V (java field write access)' test
 
+#=============================================
+# math
+[
+    0.87629807 =
+]
+[
+    0.64 acos
+] 'math acos' test
+
 "--------Success-----------" puts

@@ -1557,6 +1557,15 @@ public class Prologue {
             }
         };
 
+        Cmd _tostring = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.pop();
+                p.push(new Term<String>(Type.TString, a.value()));
+            }
+        };
+
+
         /* stdlib.v
          * [stdlib 
          *      [qsort  xxx yyy].
@@ -1717,6 +1726,8 @@ public class Prologue {
         parent.def("empty?", _isempty);
         parent.def("null?", _isnull);
         parent.def("small?", _issmall);
+
+        parent.def(">string", _tostring);
 
         //math
         parent.def("sqrt", _sqrt);
