@@ -14,7 +14,7 @@ enum Type {
     TClose
 };
 
-class Term <T> extends Token {
+public class Term <T> extends Token {
     public Type type;
     public T val;
 
@@ -29,5 +29,12 @@ class Term <T> extends Token {
 
     public Type type() {
         return type;
+    }
+
+    public int size() {
+        if (type != Type.TQuote)
+            return 1;
+        else
+            return ((QuoteStream)qvalue().tokens()).size();
     }
 }

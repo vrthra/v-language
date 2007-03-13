@@ -13,11 +13,11 @@ public class QuoteStream implements TokenStream {
         _terms.add(t);
     }
 
-    Term get(int idx) {
+    public Term get(int idx) {
         return _terms.get(idx);
     }
 
-    int size() {
+    public int size() {
         return _terms.size();
     }
 
