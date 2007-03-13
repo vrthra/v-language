@@ -152,10 +152,20 @@ public class Helper {
         }
     }
 
+    public static Field getField(String c, String method) {
+        try {
+            Class cls = getClass(c);
+            return cls.getField(method.substring(0, method.length() - 1));
+        } catch (NoSuchFieldException e) {
+            throw new VException("Java Exception : (no such field)" + e.getMessage());
+        }
+    }
+
     public static Term invoke(Term c, Term m, Quote params) {
         try {
             String cname = null;
             Object o = null;
+            String method = m.svalue();
             if (c.type != v.Type.TSymbol) {
                 o = getJavaObj(c);
                 cname = o.getClass().getName();
@@ -164,12 +174,26 @@ public class Helper {
                 o = null; // static invocation.
             }
 
-            if (m.svalue().equals("new")) {
+            if (method.equals("new")) {
                 if (o != null)
                     throw new VException("Java Invalid ClassName ");
                 Constructor cons = getConstructor(cname, params);
                 Object[] args = getParams(params);
                 return getResult(cons.newInstance(args));
+            } else if (method.endsWith("$")) {
+                // TODO: static field.
+                // Field.
+                Field fld = getField(cname, method);
+                // is it get or set?
+                int size = ((QuoteStream)params.tokens()).size();
+
+                if (size > 0) { // set
+                    Object no = getJavaObj(((QuoteStream)params.tokens()).get(0));
+                    fld.set(o, no);
+                    return getResult(no);
+                } else { // get
+                    return getResult(fld.get(o));
+                }
             } else {
                 Method mtd = getMethod(cname, m, params);
                 Object[] args = getParams(params);

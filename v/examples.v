@@ -266,4 +266,18 @@ mycmd
     [[~a ~b ~c] java.lang.String new] java
 ] 'V (java)' test
 
+[
+    '0.002' =
+]
+[
+    [v.V version$] java
+] 'V (java)' test
+
+[
+    '0.001' =
+]
+[
+    ['0.001' v.V version$] java
+] 'V (java)' test
+
 "--------Success-----------" puts
