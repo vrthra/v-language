@@ -63,8 +63,8 @@ public class Helper {
                 return Character.TYPE;
             case TInt:
                 return Integer.TYPE;
-            case TFloat:
-                return Float.TYPE;
+            case TDouble:
+                return Double.TYPE;
             case TString:
                 return String.class;
             case TObject:
@@ -84,8 +84,8 @@ public class Helper {
                 return new Character(t.cvalue());
             case TInt:
                 return new Integer(t.ivalue());
-            case TFloat:
-                return new Float(t.fvalue());
+            case TDouble:
+                return new Double(t.dvalue());
             case TString:
                 return new String(t.svalue());
             case TObject:
@@ -112,10 +112,10 @@ public class Helper {
             return new Term<Integer>(v.Type.TInt, (Integer)o);
         if (c.equals("long") || c.equals("java.lang.Long"))
             return new Term<Integer>(v.Type.TInt, new Integer(((Long)o).toString())); // cant help it loss of bits
-        if (c.equals("float") || c.equals("java.lang.Float"))
-            return new Term<Float>(v.Type.TFloat, (Float)o);
         if (c.equals("double") || c.equals("java.lang.Double"))
-            return new Term<Float>(v.Type.TFloat, new Float(((Double)o).toString())); // cant help it loss of bits
+            return new Term<Double>(v.Type.TDouble, (Double)o);
+        if (c.equals("double") || c.equals("java.lang.Float"))
+            return new Term<Double>(v.Type.TDouble, new Double(((Float)o).toString())); // cant help it loss of bits
         if (c.equals("char") || c.equals("java.lang.Character"))
             return new Term<Character>(v.Type.TChar, (Character)o);
         if (c.equals("boolean") || c.equals("java.lang.Boolean"))

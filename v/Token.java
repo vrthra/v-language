@@ -29,12 +29,12 @@ public abstract class Token {
             throw new VException("Invalid type(int) for " + value());
         }
     }
-    public float fvalue() {
+    public double dvalue() {
         try {
-            Term<Float> v = (Term<Float>)this;
+            Term<Double> v = (Term<Double>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException("Invalid type(float) for " + value());
+            throw new VException("Invalid type(double) for " + value());
         }
     }
     public String svalue() {

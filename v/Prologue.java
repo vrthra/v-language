@@ -25,15 +25,15 @@ public class Prologue {
         if (a.type == Type.TInt) {
             if (b.type == Type.TInt)
                 return a.ivalue() > b.ivalue();
-            else if (b.type == Type.TFloat)
-                return a.ivalue() > b.fvalue();
+            else if (b.type == Type.TDouble)
+                return a.ivalue() > b.dvalue();
             else
                 throw new VException("Type error(>)" + a.value() + " " + b.value());
-        } else if (a.type == Type.TFloat) {
+        } else if (a.type == Type.TDouble) {
             if (b.type == Type.TInt)
-                return a.fvalue() > b.ivalue();
-            else if (b.type == Type.TFloat)
-                return a.fvalue() > b.fvalue();
+                return a.dvalue() > b.ivalue();
+            else if (b.type == Type.TDouble)
+                return a.dvalue() > b.dvalue();
             else
                 throw new VException("Type error(>)" + a.value() + " " + b.value());
         }
@@ -46,10 +46,10 @@ public class Prologue {
                 if (b.type != Type.TInt)
                     throw new VException("Type error(=)" + a.value() + " " + b.value());
                 return a.ivalue() == b.ivalue();
-            case TFloat:
-                if (b.type != Type.TFloat)
+            case TDouble:
+                if (b.type != Type.TDouble)
                     throw new VException("Type error(=)" + a.value() + " " + b.value());
-                return a.fvalue() == b.fvalue();
+                return a.dvalue() == b.dvalue();
             case TString:
                 if (b.type != Type.TString)
                     throw new VException("Type error(=)" + a.value() + " " + b.value());
@@ -67,7 +67,6 @@ public class Prologue {
         return true;
     }
 
-    static final String _buff = "";
     public static void evaluate(Quote q, String buff) {
         getdef(q, buff).eval(q, true);
     }
@@ -106,10 +105,6 @@ public class Prologue {
         // _parent.
         map.put(symbol.val, new CmdQuote(nts, q)); 
         return map.entrySet().iterator().next();
-    }
-
-    static Term next(Iterator<Term> t) {
-        return t.next();
     }
 
     static QuoteStream evalres(TokenStream res, HashMap<String, Term> symbols, Quote q) {
@@ -164,7 +159,7 @@ public class Prologue {
                     String value = t.value();
                     if (value.charAt(0) == '_') {
                         // eat one from estream and continue.
-                        next(estream);
+                        estream.next();
                         break;
                     } else if (value.charAt(0) == '*') {
                         QuoteStream nlist = new QuoteStream();
@@ -177,7 +172,7 @@ public class Prologue {
 
                             // slurp till last but one.
                             while(estream.hasNext()) {
-                                lastelem = next(estream);
+                                lastelem = estream.next();
                                 if (estream.hasNext())
                                     nlist.add(lastelem);
                             }
@@ -201,13 +196,13 @@ public class Prologue {
                         } else {
                             // we can happily slurp now.
                             while(estream.hasNext())
-                                nlist.add(next(estream));
+                                nlist.add(estream.next());
                         }
                         if (value.length() > 1) { // do we have a named list?
                             symbols.put(value, new Term<Quote>(Type.TQuote, new CmdQuote(nlist, q)));
                         }
                     } else {
-                        Term e = next(estream);
+                        Term e = estream.next();
                         symbols.put(t.value(), e);
                     }
                     break;
@@ -215,12 +210,12 @@ public class Prologue {
 
                 case TQuote:
                     // evaluate this portion again in evaltmpl.
-                    Term et = next(estream);
+                    Term et = estream.next();
                     evaltmpl(t.qvalue().tokens(), et.qvalue().tokens(), symbols, q);
                     break;
                 default:
-                    //make sure both matches. TODO:
-                    Term eterm = next(estream);
+                    //make sure both matches.
+                    Term eterm = estream.next();
                     if (t.value().equals(eterm.value()))
                         break;
                     else
@@ -395,25 +390,6 @@ public class Prologue {
 
         Quote _let = getdef(parent, "reverse [unit cons reverse @ true] map pop");
 
-        // expects callable word as first arg and the quote where it is defined as second
-        /*Cmd _call = new Cmd(parent) {
-            @SuppressWarnings("unchecked")
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term t = p.pop();
-                Iterator<Term> it = t.qvalue().tokens().iterator();
-                Term<String> envsym = it.next();
-                Term<String> symbol = it.next();
-
-                //now get the closure
-                Quote body = q.lookup(envsym.svalue());
-                // fetch the method definition.
-                Quote f = body.lookup(symbol.svalue());
-                f.eval(q);
-            }
-        };*/
-
         Cmd _abort = new Cmd(parent) {
             public void eval(Quote q) {
                 q.stack().clear();
@@ -421,16 +397,10 @@ public class Prologue {
         };
 
         Quote _abs = getdef(parent, "unit [java.lang.Math abs] concat java");
-        Cmd _acos = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                Term v = p.pop();
-                if (v.type == Type.TInt)
-                    p.push(new Term<Float>(Type.TFloat,(float)Math.acos(v.ivalue())));
-                else if (v.type == Type.TFloat)
-                    p.push(new Term<Float>(Type.TFloat,(float)Math.acos(v.fvalue())));
-            }
-        };
+        Quote _acos = getdef(parent, "unit [java.lang.Math acos] concat java");
+        Quote _sqrt = getdef(parent, ">string unit [java.lang.Double new] concat java unit [java.lang.Math sqrt] concat java");
+        Quote _pred = getdef(parent, "1 -");
+        Quote _succ = getdef(parent, "1 +");
 
         Cmd _true = new Cmd(parent) {
             public void eval(Quote q) {
@@ -675,9 +645,9 @@ public class Prologue {
                             nts.add(new Term<String>(Type.TSymbol, "pred"));
                         }
                         break;
-                    case TFloat:
+                    case TDouble:
                         // evaluate if and pop it back.
-                        if (param.fvalue() == 0) {
+                        if (param.dvalue() == 0) {
                             p.pop();
                             thenp.qvalue().eval(q, true);
                             return;
@@ -770,66 +740,11 @@ public class Prologue {
             }
         };
 
-        Cmd _dup = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                p.push(p.peek());
-            }
-        };
-
-        Cmd _pop = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                V.debug("pop:" + q.id());
-                p.pop();
-            }
-        };
-
-        Cmd _swap = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                Term x = p.pop();
-                Term y = p.pop();
-                p.push(x);
-                p.push(y);
-            }
-        };
-
-        Cmd _lroll = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                Term t = p.pop();
-                Iterator<Term> it = t.qvalue().tokens().iterator();
-                Term first = it.next();
-
-                // copy the rest of tokens to our own stream.
-                QuoteStream nts = new QuoteStream();
-                while (it.hasNext())
-                    nts.add(it.next());
-                nts.add(first);
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
-            }
-        };
-
-        Cmd _rroll = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                Term t = p.pop();
-                Iterator<Term> it = t.qvalue().tokens().iterator();
-
-                List<Term> lst = new LinkedList<Term>();
-                // copy the rest of tokens to our own stream.
-                QuoteStream nts = new QuoteStream();
-                while (it.hasNext())
-                    lst.add(it.next());
-
-                nts.add(lst.remove(lst.size() -1));
-
-                for(Term e: lst)
-                    nts.add(e);
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
-            }
-        };
+        Quote _dup = getdef(parent, "[a : a a] V");
+        Quote _pop = getdef(parent, "[a :] V");
+        Quote _swap = getdef(parent, "[a b : b a] V");
+        Quote _lroll = getdef(parent, "[[a *rest] : [*rest a]] V");
+        Quote _rroll = getdef(parent, "[[*rest a] : [a *rest]] V");
 
         Cmd _step = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1132,56 +1047,11 @@ public class Prologue {
             }
         };
 
-        Cmd _uncons = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term list = p.pop();
-                // dequote both, append and push it back to stack.
-                Iterator<Term> fstream = list.qvalue().tokens().iterator();
-                p.push(fstream.next());
-                
-                // copy the rest of tokens to our own stream.
-                QuoteStream nts = new QuoteStream();
-                while (fstream.hasNext())
-                    nts.add(fstream.next());
-                    
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
-            }
-        };
-
+        Quote _uncons = getdef(parent, "[[a *rest] : a [*rest]] V");
+        Quote _first = getdef(parent, "[[a *rest] : a] V");
         Quote _first_i = getdef(parent, "dup first");
-
-        Cmd _first = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term list = p.pop();
-                // dequote both, append and push it back to stack.
-                Iterator<Term> fstream = list.qvalue().tokens().iterator();
-                p.push(fstream.next());
-            }
-        };
-
+        Quote _rest = getdef(parent, "[[a *rest] : [*rest]] V");
         Quote _rest_i = getdef(parent, "dup rest");
-
-        Cmd _rest = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term list = p.pop();
-                // dequote both, append and push it back to stack.
-                Iterator<Term> fstream = list.qvalue().tokens().iterator();
-                fstream.next(); //loose first.
-                
-                // copy the rest of tokens to our own stream.
-                QuoteStream nts = new QuoteStream();
-                while (fstream.hasNext())
-                    nts.add(fstream.next());
-                    
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
-            }
-        };
 
         Quote _size_i = getdef(parent, "dup size");
 
@@ -1197,27 +1067,9 @@ public class Prologue {
             }
         };
 
-
-        Cmd _cons = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term list = p.pop();
-                Term next = p.pop();
-                // dequote both, append and push it back to stack.
-                Iterator<Term> fstream = list.qvalue().tokens().iterator();
-
-                // copy the rest of tokens to our own stream.
-                QuoteStream nts = new QuoteStream();
-                nts.add(next);
-                while (fstream.hasNext())
-                    nts.add(fstream.next());
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
-            }
-        };
-
+        Quote _cons = getdef(parent, "[a [*rest] : [a *rest]] V");
         Quote _unit = getdef(parent, "[] cons");
-
+        Quote _concat = getdef(parent, "[[*a] [*b] : [*a *b]] V");
 
         Cmd _dip = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1228,26 +1080,6 @@ public class Prologue {
 
                 prog.qvalue().eval(q, true);
                 p.push(saved);
-            }
-        };
-
-        Cmd _concat = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term next = p.pop();
-                Term first = p.pop();
-                // dequote both, append and push it back to stack.
-                Iterator<Term> fstream = first.qvalue().tokens().iterator();
-                Iterator<Term> nstream = next.qvalue().tokens().iterator();
-
-                // copy the rest of tokens to our own stream.
-                QuoteStream nts = new QuoteStream();
-                while (fstream.hasNext())
-                    nts.add(fstream.next());
-                while (nstream.hasNext())
-                    nts.add(nstream.next());
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
         };
 
@@ -1276,15 +1108,15 @@ public class Prologue {
                 if (a.type == Type.TInt) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Integer>(Type.TInt, a.ivalue() + b.ivalue()));
-                    else if (b.type == Type.TFloat)
-                        p.push(new Term<Float>(Type.TFloat, a.ivalue() + b.fvalue()));
+                    else if (b.type == Type.TDouble)
+                        p.push(new Term<Double>(Type.TDouble, a.ivalue() + b.dvalue()));
                     else
                         throw new VException("Type error(+)" + a.value() + " " + b.value());
-                } else if (a.type == Type.TFloat) {
+                } else if (a.type == Type.TDouble) {
                     if (b.type == Type.TInt)
-                        p.push(new Term<Float>(Type.TFloat, a.fvalue() + b.ivalue()));
-                    else if (b.type == Type.TFloat)
-                        p.push(new Term<Float>(Type.TFloat, a.fvalue() + b.fvalue()));
+                        p.push(new Term<Double>(Type.TDouble, a.dvalue() + b.ivalue()));
+                    else if (b.type == Type.TDouble)
+                        p.push(new Term<Double>(Type.TDouble, a.dvalue() + b.dvalue()));
                     else
                         throw new VException("Type error(+)" + a.value() + " " + b.value());
                 }
@@ -1299,15 +1131,15 @@ public class Prologue {
                 if (a.type == Type.TInt) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Integer>(Type.TInt, a.ivalue() - b.ivalue()));
-                    else if (b.type == Type.TFloat)
-                        p.push(new Term<Float>(Type.TFloat, a.ivalue() - b.fvalue()));
+                    else if (b.type == Type.TDouble)
+                        p.push(new Term<Double>(Type.TDouble, a.ivalue() - b.dvalue()));
                     else
                         throw new VException("Type error(-)" + a.value() + " " + b.value());
-                } else if (a.type == Type.TFloat) {
+                } else if (a.type == Type.TDouble) {
                     if (b.type == Type.TInt)
-                        p.push(new Term<Float>(Type.TFloat, a.fvalue() - b.ivalue()));
-                    else if (b.type == Type.TFloat)
-                        p.push(new Term<Float>(Type.TFloat, a.fvalue() - b.fvalue()));
+                        p.push(new Term<Double>(Type.TDouble, a.dvalue() - b.ivalue()));
+                    else if (b.type == Type.TDouble)
+                        p.push(new Term<Double>(Type.TDouble, a.dvalue() - b.dvalue()));
                     else
                         throw new VException("Type error(-)" + a.value() + " " + b.value());
                 }
@@ -1322,15 +1154,15 @@ public class Prologue {
                 if (a.type == Type.TInt) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Integer>(Type.TInt, a.ivalue() * b.ivalue()));
-                    else if (b.type == Type.TFloat)
-                        p.push(new Term<Float>(Type.TFloat, a.ivalue() * b.fvalue()));
+                    else if (b.type == Type.TDouble)
+                        p.push(new Term<Double>(Type.TDouble, a.ivalue() * b.dvalue()));
                     else
                         throw new VException("Type error(*)" + a.value() + " " + b.value());
-                } else if (a.type == Type.TFloat) {
+                } else if (a.type == Type.TDouble) {
                     if (b.type == Type.TInt)
-                        p.push(new Term<Float>(Type.TFloat, a.fvalue() * b.ivalue()));
-                    else if (b.type == Type.TFloat)
-                        p.push(new Term<Float>(Type.TFloat, a.fvalue() * b.fvalue()));
+                        p.push(new Term<Double>(Type.TDouble, a.dvalue() * b.ivalue()));
+                    else if (b.type == Type.TDouble)
+                        p.push(new Term<Double>(Type.TDouble, a.dvalue() * b.dvalue()));
                     else
                         throw new VException("Type error(*)" + a.value() + " " + b.value());
                 }
@@ -1344,16 +1176,16 @@ public class Prologue {
                 Term a = p.pop();
                 if (a.type == Type.TInt) {
                     if (b.type == Type.TInt)
-                        p.push(new Term<Float>(Type.TFloat, (float)(a.ivalue() / (1.0 * b.ivalue()))));
-                    else if (b.type == Type.TFloat)
-                        p.push(new Term<Float>(Type.TFloat, a.ivalue() / b.fvalue()));
+                        p.push(new Term<Double>(Type.TDouble, (double)(a.ivalue() / (1.0 * b.ivalue()))));
+                    else if (b.type == Type.TDouble)
+                        p.push(new Term<Double>(Type.TDouble, a.ivalue() / b.dvalue()));
                     else
                         throw new VException("Type error(/)" + a.value() + " " + b.value());
-                } else if (a.type == Type.TFloat) {
+                } else if (a.type == Type.TDouble) {
                     if (b.type == Type.TInt)
-                        p.push(new Term<Float>(Type.TFloat, a.fvalue() / b.ivalue()));
-                    else if (b.type == Type.TFloat)
-                        p.push(new Term<Float>(Type.TFloat, a.fvalue() / b.fvalue()));
+                        p.push(new Term<Double>(Type.TDouble, a.dvalue() / b.ivalue()));
+                    else if (b.type == Type.TDouble)
+                        p.push(new Term<Double>(Type.TDouble, a.dvalue() / b.dvalue()));
                     else
                         throw new VException("Type error(/)" + a.value() + " " + b.value());
                 }
@@ -1441,28 +1273,6 @@ public class Prologue {
             }
         };
 
-        // Math
-        Cmd _sqrt = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                p.push(new Term<Integer>(Type.TInt,(int)Math.sqrt(p.pop().ivalue())));
-            }
-        };
-
-        Cmd _pred = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                p.push(new Term<Integer>(Type.TInt,p.pop().ivalue()-1));
-            }
-        };
-
-        Cmd _succ = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                p.push(new Term<Integer>(Type.TInt,p.pop().ivalue()+1));
-            }
-        };
-
 
 
         // Predicates do not consume the element. 
@@ -1482,11 +1292,11 @@ public class Prologue {
             }
         };
 
-        Cmd _isfloat = new Cmd(parent) {
+        Cmd _isdouble = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
                 Term a = p.peek();
-                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TFloat));
+                p.push(new Term<Boolean>(Type.TBool, a.type == Type.TDouble));
             }
         };
 
@@ -1523,7 +1333,7 @@ public class Prologue {
                 p.push(new Term<Boolean>(Type.TBool,
                             (a.type == Type.TInt && a.ivalue() == 0)
                              ||
-                            (a.type == Type.TFloat && a.fvalue() == 0)));
+                            (a.type == Type.TDouble && a.dvalue() == 0)));
             }
         };
 
@@ -1545,7 +1355,7 @@ public class Prologue {
                 QStack p = q.stack();
                 Term a = p.peek();
                 p.push(new Term<Boolean>(Type.TBool,
-                            a.type == Type.TInt || a.type == Type.TFloat));
+                            a.type == Type.TInt || a.type == Type.TDouble));
             }
         };
 
@@ -1713,7 +1523,7 @@ public class Prologue {
         //do -> if (x is yyy) then {do some thing with x} so it is more
         //natural to let x be there in the stack than to pop it off.
         parent.def("integer?", _isinteger);
-        parent.def("float?", _isfloat);
+        parent.def("double?", _isdouble);
         parent.def("boolean?", _isbool);
         parent.def("symbol?", _issym);
         parent.def("list?", _islist);

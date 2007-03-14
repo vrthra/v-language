@@ -4,7 +4,7 @@ public enum Type {
     TQuote,
     TString,
     TInt,
-    TFloat,
+    TDouble,
     TChar,
     TBool,
     TObject, // only for java.

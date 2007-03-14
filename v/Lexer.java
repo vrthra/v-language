@@ -197,7 +197,7 @@ public class Lexer {
         if (P_INT.matcher(word).matches())
             add(new Term<Integer>(Type.TInt, Integer.parseInt(_word.toString())));
         else if (P_FLOAT.matcher(word).matches())
-            add(new Term<Float>(Type.TFloat, Float.parseFloat(_word.toString())));
+            add(new Term<Double>(Type.TDouble, Double.parseDouble(_word.toString())));
         else
             add(new Term<String>(Type.TSymbol, _word.toString()));
     }
