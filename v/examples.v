@@ -28,6 +28,22 @@
 [[5 4 3 2 1] =] [[1 2 3 4 5] reverse] 'list reverse' test
 [[peter paul mary jane] =] [[peter paul]  [mary jane]  concat] 'list concat' test
 
+#=========================================
+# list destructuring with symbols on stack.
+[
+    [b] =
+]
+[
+    [b] uncons pop unit
+] 'list destructuring (1)' test
+
+[
+    [b] =
+]
+[
+    [b] first unit
+] 'list destructuring (2)' test
+
 #internal definitions
 #=========================================
 [int0

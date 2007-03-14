@@ -359,7 +359,11 @@ public class Prologue {
                 // have if we do have a definition.
                 QuoteStream resstream = evalres(res, symbols, q);
                 CmdQuote qs = new CmdQuote(resstream, q);
-                qs.eval(q);
+
+                Iterator<Term> i = qs.tokens().iterator();
+                while (i.hasNext())
+                    p.push(i.next());
+                //qs.eval(q);
             }
         };
 
@@ -1085,7 +1089,21 @@ public class Prologue {
         Quote _cons = getdef(parent, "[a [*rest] : [a *rest]] V");
         Quote _unit = getdef(parent, "[] cons");
         Quote _concat = getdef(parent, "[[*a] [*b] : [*a *b]] V");
-        Quote _dip = getdef(parent, "[a b : b i a] V");
+        
+        // Quote _dip = getdef(parent, "[a b : b i a] V");
+        // V is just a list destructuring operator.
+        Cmd _dip = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term prog = p.pop();
+                Term saved = p.pop();
+
+                prog.qvalue().eval(q, true);
+                p.push(saved);
+            }
+        };
+
         Quote _x = getdef(parent, "dup i");
         Quote _id = getdef(parent, "[a : a] V");
 
