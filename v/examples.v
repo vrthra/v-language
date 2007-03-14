@@ -30,6 +30,16 @@
 
 #internal definitions
 #=========================================
+[int0
+    [myfunct
+      [mf dup +].
+      [mf] i
+    ].
+    [1 2 3 4] [myfunct] map
+].
+
+[[2 4 6 8] =] [int0] 'internal (1)' test
+#=========================================
 [int1
     [myfunct dup +].
     [1 2 3 4] [myfunct] map
