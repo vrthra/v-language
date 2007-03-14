@@ -1303,28 +1303,9 @@ public class Prologue {
             }
         };
 
-        Cmd _iszero = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                Term a = p.peek();
-                p.push(new Term<Boolean>(Type.TBool,
-                            (a.type == Type.TInt && a.ivalue() == 0)
-                             ||
-                            (a.type == Type.TDouble && a.dvalue() == 0)));
-            }
-        };
-
-        Cmd _isempty = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-                Term a = p.peek();
-                p.push(new Term<Boolean>(Type.TBool, (a.type == Type.TQuote &&
-                                ((QuoteStream)a.qvalue().tokens()).size() == 0)));
-            }
-        };
-
+        Quote _iszero = getdef(parent, "dup >decimal 0.0 =");
+        Quote _isempty = getdef(parent, "size& zero? swap pop");
         Quote _isnull = getdef(parent, "number? [zero?] [empty?] ifte");
-
         Quote _issmall = getdef(parent, "[list?] [size& swap pop zero? swap 1 = or] [zero? swap 1 = or] ifte");
 
         Cmd _isnum = new Cmd(parent) {
