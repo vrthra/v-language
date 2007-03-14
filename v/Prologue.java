@@ -242,17 +242,35 @@ public class Prologue {
             }
         };
 
-        Cmd _defparent = new Cmd(parent) {
+        Cmd _me = new Cmd(parent) {
             public void eval(Quote q) {
                 // eval is passed in the quote representing the current scope.
                 QStack p = q.stack();
+                p.push(new Term<Quote>(Type.TQuote, q));
+            }
+        };
+
+        Cmd _parent = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term t = p.pop();
+                p.push(new Term<Quote>(Type.TQuote, t.qvalue().parent()));
+            }
+        };
+
+        Cmd _definenv = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term b = p.pop();
                 Term t = p.pop();
                 
                 Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
                 String symbol = entry.getKey();
 
                 V.debug("DefP [" + symbol + "] @ " + q.id() + ":" + parent.id());
-                q.parent().def(symbol, entry.getValue());
+                b.qvalue().def(symbol, entry.getValue());
             }
         };
 
@@ -349,10 +367,11 @@ public class Prologue {
             public void eval(Quote q) {
                 // eval is passed in the quote representing the current scope.
                 QStack p = q.stack();
+                Term t = p.pop();
 
                 // copy the rest of tokens to our own stream.
                 QuoteStream nts = new QuoteStream();
-                for(String s: q.bindings().keySet())
+                for(String s: t.qvalue().bindings().keySet())
                     nts.add(new Term<String>(Type.TSymbol,s));
                 p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
             }
@@ -386,7 +405,7 @@ public class Prologue {
             }
         };
 
-        Quote _let = getdef(parent, "reverse [unit cons reverse @ true] map pop");
+        Quote _let = getdef(parent, "reverse [unit cons reverse $me $parent @ true] map pop");
 
         Cmd _abort = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1080,6 +1099,17 @@ public class Prologue {
             }
         };
 
+        Cmd _dequoteenv = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term env = p.pop();
+                Term prog = p.pop();
+                V.debug("Dequote @ " + q.id() + ":" + parent.id() + " prog " + prog.qvalue().id());
+                prog.qvalue().eval(env.qvalue(), true); // apply on parent
+            }
+        };
+
         Cmd _add = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1400,12 +1430,14 @@ public class Prologue {
 
         //meta
         parent.def(".", _def);
-        /*parent.def("module", _defmodule);*/
-        parent.def("@", _defparent);
+        parent.def("@", _definenv);
+        parent.def("$i", _dequoteenv);
+        parent.def("$me", _me);
+        parent.def("$parent", _parent);
+        parent.def("$words", _words);
         parent.def("V", _shuffle);
         parent.def("java", _java);
-        /*parent.def("$", _call);*/
-        parent.def("$words", _words);
+
         parent.def("true", _true);
         parent.def("false", _false);
         parent.def("let", _let);
