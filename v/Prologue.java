@@ -79,7 +79,6 @@ public class Prologue {
         return new CmdQuote(nts, q);
     }
 
-
     static Quote getdef(Quote q, String buf) {
         CharStream cs = new BuffCharStream(buf);
         return compile(q, new CmdQuote(new LexStream(cs), q));
@@ -135,8 +134,8 @@ public class Prologue {
                             }
                         } else
                             r.add(symbols.get(sym));
+                        break;
                     }
-                    break;
                 default:
                     // just push it in.
                     r.add(t);
@@ -206,7 +205,6 @@ public class Prologue {
                         symbols.put(t.value(), e);
                     }
                     break;
-
 
                 case TQuote:
                     // evaluate this portion again in evaltmpl.
@@ -769,7 +767,6 @@ public class Prologue {
             }
         };
 
-
         // this map is not a stack invariant. specifically 
         // 1 2 3 4  [a b c d] [[] cons cons] map => [[4 a] [3 b] [2 c] [1 d]]
         Cmd _map = new Cmd(parent) {
@@ -971,7 +968,6 @@ public class Prologue {
             }
         };
 
-
         Cmd _fold = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1070,18 +1066,9 @@ public class Prologue {
         Quote _cons = getdef(parent, "[a [*rest] : [a *rest]] V");
         Quote _unit = getdef(parent, "[] cons");
         Quote _concat = getdef(parent, "[[*a] [*b] : [*a *b]] V");
-
-        Cmd _dip = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term prog = p.pop();
-                Term saved = p.pop();
-
-                prog.qvalue().eval(q, true);
-                p.push(saved);
-            }
-        };
+        Quote _dip = getdef(parent, "[a b : b i a] V");
+        Quote _x = getdef(parent, "dup i");
+        Quote _id = getdef(parent, "[a : a] V");
 
         Cmd _dequote = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1092,13 +1079,6 @@ public class Prologue {
                 prog.qvalue().eval(q, true); // apply on parent
             }
         };
-
-        Cmd _id = new Cmd(parent) {
-            public void eval(Quote q) {
-            }
-        };
-
-        Quote _x = getdef(parent, "dup i");
 
         Cmd _add = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1228,7 +1208,6 @@ public class Prologue {
             }
         };
 
-
         Cmd _eq = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1272,8 +1251,6 @@ public class Prologue {
                 p.push(new Term<Boolean>(Type.TBool, !a.bvalue()));
             }
         };
-
-
 
         // Predicates do not consume the element. 
         Cmd _isbool = new Cmd(parent) {
@@ -1375,6 +1352,21 @@ public class Prologue {
             }
         };
 
+        Cmd _toint = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.pop();
+                p.push(new Term<Integer>(Type.TInt, (new Double(a.value())).intValue()));
+            }
+        };
+
+        Cmd _todecimal = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term a = p.pop();
+                p.push(new Term<Double>(Type.TDouble, new Double(a.value())));
+            }
+        };
 
         /* stdlib.v
          * [stdlib 
@@ -1538,6 +1530,8 @@ public class Prologue {
         parent.def("small?", _issmall);
 
         parent.def(">string", _tostring);
+        parent.def(">int", _toint);
+        parent.def(">decimal", _todecimal);
 
         //math
         parent.def("sqrt", _sqrt);
