@@ -119,7 +119,7 @@ public class Lexer {
             case '[':
                 return ']';
             default:
-                throw new VException("Invalid compound char (" + c + ")");
+                throw new VException(">Invalid open (" + c + ")");
         }
     }
 
@@ -136,13 +136,13 @@ public class Lexer {
     // and keep tab on the compound is complete or not.
     void cclose() {
         if (_cstack.empty())
-            throw new VException("Invalid close ("
-                    + _stream.current() + ") - compound stack empty.");
+            throw new VException(">Invalid close "
+                    + _stream.current() + " - No open statement.");
 
         char c = _cstack.pop();
         if (c != _stream.current())
-            throw new VException("Invalid close ("
-                    + _stream.current() + ") - expects (" + c + ")");
+            throw new VException(">Invalid close "
+                    + _stream.current() + " - Need " + c + "");
 
         add(new Term<Character>(Type.TClose, _stream.current()));
     }

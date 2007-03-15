@@ -40,7 +40,7 @@ public class LexIterator extends QuoteIterator {
         while(true) {
             Term t = lex_next();
             if (t == null)
-                throw new VException("Still expecting compound to close.");
+                throw new VException(">Need " + Lexer.closeCompound(open.val));
             if (t.type == Type.TClose) {
                 Term<Character> c = t;
                 if (c.val == Lexer.closeCompound(open.val))
@@ -58,7 +58,7 @@ public class LexIterator extends QuoteIterator {
     }
 
     public void remove() {
-        throw new VException("Attempt to remove from QuoteIterator");
+        throw new VException(">QuoteIterator:remove not supported");
     }
 }
 
