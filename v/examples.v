@@ -118,7 +118,7 @@ ie:
 [120 =] [5 lfact] '(linrec) lfact ' test
 #=========================================
 [t-last
-    [rest& null?]
+    [rest null?]
     [first]
     [rest]
     tailrec].

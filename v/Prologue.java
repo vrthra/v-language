@@ -698,7 +698,8 @@ public class Prologue {
                             thenp.qvalue().eval(q, true);
                             return;
                         } else {
-                            nts.add(new Term<String>(Type.TSymbol, "rest&"));
+                            nts.add(new Term<String>(Type.TSymbol, "dup"));
+                            nts.add(new Term<String>(Type.TSymbol, "rest"));
                         }
                         break;
                     default:
@@ -1080,11 +1081,7 @@ public class Prologue {
 
         Quote _uncons = getdef(parent, "[[a *rest] : a [*rest]] V");
         Quote _first = getdef(parent, "[[a *rest] : a] V");
-        Quote _first_i = getdef(parent, "dup first");
         Quote _rest = getdef(parent, "[[a *rest] : [*rest]] V");
-        Quote _rest_i = getdef(parent, "dup rest");
-
-        Quote _size_i = getdef(parent, "dup size");
 
         Cmd _size = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1101,21 +1098,7 @@ public class Prologue {
         Quote _cons = getdef(parent, "[a [*rest] : [a *rest]] V");
         Quote _unit = getdef(parent, "[] cons");
         Quote _concat = getdef(parent, "[[*a] [*b] : [*a *b]] V");
-        
-        // Quote _dip = getdef(parent, "[a b : b i a] V");
-        // V is just a list destructuring operator.
-        Cmd _dip = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term prog = p.pop();
-                Term saved = p.pop();
-
-                prog.qvalue().eval(q, true);
-                p.push(saved);
-            }
-        };
-
+        Quote _dip = getdef(parent, "[a b : [b i a]] V i");
         Quote _x = getdef(parent, "dup i");
         Quote _id = getdef(parent, "[a : a] V");
 
@@ -1364,9 +1347,9 @@ public class Prologue {
         };
 
         Quote _iszero = getdef(parent, "dup >decimal 0.0 =");
-        Quote _isempty = getdef(parent, "size& zero? swap pop");
+        Quote _isempty = getdef(parent, "dup size zero? swap pop");
         Quote _isnull = getdef(parent, "number? [zero?] [empty?] ifte");
-        Quote _issmall = getdef(parent, "[list?] [size& swap pop zero? swap 1 = or] [zero? swap 1 = or] ifte");
+        Quote _issmall = getdef(parent, "[list?] [dup size swap pop zero? swap 1 = or] [zero? swap 1 = or] ifte");
 
         Cmd _isnum = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1509,11 +1492,8 @@ public class Prologue {
         //list
         parent.def("reverse", _reverse);
         parent.def("unit", _unit);
-        parent.def("first&", _first_i);
         parent.def("first", _first);
-        parent.def("rest&", _rest_i);
         parent.def("rest", _rest);
-        parent.def("size&", _size_i);
         parent.def("size", _size);
        
         // construct destruct 
