@@ -10,7 +10,7 @@ public abstract class Token {
             Term<Boolean> v = (Term<Boolean>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException("Invalid type(bool) for " + value());
+            throw new VException(value() + ">Invalid type(need bool)");
         }
     }
     public char cvalue() {
@@ -18,7 +18,7 @@ public abstract class Token {
             Term<Character> v = (Term<Character>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException("Invalid type(bool) for " + value());
+            throw new VException(value() + ">Invalid type(need bool)");
         }
     }
     public int ivalue() {
@@ -26,7 +26,7 @@ public abstract class Token {
             Term<Integer> v = (Term<Integer>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException("Invalid type(int) for " + value());
+            throw new VException(value() + ">Invalid type(need int)");
         }
     }
     public double dvalue() {
@@ -34,7 +34,7 @@ public abstract class Token {
             Term<Double> v = (Term<Double>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException("Invalid type(double) for " + value());
+            throw new VException(value() + ">Invalid type(need double)");
         }
     }
     public String svalue() {
@@ -42,7 +42,7 @@ public abstract class Token {
             Term<String> v = (Term<String>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException("Invalid type(string) for " + value());
+            throw new VException(value() + ">Invalid type(need string)");
         }
     }
     public Quote qvalue() {
@@ -50,7 +50,7 @@ public abstract class Token {
             Term<Quote> v = (Term<Quote>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException("Invalid type(quote) for " + value());
+            throw new VException(value() + ">Invalid type(need quote)");
         }
     }
     public Object ovalue() {
@@ -58,7 +58,7 @@ public abstract class Token {
             Term<Object> v = (Term<Object>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException("Invalid type(object) for " + value());
+            throw new VException(value() + ">Invalid type(need object)");
         }
     }
 }
