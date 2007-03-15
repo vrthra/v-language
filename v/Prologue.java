@@ -152,64 +152,76 @@ public class Prologue {
             Term t = tstream.next();
             switch (t.type) {
                 case TSymbol:
-                    // _ means any one
-                    // * means any including nil unnamed.
-                    // *a means any including nil but named with symbol '*a'
-                    String value = t.value();
-                    if (value.charAt(0) == '_') {
-                        // eat one from estream and continue.
-                        estream.next();
-                        break;
-                    } else if (value.charAt(0) == '*') {
-                        QuoteStream nlist = new QuoteStream();
-                        // * is all. but before we slurp, check the next element
-                        // in the template. If there is not any, then slurp. If there
-                        // is one, then slurp until last but one, and leave it.
-                        if (tstream.hasNext()) {
-                            Term tmplterm = tstream.next();
-                            Term lastelem = null;
+                    try {
+                        // _ means any one
+                        // * means any including nil unnamed.
+                        // *a means any including nil but named with symbol '*a'
+                        String value = t.value();
+                        if (value.charAt(0) == '_') {
+                            // eat one from estream and continue.
+                            estream.next();
+                            break;
+                        } else if (value.charAt(0) == '*') {
+                            QuoteStream nlist = new QuoteStream();
+                            // * is all. but before we slurp, check the next element
+                            // in the template. If there is not any, then slurp. If there
+                            // is one, then slurp until last but one, and leave it.
+                            if (tstream.hasNext()) {
+                                Term tmplterm = tstream.next();
+                                Term lastelem = null;
 
-                            // slurp till last but one.
-                            while(estream.hasNext()) {
-                                lastelem = estream.next();
-                                if (estream.hasNext())
-                                    nlist.add(lastelem);
-                            }
+                                // slurp till last but one.
+                                while(estream.hasNext()) {
+                                    lastelem = estream.next();
+                                    if (estream.hasNext())
+                                        nlist.add(lastelem);
+                                }
 
-                            switch (tmplterm.type) {
-                                case TSymbol:
-                                    // assign value in symbols.
-                                    symbols.put(tmplterm.svalue(), lastelem);
-                                    break;
-                                case TQuote:
-                                    evaltmpl(tmplterm.qvalue().tokens(), lastelem.qvalue().tokens(), symbols, q);
-                                    break;
-                                default:
-                                    if (tmplterm.value().equals(lastelem.value()))
+                                switch (tmplterm.type) {
+                                    case TSymbol:
+                                        // assign value in symbols.
+                                        symbols.put(tmplterm.svalue(), lastelem);
                                         break;
-                                    else
-                                        throw new VException("shuffle failed assert"
-                                                + tmplterm.value() + ":" + lastelem.value() );
-                            }
+                                    case TQuote:
+                                        evaltmpl(tmplterm.qvalue().tokens(), lastelem.qvalue().tokens(), symbols, q);
+                                        break;
+                                    default:
+                                        if (tmplterm.value().equals(lastelem.value()))
+                                            break;
+                                        else
+                                            throw new VException("shuffle failed assert"
+                                                    + tmplterm.value() + ":" + lastelem.value() );
+                                }
 
+                            } else {
+                                // we can happily slurp now.
+                                while(estream.hasNext())
+                                    nlist.add(estream.next());
+                            }
+                            if (value.length() > 1) { // do we have a named list?
+                                symbols.put(value, new Term<Quote>(Type.TQuote, new CmdQuote(nlist, q)));
+                            }
                         } else {
-                            // we can happily slurp now.
-                            while(estream.hasNext())
-                                nlist.add(estream.next());
+                            Term e = estream.next();
+                            symbols.put(t.value(), e);
                         }
-                        if (value.length() > 1) { // do we have a named list?
-                            symbols.put(value, new Term<Quote>(Type.TQuote, new CmdQuote(nlist, q)));
-                        }
-                    } else {
-                        Term e = estream.next();
-                        symbols.put(t.value(), e);
+                        break;
+                    } catch (VException e) {
+                        throw new VException(e.getMessage() + "\n\t|" + t.value());
+                    } catch (Exception e) {
+                        throw new VException(e.getMessage() + "\n\tat V(evaltemplate:sym)\n\t|" + t.value());
                     }
-                    break;
 
                 case TQuote:
                     // evaluate this portion again in evaltmpl.
-                    Term et = estream.next();
-                    evaltmpl(t.qvalue().tokens(), et.qvalue().tokens(), symbols, q);
+                    try {
+                        Term et = estream.next();
+                        evaltmpl(t.qvalue().tokens(), et.qvalue().tokens(), symbols, q);
+                    } catch (VException e) {
+                        throw new VException(e.getMessage() + "\n\t|" + t.value());
+                    } catch (Exception e) {
+                        throw new VException(e.getMessage() + "\n\tat V(evaltemplate:quote)\n\t|" + t.value());
+                    }
                     break;
                 default:
                     //make sure both matches.
@@ -217,8 +229,7 @@ public class Prologue {
                     if (t.value().equals(eterm.value()))
                         break;
                     else
-                        throw new VException("shuffle failed assert"
-                                + t.value() + ":" + eterm.value() );
+                        throw new VException("shuffle failed asert \n\tat V(evaltemplate:default)\n\t|" + eterm.value() + "\n\t|" + t.value());
 
             }
         }
@@ -690,7 +701,7 @@ public class Prologue {
                         }
                         break;
                     default:
-                        throw new VException("wrong datatype for primrec");
+                        throw new VException("wrong datatype for primrec(" + param.value() + ")");
                 }
                 Quote nq = new CmdQuote(nts, q);
                 nq.eval(q, true);

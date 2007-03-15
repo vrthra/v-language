@@ -124,7 +124,11 @@ public class CmdQuote implements Quote {
             q = q.clone();
             // Invoke the quote on our quote by passing us as the parent.
             V.debug("Using " + scope.id() + " val " + sym.value() );
-            q.eval(scope);
+            try {
+                q.eval(scope);
+            } catch (VException e) {
+                throw new VException(e.getMessage() + "\n\t|" + sym.value() );
+            }
         } catch (VException e) {
             // do we have a $shield defined?
             Cmd q = (Cmd)_dict.get("$shield");
