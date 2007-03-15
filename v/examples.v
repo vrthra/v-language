@@ -14,6 +14,27 @@
     expected i not [msg throw] if
     msg put ' success' puts].
 
+[comment pop].
+#=========================================
+[The tests have this format.
+There are two quotes, one the result and the second the test quote.
+
+First the test quote is evaluated, this will give an answer in the stack. Then the result
+quote is executed, and it should leave a value true in the stack.
+ie:
+
+# result verification quote. (This checks if the value currently in the stack is equal to '2')
+[
+    2 =
+]
+# test quote. this is executed first, and then the result verification quote is executed.
+[
+    1 1 +
+] 'message' test
+# the 'message' is printed along with success or failure of the test.
+
+] comment
+
 #=========================================
 'Starting tests...' puts
 '=========================================' puts
@@ -136,6 +157,28 @@
     binrec].
 
 [[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort] '(binrec) fib' test
+#=========================================
+[qsort1
+    [joinparts 
+        [p l1 l2] let
+        l1 p l2 cons concat].
+    [small?]
+    []
+    [uncons [>] split&]
+    [joinparts]
+    binrec].
+
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort1] '(binrec let) fib' test
+#=========================================
+[qsort2
+    [joinparts [p [*l1] [*l2] : [*l1 p *l2]] V].
+    [small?]
+    []
+    [uncons [>] split&]
+    [joinparts]
+    binrec].
+
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort2] '(binrec V) fib' test
 #=========================================
 
 
