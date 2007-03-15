@@ -28,14 +28,14 @@ public class Prologue {
             else if (b.type == Type.TDouble)
                 return a.ivalue() > b.dvalue();
             else
-                throw new VException("Type error(>)" + a.value() + " " + b.value());
+                throw new VException("Type error(>)\n\t|" + a.value() + " " + b.value());
         } else if (a.type == Type.TDouble) {
             if (b.type == Type.TInt)
                 return a.dvalue() > b.ivalue();
             else if (b.type == Type.TDouble)
                 return a.dvalue() > b.dvalue();
             else
-                throw new VException("Type error(>)" + a.value() + " " + b.value());
+                throw new VException("Type error(>)\n\t|" + a.value() + " " + b.value());
         }
         return false;
     }
@@ -44,15 +44,15 @@ public class Prologue {
         switch(a.type) {
             case TInt:
                 if (b.type != Type.TInt)
-                    throw new VException("Type error(=)" + a.value() + " " + b.value());
+                    throw new VException("Type error(=)\n\t|" + a.value() + " " + b.value());
                 return a.ivalue() == b.ivalue();
             case TDouble:
                 if (b.type != Type.TDouble)
-                    throw new VException("Type error(=)" + a.value() + " " + b.value());
+                    throw new VException("Type error(=)\n\t|" + a.value() + " " + b.value());
                 return a.dvalue() == b.dvalue();
             case TString:
                 if (b.type != Type.TString)
-                    throw new VException("Type error(=)" + a.value() + " " + b.value());
+                    throw new VException("Type error(=)\n\t|" + a.value() + " " + b.value());
                 return a.svalue().equals(b.svalue());
             default:
                 return a.value().equals(b.value());
@@ -189,8 +189,8 @@ public class Prologue {
                                         if (tmplterm.value().equals(lastelem.value()))
                                             break;
                                         else
-                                            throw new VException("shuffle failed assert"
-                                                    + tmplterm.value() + ":" + lastelem.value() );
+                                            throw new VException("V(evaltmpl:assert) "
+                                                    + tmplterm.value() + "<>" + lastelem.value() );
                                 }
 
                             } else {
@@ -229,7 +229,8 @@ public class Prologue {
                     if (t.value().equals(eterm.value()))
                         break;
                     else
-                        throw new VException("shuffle failed asert \n\tat V(evaltemplate:default)\n\t|" + eterm.value() + "\n\t|" + t.value());
+                        throw new VException("V(evaltmpl:assert) " + t.value() + "<>" + eterm.value() 
+                                + "\n\t|V(evaltemplate:default)\n\t|" + eterm.value() + "\n\t|" + t.value());
 
             }
         }
@@ -701,7 +702,7 @@ public class Prologue {
                         }
                         break;
                     default:
-                        throw new VException("wrong datatype for primrec(" + param.value() + ")");
+                        throw new VException("wrong datatype for primrec\n\t|" + param.value());
                 }
                 Quote nq = new CmdQuote(nts, q);
                 nq.eval(q, true);
@@ -1150,14 +1151,14 @@ public class Prologue {
                     else if (b.type == Type.TDouble)
                         p.push(new Term<Double>(Type.TDouble, a.ivalue() + b.dvalue()));
                     else
-                        throw new VException("Type error(+)" + a.value() + " " + b.value());
+                        throw new VException("Type error(+)\n\t|" + a.value() + " " + b.value());
                 } else if (a.type == Type.TDouble) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Double>(Type.TDouble, a.dvalue() + b.ivalue()));
                     else if (b.type == Type.TDouble)
                         p.push(new Term<Double>(Type.TDouble, a.dvalue() + b.dvalue()));
                     else
-                        throw new VException("Type error(+)" + a.value() + " " + b.value());
+                        throw new VException("Type error(+)\n\t|" + a.value() + " " + b.value());
                 }
             }
         };
@@ -1173,14 +1174,14 @@ public class Prologue {
                     else if (b.type == Type.TDouble)
                         p.push(new Term<Double>(Type.TDouble, a.ivalue() - b.dvalue()));
                     else
-                        throw new VException("Type error(-)" + a.value() + " " + b.value());
+                        throw new VException("Type error(-)\n\t|" + a.value() + " " + b.value());
                 } else if (a.type == Type.TDouble) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Double>(Type.TDouble, a.dvalue() - b.ivalue()));
                     else if (b.type == Type.TDouble)
                         p.push(new Term<Double>(Type.TDouble, a.dvalue() - b.dvalue()));
                     else
-                        throw new VException("Type error(-)" + a.value() + " " + b.value());
+                        throw new VException("Type error(-)\n\t|" + a.value() + " " + b.value());
                 }
             }
         };
@@ -1196,14 +1197,14 @@ public class Prologue {
                     else if (b.type == Type.TDouble)
                         p.push(new Term<Double>(Type.TDouble, a.ivalue() * b.dvalue()));
                     else
-                        throw new VException("Type error(*)" + a.value() + " " + b.value());
+                        throw new VException("Type error(*)\n\t|" + a.value() + " " + b.value());
                 } else if (a.type == Type.TDouble) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Double>(Type.TDouble, a.dvalue() * b.ivalue()));
                     else if (b.type == Type.TDouble)
                         p.push(new Term<Double>(Type.TDouble, a.dvalue() * b.dvalue()));
                     else
-                        throw new VException("Type error(*)" + a.value() + " " + b.value());
+                        throw new VException("Type error(*)\n\t|" + a.value() + " " + b.value());
                 }
             }
         };
@@ -1219,14 +1220,14 @@ public class Prologue {
                     else if (b.type == Type.TDouble)
                         p.push(new Term<Double>(Type.TDouble, a.ivalue() / b.dvalue()));
                     else
-                        throw new VException("Type error(/)" + a.value() + " " + b.value());
+                        throw new VException("Type error(/)\n\t|" + a.value() + " " + b.value());
                 } else if (a.type == Type.TDouble) {
                     if (b.type == Type.TInt)
                         p.push(new Term<Double>(Type.TDouble, a.dvalue() / b.ivalue()));
                     else if (b.type == Type.TDouble)
                         p.push(new Term<Double>(Type.TDouble, a.dvalue() / b.dvalue()));
                     else
-                        throw new VException("Type error(/)" + a.value() + " " + b.value());
+                        throw new VException("Type error(/)\n\t|" + a.value() + " " + b.value());
                 }
             }
         };
