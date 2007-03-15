@@ -3,15 +3,18 @@
 [show
     [q] let
     debug?
-    [ q [put 1] map "" puts ]
+    [ q [put] step "" puts ]
     if].
 
 [test
     [expected fn msg] let
+    'sentry'
     expected put ' ' put
     fn put ' : ' put
     fn i
     expected i not [msg throw] if
+    ['sentry' !=] [?? 'incorrect stack' throw] if
+    pop
     msg put ' success' puts].
 
 [comment pop].
@@ -209,6 +212,7 @@ ie:
     [root2 0 b - discr - 2 a * /].
 
     [] " root1: " << root1 << " root2: " << root2 << reverse show
+
     root1 root2].
 
 [-5.0 = swap 3.0 = and] [2 4 -30 roots] 'roots' test
@@ -347,7 +351,7 @@ mycmd
 ] 'V (java static method)' test
 
 [
-    integer?
+    integer? swap pop
 ]
 [
     [java.util.Date new] java unit [getDay] concat java
