@@ -116,10 +116,10 @@ public class CmdQuote implements Quote {
             // pop the first token in the stack
             Token sym = _stack.pop();
             if (sym.type() != Type.TSymbol)
-                throw new VException("Attempt to apply NotSymbol(" + sym.value() + ")");
+                throw new VException(sym.value() + "\n>not a symbol");
             Quote q = scope.lookup(sym.value());
             if (q == null) {
-                throw new VException("Attempt to invoke undefined word (" + sym.value()+ ") at " + id() + " and parent " + parent().id() );
+                throw new VException(sym.value()+ "\n>undefined symbol [@" + id() + " ^@" + parent().id() + "]" );
             }
             q = q.clone();
             // Invoke the quote on our quote by passing us as the parent.

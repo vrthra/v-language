@@ -156,7 +156,7 @@ ie:
     [[swap] dip cons concat]
     binrec].
 
-[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort] '(binrec) fib' test
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort] '(binrec) qsort' test
 #=========================================
 [qsort1
     [joinparts 
@@ -168,7 +168,7 @@ ie:
     [joinparts]
     binrec].
 
-[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort1] '(binrec let) fib' test
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort1] '(binrec let) qsort' test
 #=========================================
 [qsort2
     [joinparts [p [*l1] [*l2] : [*l1 p *l2]] V].
@@ -178,7 +178,17 @@ ie:
     [joinparts]
     binrec].
 
-[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort2] '(binrec V) fib' test
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort2] '(binrec V) qsort' test
+#=========================================
+[qsort3
+    [joinparts [p [*l1] [*l2] : [*l1 p *l2]] V].
+    [split_on_first_element uncons [>] split&].
+    [small?]
+        []
+        [split_on_first_element [l1 l2 : [l1 qsort3 l2 qsort3 joinparts]] V i]
+    ifte].
+
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort3] '(V) qsort' test
 #=========================================
 
 
