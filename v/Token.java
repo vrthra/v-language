@@ -37,6 +37,13 @@ public abstract class Token {
             throw new VException(value() + ">Invalid type(need double)");
         }
     }
+    public Number numvalue() {
+        if (type() == Type.TInt)
+            return new Integer(ivalue());
+        if (type() == Type.TDouble)
+            return new Double(dvalue());
+        throw new VException("Type error(NaN)\n\t|" + value());
+    }
     public String svalue() {
         try {
             Term<String> v = (Term<String>)this;

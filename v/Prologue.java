@@ -22,34 +22,14 @@ public class Prologue {
     }
 
     private static boolean isGt(Term a, Term b) {
-        if (a.type == Type.TInt) {
-            if (b.type == Type.TInt)
-                return a.ivalue() > b.ivalue();
-            else if (b.type == Type.TDouble)
-                return a.ivalue() > b.dvalue();
-            else
-                throw new VException("Type error(>)\n\t|" + a.value() + " " + b.value());
-        } else if (a.type == Type.TDouble) {
-            if (b.type == Type.TInt)
-                return a.dvalue() > b.ivalue();
-            else if (b.type == Type.TDouble)
-                return a.dvalue() > b.dvalue();
-            else
-                throw new VException("Type error(>)\n\t|" + a.value() + " " + b.value());
-        }
-        return false;
+        return a.numvalue().doubleValue()> b.numvalue().doubleValue();
     }
 
     private static boolean isEq(Term a, Term b) {
         switch(a.type) {
             case TInt:
-                if (b.type != Type.TInt)
-                    throw new VException("Type error(=)\n\t|" + a.value() + " " + b.value());
-                return a.ivalue() == b.ivalue();
             case TDouble:
-                if (b.type != Type.TDouble)
-                    throw new VException("Type error(=)\n\t|" + a.value() + " " + b.value());
-                return a.dvalue() == b.dvalue();
+                return a.numvalue().doubleValue() ==  b.numvalue().doubleValue();
             case TString:
                 if (b.type != Type.TString)
                     throw new VException("Type error(=)\n\t|" + a.value() + " " + b.value());
@@ -1128,21 +1108,12 @@ public class Prologue {
                 QStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
-                if (a.type == Type.TInt) {
-                    if (b.type == Type.TInt)
-                        p.push(new Term<Integer>(Type.TInt, a.ivalue() + b.ivalue()));
-                    else if (b.type == Type.TDouble)
-                        p.push(new Term<Double>(Type.TDouble, a.ivalue() + b.dvalue()));
-                    else
-                        throw new VException("Type error(+)\n\t|" + a.value() + " " + b.value());
-                } else if (a.type == Type.TDouble) {
-                    if (b.type == Type.TInt)
-                        p.push(new Term<Double>(Type.TDouble, a.dvalue() + b.ivalue()));
-                    else if (b.type == Type.TDouble)
-                        p.push(new Term<Double>(Type.TDouble, a.dvalue() + b.dvalue()));
-                    else
-                        throw new VException("Type error(+)\n\t|" + a.value() + " " + b.value());
-                }
+                double dres = a.numvalue().doubleValue() + b.numvalue().doubleValue();
+                int ires  = (int)dres;
+                if (dres == ires)
+                    p.push(new Term<Integer>(Type.TInt, ires));
+                else
+                    p.push(new Term<Double>(Type.TDouble, dres));
             }
         };
 
@@ -1151,21 +1122,12 @@ public class Prologue {
                 QStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
-                if (a.type == Type.TInt) {
-                    if (b.type == Type.TInt)
-                        p.push(new Term<Integer>(Type.TInt, a.ivalue() - b.ivalue()));
-                    else if (b.type == Type.TDouble)
-                        p.push(new Term<Double>(Type.TDouble, a.ivalue() - b.dvalue()));
-                    else
-                        throw new VException("Type error(-)\n\t|" + a.value() + " " + b.value());
-                } else if (a.type == Type.TDouble) {
-                    if (b.type == Type.TInt)
-                        p.push(new Term<Double>(Type.TDouble, a.dvalue() - b.ivalue()));
-                    else if (b.type == Type.TDouble)
-                        p.push(new Term<Double>(Type.TDouble, a.dvalue() - b.dvalue()));
-                    else
-                        throw new VException("Type error(-)\n\t|" + a.value() + " " + b.value());
-                }
+                double dres = a.numvalue().doubleValue() - b.numvalue().doubleValue();
+                int ires  = (int)dres;
+                if (dres == ires)
+                    p.push(new Term<Integer>(Type.TInt, ires));
+                else
+                    p.push(new Term<Double>(Type.TDouble, dres));
             }
         };
 
@@ -1174,21 +1136,12 @@ public class Prologue {
                 QStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
-                if (a.type == Type.TInt) {
-                    if (b.type == Type.TInt)
-                        p.push(new Term<Integer>(Type.TInt, a.ivalue() * b.ivalue()));
-                    else if (b.type == Type.TDouble)
-                        p.push(new Term<Double>(Type.TDouble, a.ivalue() * b.dvalue()));
-                    else
-                        throw new VException("Type error(*)\n\t|" + a.value() + " " + b.value());
-                } else if (a.type == Type.TDouble) {
-                    if (b.type == Type.TInt)
-                        p.push(new Term<Double>(Type.TDouble, a.dvalue() * b.ivalue()));
-                    else if (b.type == Type.TDouble)
-                        p.push(new Term<Double>(Type.TDouble, a.dvalue() * b.dvalue()));
-                    else
-                        throw new VException("Type error(*)\n\t|" + a.value() + " " + b.value());
-                }
+                double dres = a.numvalue().doubleValue() * b.numvalue().doubleValue();
+                int ires  = (int)dres;
+                if (dres == ires)
+                    p.push(new Term<Integer>(Type.TInt, ires));
+                else
+                    p.push(new Term<Double>(Type.TDouble, dres));
             }
         };
 
@@ -1197,21 +1150,12 @@ public class Prologue {
                 QStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
-                if (a.type == Type.TInt) {
-                    if (b.type == Type.TInt)
-                        p.push(new Term<Double>(Type.TDouble, (double)(a.ivalue() / (1.0 * b.ivalue()))));
-                    else if (b.type == Type.TDouble)
-                        p.push(new Term<Double>(Type.TDouble, a.ivalue() / b.dvalue()));
-                    else
-                        throw new VException("Type error(/)\n\t|" + a.value() + " " + b.value());
-                } else if (a.type == Type.TDouble) {
-                    if (b.type == Type.TInt)
-                        p.push(new Term<Double>(Type.TDouble, a.dvalue() / b.ivalue()));
-                    else if (b.type == Type.TDouble)
-                        p.push(new Term<Double>(Type.TDouble, a.dvalue() / b.dvalue()));
-                    else
-                        throw new VException("Type error(/)\n\t|" + a.value() + " " + b.value());
-                }
+                double dres = a.numvalue().doubleValue() / b.numvalue().doubleValue();
+                int ires  = (int)dres;
+                if (dres == ires)
+                    p.push(new Term<Integer>(Type.TInt, ires));
+                else
+                    p.push(new Term<Double>(Type.TDouble, dres));
             }
         };
 
