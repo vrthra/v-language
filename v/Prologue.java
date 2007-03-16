@@ -755,8 +755,11 @@ public class Prologue {
         };
 
         Quote _dup = getdef(parent, "[a : a a] V");
+        Quote _dupd = getdef(parent, "[dup] dip");
         Quote _pop = getdef(parent, "[a :] V");
+        Quote _popd = getdef(parent, "[pop] dip");
         Quote _swap = getdef(parent, "[a b : b a] V");
+        Quote _swapd = getdef(parent, "[swap] dip");
         Quote _lroll = getdef(parent, "[[a *rest] : [*rest a]] V");
         Quote _rroll = getdef(parent, "[[*rest a] : [a *rest]] V");
 
@@ -1239,6 +1242,8 @@ public class Prologue {
             }
         };
 
+        Quote _xor = getdef(parent, "[a b : a b a b] V or [and not] dip and");
+
         // Predicates do not consume the element. 
         Cmd _isbool = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1405,6 +1410,8 @@ public class Prologue {
         parent.def("or", _or);
         parent.def("not", _not);
 
+        parent.def("xor", _xor);
+
         //control structures
         parent.def("ifte", _ifte);
         parent.def("if", _if);
@@ -1424,8 +1431,11 @@ public class Prologue {
         parent.def("abs", _abs);
         parent.def("acos", _acos);
         parent.def("dup", _dup);
+        parent.def("dupd", _dupd);
         parent.def("pop", _pop);
+        parent.def("popd", _popd);
         parent.def("swap", _swap);
+        parent.def("swapd", _swapd);
         parent.def("lroll", _lroll);
         parent.def("rollup", _lroll);
         parent.def("rroll", _rroll);
@@ -1470,6 +1480,7 @@ public class Prologue {
 
         //bool
         parent.def("=", _eq);
+        parent.def("==", _eq);
         parent.def("!=", _neq);
         parent.def(">", _gt);
         parent.def("<", _lt);
