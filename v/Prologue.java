@@ -449,6 +449,22 @@ public class Prologue {
             }
         };
 
+        Cmd _choice = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+
+                Term af = p.pop();
+                Term at = p.pop();
+                Term cond = p.pop();
+
+                if (cond.bvalue())
+                    p.push(at);
+                else
+                    p.push(af);
+            }
+        };
+
+
         Cmd _ifte = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1216,6 +1232,9 @@ public class Prologue {
             }
         };
 
+        Quote _max = getdef(parent, "[a b : [[a b >] [a] [b] ifte]] V i");
+        Quote _min = getdef(parent, "[a b : [[a b <] [a] [b] ifte]] V i");
+
         Cmd _and = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1416,6 +1435,7 @@ public class Prologue {
         parent.def("ifte", _ifte);
         parent.def("if", _if);
         parent.def("while", _while);
+        parent.def("choice", _choice);
 
         //io
         parent.def("put", _print);
@@ -1487,6 +1507,8 @@ public class Prologue {
         parent.def("<=", _lteq);
         parent.def(">=", _gteq);
 
+        parent.def("max", _max);
+        parent.def("min", _min);
         //predicates
         //The predicates do not consume stuff off the stack. They just
         //peek and push the result. the reason for this is that we generally

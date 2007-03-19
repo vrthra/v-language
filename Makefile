@@ -5,5 +5,5 @@ all:
 run:
 	(cd pkg && java -jar v.jar)
 test:
-	cd pkg && java -jar v.jar ../v/examples.v
+	cd pkg && java -jar v.jar ../scripts/test.v
 
