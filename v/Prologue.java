@@ -1,5 +1,6 @@
 package v;
 import java.util.*;
+import java.io.*;
 import v.java.*;
 
 class Shield {
@@ -63,7 +64,21 @@ public class Prologue {
         CharStream cs = new BuffCharStream(buf);
         return compile(q, new CmdQuote(new LexStream(cs), q));
     }
-
+    
+    static String getresource(String s) {
+        try {
+            StringBuffer buf = new StringBuffer();
+            BufferedReader br = new BufferedReader(new InputStreamReader(Prologue.class.getResourceAsStream(s)));
+            String line;
+            while((line = br.readLine()) != null) {
+                buf.append(line);
+            }
+            return buf.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     @SuppressWarnings("unchecked")
     static Map.Entry<String, CmdQuote> splitdef(Quote qval, Quote q) {
         HashMap<String, CmdQuote> map = new HashMap<String, CmdQuote>();
@@ -401,19 +416,11 @@ public class Prologue {
             }
         };
 
-        Quote _let = getdef(parent, "reverse [unit cons reverse $me $parent @ true] map pop");
-
         Cmd _abort = new Cmd(parent) {
             public void eval(Quote q) {
                 q.stack().clear();
             }
         };
-
-        Quote _abs = getdef(parent, "unit [java.lang.Math abs] concat java");
-        Quote _acos = getdef(parent, "unit [java.lang.Math acos] concat java");
-        Quote _sqrt = getdef(parent, ">string unit [java.lang.Double new] concat java unit [java.lang.Math sqrt] concat java");
-        Quote _pred = getdef(parent, "1 -");
-        Quote _succ = getdef(parent, "1 +");
 
         Cmd _true = new Cmd(parent) {
             public void eval(Quote q) {
@@ -770,15 +777,6 @@ public class Prologue {
             }
         };
 
-        Quote _dup = getdef(parent, "[a : a a] V");
-        Quote _dupd = getdef(parent, "[dup] dip");
-        Quote _pop = getdef(parent, "[a :] V");
-        Quote _popd = getdef(parent, "[pop] dip");
-        Quote _swap = getdef(parent, "[a b : b a] V");
-        Quote _swapd = getdef(parent, "[swap] dip");
-        Quote _lroll = getdef(parent, "[[a *rest] : [*rest a]] V");
-        Quote _rroll = getdef(parent, "[[*rest a] : [a *rest]] V");
-
         Cmd _step = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -936,11 +934,6 @@ public class Prologue {
             }
         };
 
-        Quote _all = getdef(parent, "map true [and] fold");
-        Quote _all_i = getdef(parent, "map& true [and] fold");
-        Quote _some = getdef(parent, "map false [or] fold");
-        Quote _some_i = getdef(parent, "map& false [or] fold");
-
         Cmd _filter = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1078,10 +1071,6 @@ public class Prologue {
             }
         };
 
-        Quote _uncons = getdef(parent, "[[a *rest] : a [*rest]] V");
-        Quote _first = getdef(parent, "[[a *rest] : a] V");
-        Quote _rest = getdef(parent, "[[a *rest] : [*rest]] V");
-
         Cmd _size = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1093,13 +1082,6 @@ public class Prologue {
                 p.push(new Term<Integer>(Type.TInt , count));
             }
         };
-
-        Quote _cons = getdef(parent, "[a [*rest] : [a *rest]] V");
-        Quote _unit = getdef(parent, "[] cons");
-        Quote _concat = getdef(parent, "[[*a] [*b] : [*a *b]] V");
-        Quote _dip = getdef(parent, "[a b : [b i a]] V i");
-        Quote _x = getdef(parent, "dup i");
-        Quote _id = getdef(parent, "[a : a] V");
 
         Cmd _dequote = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1232,9 +1214,6 @@ public class Prologue {
             }
         };
 
-        Quote _max = getdef(parent, "[a b : [[a b >] [a] [b] ifte]] V i");
-        Quote _min = getdef(parent, "[a b : [[a b <] [a] [b] ifte]] V i");
-
         Cmd _and = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1261,7 +1240,6 @@ public class Prologue {
             }
         };
 
-        Quote _xor = getdef(parent, "[a b : a b a b] V or [and not] dip and");
 
         // Predicates do not consume the element. 
         Cmd _isbool = new Cmd(parent) {
@@ -1296,8 +1274,6 @@ public class Prologue {
             }
         };
 
-        Quote _isleaf = getdef(parent, "list? not");
-
         Cmd _islist = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1313,11 +1289,6 @@ public class Prologue {
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TString));
             }
         };
-
-        Quote _iszero = getdef(parent, "dup >decimal 0.0 =");
-        Quote _isempty = getdef(parent, "dup size zero? swap pop");
-        Quote _isnull = getdef(parent, "number? [zero?] [empty?] ifte");
-        Quote _issmall = getdef(parent, "[list?] [dup size swap pop zero? swap 1 = or] [zero? swap 1 = or] ifte");
 
         Cmd _isnum = new Cmd(parent) {
             public void eval(Quote q) {
@@ -1360,6 +1331,7 @@ public class Prologue {
             }
         };
 
+
         /* stdlib.v
          * [stdlib 
          *      [qsort  xxx yyy].
@@ -1371,32 +1343,66 @@ public class Prologue {
          * */
         Cmd _use = new Cmd(parent) {
             public void eval(Quote q) {
+                QStack p = q.stack();
+                Term file = p.pop();
+                String val = file.svalue() + ".v";
                 try {
-                    QStack p = q.stack();
-                    Term file = p.pop();
-
-                    CharStream cs = new FileCharStream(file.svalue() + ".v");
+                    // Try and see if the file requested is any of the standard defined
+                    String chars = getresource(val);
+                    CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
 
                     CmdQuote module = new CmdQuote(new LexStream(cs), q);
                     module.eval(q,true);
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    V.outln("UError:" + e.getMessage());
+                    throw new VException(">use failed \n\t|" + file.value());
+                }
+            }
+        };
+
+        Cmd _useenv = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term env = p.pop();
+                Term file = p.pop();
+                String val = file.svalue() + ".v";
+                try {
+                    // Try and see if the file requested is any of the standard defined
+                    String chars = getresource(val);
+                    CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
+
+                    CmdQuote module = new CmdQuote(new LexStream(cs), env.qvalue());
+                    module.eval(env.qvalue(),true);
+                    V.debug("use @ " + q.id());
+                } catch (Exception e) {
+                    throw new VException(">*use failed \n\t|" + file.value());
                 }
             }
         };
 
         Cmd _eval = new Cmd(parent) {
             public void eval(Quote q) {
+                QStack p = q.stack();
+                Term buff = p.pop();
                 try {
-                    QStack p = q.stack();
-                    Term buff = p.pop();
                     evaluate(q, buff.svalue());
                     V.debug("eval @ " + q.id());
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    V.outln("EError:" + e.getMessage());
+                    throw new VException(">eval failed \n\t|" + buff.value());
+                }
+            }
+        };
+
+        Cmd _evalenv = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term env = p.pop();
+                Term buff = p.pop();
+                try {
+                    evaluate(env.qvalue(), buff.svalue());
+                    V.debug("eval @ " + env.qvalue().id());
+                } catch (Exception e) {
+                    throw new VException(">*eval failed \n\t|" + buff.value());
                 }
             }
         };
@@ -1412,24 +1418,24 @@ public class Prologue {
         //meta
         parent.def(".", _def);
         parent.def("@", _definenv);
-        parent.def("$i", _dequoteenv);
         parent.def("$me", _me);
         parent.def("$parent", _parent);
         parent.def("$words", _words);
+
+        parent.def("*i", _dequoteenv);
+        parent.def("i", _dequote);
+
         parent.def("V", _shuffle);
         parent.def("java", _java);
 
         parent.def("true", _true);
         parent.def("false", _false);
-        parent.def("let", _let);
         parent.def("shield", _shield);
         parent.def("throw", _throw);
 
         parent.def("and", _and);
         parent.def("or", _or);
         parent.def("not", _not);
-
-        parent.def("xor", _xor);
 
         //control structures
         parent.def("ifte", _ifte);
@@ -1448,34 +1454,11 @@ public class Prologue {
         parent.def("debug", _debug);
 
         parent.def("abort", _abort);
-        parent.def("abs", _abs);
-        parent.def("acos", _acos);
-        parent.def("dup", _dup);
-        parent.def("dupd", _dupd);
-        parent.def("pop", _pop);
-        parent.def("popd", _popd);
-        parent.def("swap", _swap);
-        parent.def("swapd", _swapd);
-        parent.def("lroll", _lroll);
-        parent.def("rollup", _lroll);
-        parent.def("rroll", _rroll);
-        parent.def("rolldown", _rroll);
-        parent.def("dip", _dip);
-        parent.def("id", _id);
 
         //list
         parent.def("reverse", _reverse);
-        parent.def("unit", _unit);
-        parent.def("first", _first);
-        parent.def("rest", _rest);
         parent.def("size", _size);
        
-        // construct destruct 
-        parent.def("uncons", _uncons);
-        parent.def("cons", _cons);
-        parent.def("i", _dequote);
-        parent.def("x", _x);
-        parent.def("concat", _concat);
 
         // on list
         parent.def("step", _step);
@@ -1483,10 +1466,6 @@ public class Prologue {
         parent.def("map&", _map_i);
         parent.def("filter", _filter);
         parent.def("filter&", _filter_i);
-        parent.def("all", _all);
-        parent.def("all&", _all_i);
-        parent.def("some", _some);
-        parent.def("some&", _some_i);
         parent.def("split", _split);
         parent.def("split&", _split_i);
         parent.def("fold", _fold);
@@ -1507,8 +1486,6 @@ public class Prologue {
         parent.def("<=", _lteq);
         parent.def(">=", _gteq);
 
-        parent.def("max", _max);
-        parent.def("min", _min);
         //predicates
         //The predicates do not consume stuff off the stack. They just
         //peek and push the result. the reason for this is that we generally
@@ -1519,24 +1496,13 @@ public class Prologue {
         parent.def("boolean?", _isbool);
         parent.def("symbol?", _issym);
         parent.def("list?", _islist);
-        parent.def("leaf?", _isleaf);
         parent.def("char?", _ischar);
         parent.def("number?", _isnum);
         parent.def("string?", _isstr);
 
-        parent.def("zero?", _iszero);
-        parent.def("empty?", _isempty);
-        parent.def("null?", _isnull);
-        parent.def("small?", _issmall);
-
         parent.def(">string", _tostring);
         parent.def(">int", _toint);
         parent.def(">decimal", _todecimal);
-
-        //math
-        parent.def("sqrt", _sqrt);
-        parent.def("pred", _pred);
-        parent.def("succ", _succ);
 
         // recursion
         parent.def("genrec", _genrec);
@@ -1547,9 +1513,14 @@ public class Prologue {
 
         //modules
         parent.def("use", _use);
+        parent.def("*use", _useenv);
         parent.def("eval", _eval);
+        parent.def("*eval", _evalenv);
 
         parent.def("help", _help);
+        
+        Quote libs = getdef(parent, "'std' use");
+        libs.eval(parent, true);
     }
 }
 
