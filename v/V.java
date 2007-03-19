@@ -5,6 +5,8 @@ import java.util.*;
 public class V {
     public static String version = "0.002";
 
+    public static boolean pure = true;
+
     static QStack _stack = null;
     static void banner() {
         outln("\t|V|\t");

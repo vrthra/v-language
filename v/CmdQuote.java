@@ -168,6 +168,8 @@ public class CmdQuote implements Quote {
     }
 
     public void def(String sym, Quote q) {
+        if (_dict.containsKey(sym) && V.pure)
+            throw new VException(">Attempt to redefine " + sym);
         _dict.put(sym, q);
     }
 
