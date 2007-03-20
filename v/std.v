@@ -1,4 +1,4 @@
-[let reverse [unit cons reverse $me $parent @ true] map pop].
+[let reverse [unit cons reverse $me &parent &. true] map pop].
 
 [abs unit [java.lang.Math abs] concat java].
 [acos unit [java.lang.Math acos] concat java].

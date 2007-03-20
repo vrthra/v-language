@@ -75,10 +75,10 @@ public class Prologue {
             }
             return buf.toString();
         } catch (Exception e) {
-            e.printStackTrace();
             return null;
         }
     }
+
     @SuppressWarnings("unchecked")
     static Map.Entry<String, CmdQuote> splitdef(Quote qval, Quote q) {
         HashMap<String, CmdQuote> map = new HashMap<String, CmdQuote>();
@@ -266,7 +266,7 @@ public class Prologue {
             }
         };
 
-        Cmd _definenv = new Cmd(parent) {
+        Cmd _defenv = new Cmd(parent) {
             public void eval(Quote q) {
                 // eval is passed in the quote representing the current scope.
                 QStack p = q.stack();
@@ -280,6 +280,46 @@ public class Prologue {
                 b.qvalue().def(symbol, entry.getValue());
             }
         };
+
+        Cmd _defmodule = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term t = p.pop();
+                
+                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
+                String symbol = entry.getKey();
+                CmdQuote qval = entry.getValue();
+
+                //bind the symbol in q.
+                QuoteStream qs = new QuoteStream();
+                qs.add(new Term<String>(Type.TString, symbol));
+                t.qvalue().parent().def("$name", new CmdQuote(qs, q));
+                t.qvalue().parent().def("$env", q);
+                
+                // now evaluate the entire thing on the current env.
+                // and allow publish to do the work.
+                qval.eval(t.qvalue().parent(),true);
+            }
+        };
+
+        Cmd _publish = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                String module = q.lookup("$name").tokens().iterator().next().value();
+                Quote env = q.lookup("$env");
+                Term t = p.pop();
+                Iterator <Term> i = t.qvalue().tokens().iterator();
+                while(i.hasNext()) {
+                    // look up their bindings and rebind it to parents.
+                    String s = i.next().value();
+                    env.def(module + ':' + s, q.lookup(s));
+                }
+
+            }
+        };
+
 
         // [a b c obj method] java
         Cmd _java = new Cmd(parent) {
@@ -1417,12 +1457,14 @@ public class Prologue {
 
         //meta
         parent.def(".", _def);
-        parent.def("@", _definenv);
+        parent.def("&.", _defenv);
+        parent.def("module", _defmodule);
+        parent.def("publish", _publish);
+        parent.def("&words", _words);
+        parent.def("&parent", _parent);
         parent.def("$me", _me);
-        parent.def("$parent", _parent);
-        parent.def("$words", _words);
 
-        parent.def("*i", _dequoteenv);
+        parent.def("&i", _dequoteenv);
         parent.def("i", _dequote);
 
         parent.def("V", _shuffle);

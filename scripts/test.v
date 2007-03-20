@@ -473,5 +473,20 @@ mycmd
 [
     0.64 acos
 ] 'math acos' test
+
+#=============================================
+#modules
+[tst
+    [open 'abc'].
+    [hide 'def'].
+    [using hide].
+    [using open] publish
+] module
+['abc' =] [tst:open] 'module' test
+['throw expected (success)' puts true] shield
+['!' =] [tst:hide] 'module' test
+['def' =] [tst:using] 'module' test
+
+
 ??
 "--------Success-----------" puts
