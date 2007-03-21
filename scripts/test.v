@@ -483,7 +483,7 @@ mycmd
     [using open] publish
 ] module
 ['abc' =] [tst:open] 'module' test
-['throw expected (success)' puts true] shield
+[put ' throw expected (success)' puts true] shield
 ['!' =] [tst:hide] 'module' test
 ['def' =] [tst:using] 'module' test
 
