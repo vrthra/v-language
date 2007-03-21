@@ -72,7 +72,7 @@ public class Helper {
             case TQuote:
                 return getArrayType(t);
             default:
-                throw new VException("Unable to convert type :" + t.value());
+                throw new VException("err:java:type "+ t.value(),"Unable to convert type :" + t.value());
         }
     }
 
@@ -93,7 +93,7 @@ public class Helper {
             case TQuote:
                 return getArrayObj(t);
             default:
-                throw new VException("Unable to convert value" + t.value());
+                throw new VException("err:java:obj " + t.value(), "Unable to convert value" + t.value());
         }
     }
 
@@ -129,18 +129,18 @@ public class Helper {
         try {
             return Class.forName(c);
         } catch (ClassNotFoundException e) {
-            throw new VException("Java Exception : (class not found) " + e.getMessage());
+            throw new VException("err:java:class_not_found " + c, "Java Exception : " + e.getMessage());
         }
     }
 
     public static Method getMethod(String c, Term m, Quote params) {
+        String method = m.svalue();
         try {
-            String method = m.svalue();
             Class cls = getClass(c);
             Class[] ptypes = getParamType(params);
             return cls.getMethod(method, ptypes);
         } catch (NoSuchMethodException e) {
-            throw new VException("Java Exception : (no such method)" + e.getMessage());
+            throw new VException("err:java:no_such_method " + method, "Java Exception : " + e.getMessage());
         }
     }
 
@@ -150,7 +150,7 @@ public class Helper {
             Class[] ptypes = getParamType(params);
             return cls.getConstructor(ptypes);
         } catch (NoSuchMethodException e) {
-            throw new VException("Java Exception : (no such method)" + e.getMessage());
+            throw new VException("err:java:no_such_constructor " + c , "Java Exception : " + e.getMessage());
         }
     }
 
@@ -159,26 +159,26 @@ public class Helper {
             Class cls = getClass(c);
             return cls.getField(method.substring(0, method.length() - 1));
         } catch (NoSuchFieldException e) {
-            throw new VException("Java Exception : (no such field)" + e.getMessage());
+            throw new VException("err:java:no_such_field" + method , "Java Exception : " + e.getMessage());
         }
     }
 
     public static Term invoke(Term c, Term m, Quote params) {
-        try {
-            String cname = null;
-            Object o = null;
-            String method = m.svalue();
-            if (c.type != v.Type.TSymbol) {
-                o = getJavaObj(c);
-                cname = o.getClass().getName();
-            } else {
-                cname = c.svalue();
-                o = null; // static invocation.
-            }
+        String cname = null;
+        Object o = null;
+        String method = m.svalue();
+        if (c.type != v.Type.TSymbol) {
+            o = getJavaObj(c);
+            cname = o.getClass().getName();
+        } else {
+            cname = c.svalue();
+            o = null; // static invocation.
+        }
 
+        try {
             if (method.equals("new")) {
                 if (o != null)
-                    throw new VException("Java Invalid ClassName ");
+                    throw new VException("err:java:invalid_class_name" + o.toString(), "Java Exception invalid class");
                 Constructor cons = getConstructor(cname, params);
                 Object[] args = getParams(params);
                 return getResult(cons.newInstance(args));
@@ -202,11 +202,11 @@ public class Helper {
                 return getResult(mtd.invoke(o, args));
             }
         } catch (IllegalAccessException e) {
-            throw new VException("Java Exception : (Illegal access)" + e.getMessage());
+            throw new VException("err:java:invoke:illegalaccess "+cname+"."+method, "Java Exception : " + e.getMessage());
         } catch (InvocationTargetException e) {
-            throw new VException("Java Exception : (Invocation target)" + e.getMessage());
+            throw new VException("err:java:invoke:invocationtarget "+cname+"."+method, "Java Exception : " + e.getMessage());
         } catch (InstantiationException e) {
-            throw new VException("Java Exception : (Instantiation) " + e.getMessage());
+            throw new VException("err:java:invoke:instantiation "+cname+"."+method, "Java Exception : " + e.getMessage());
         }
     }
 }

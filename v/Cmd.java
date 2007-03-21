@@ -29,7 +29,7 @@ public abstract class Cmd implements Quote {
     }
 
     public HashMap<String,Quote> bindings() {
-        throw new VException("Commands does not have bindings.");
+        throw new VException("err:internal:cmd:bindings","Commands does not have bindings.");
     }
 
     public Quote lookup(String key) {
@@ -37,22 +37,22 @@ public abstract class Cmd implements Quote {
     }
 
     public QStack stack() {
-        throw new VException("Commands does not have a stack.");
+        throw new VException("err:internal:cmd:stack","Commands does not have a stack.");
     }
 
     public Quote parent() {
-        throw new VException("Commands does not have a parent?.");
+        throw new VException("err:internal:cmd:parent","Commands does not have a parent?.");
     }
 
     public void def(String sym, Quote q) {
-        throw new VException("Commands can not define internal commands.");
+        throw new VException("err:internal:cmd:def","Commands can not define internal commands.");
     }
 
     public TokenStream tokens() {
-        throw new VException("Commands can not have tokens.");
+        throw new VException("err:internal:cmd:tokens","Commands can not have tokens.");
     }	
 
     public void eval(Quote scope, boolean on_parent) {
-        throw new VException("Commands can not apply on parents.");
+        throw new VException("err:internal:cmd:eval","Commands can not apply on parents.");
     }
 }

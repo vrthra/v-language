@@ -33,7 +33,7 @@ public class Prologue {
                 return a.numvalue().doubleValue() ==  b.numvalue().doubleValue();
             case TString:
                 if (b.type != Type.TString)
-                    throw new VException("Type error(=)\n\t|" + a.value() + " " + b.value());
+                    throw new VException("err:type:eq "+a.value() + " "+b.value(), "Type error(=)");
                 return a.svalue().equals(b.svalue());
             default:
                 return a.value().equals(b.value());
@@ -184,8 +184,8 @@ public class Prologue {
                                         if (tmplterm.value().equals(lastelem.value()))
                                             break;
                                         else
-                                            throw new VException("V(evaltmpl:assert) "
-                                                    + tmplterm.value() + "<>" + lastelem.value() );
+                                            throw new VException("err:evaltmpl:eq "+tmplterm.value() + " "+lastelem.value(), 
+                                                    "V(evaltmpl:eq)");
                                 }
 
                             } else {
@@ -202,9 +202,9 @@ public class Prologue {
                         }
                         break;
                     } catch (VException e) {
-                        throw new VException(e.getMessage() + "\n\t|" + t.value());
+                        throw new VException(e, t.value());
                     } catch (Exception e) {
-                        throw new VException(e.getMessage() + "\n\tat V(evaltemplate:sym)\n\t|" + t.value());
+                        throw new VException("err:evaltmpl:sym "+t.value(), "V(evaltemplate:sym) " + e.getMessage());
                     }
 
                 case TQuote:
@@ -213,9 +213,9 @@ public class Prologue {
                         Term et = estream.next();
                         evaltmpl(t.qvalue().tokens(), et.qvalue().tokens(), symbols, q);
                     } catch (VException e) {
-                        throw new VException(e.getMessage() + "\n\t|" + t.value());
+                        throw new VException(e, t.value());
                     } catch (Exception e) {
-                        throw new VException(e.getMessage() + "\n\tat V(evaltemplate:quote)\n\t|" + t.value());
+                        throw new VException("err:evaltmpl:quote "+t.value(), "V(evaltemplate:quote) " + e.getMessage());
                     }
                     break;
                 default:
@@ -224,9 +224,7 @@ public class Prologue {
                     if (t.value().equals(eterm.value()))
                         break;
                     else
-                        throw new VException("V(evaltmpl:assert) " + t.value() + "<>" + eterm.value() 
-                                + "\n\t|V(evaltemplate:default)\n\t|" + eterm.value() + "\n\t|" + t.value());
-
+                        throw new VException("err:evaltmpl:eq " +t.value() + " " +eterm.value(), "V(evaltemplate:eq) ");
             }
         }
     }
@@ -452,7 +450,7 @@ public class Prologue {
 
         Cmd _throw = new Cmd(parent) {
             public void eval(Quote q) {
-                throw new VException("Error(" + q.stack().peek().value() + ")" );
+                throw new VException("err:throw " + q.stack().peek().value(), "Throw(user)" );
             }
         };
 
@@ -746,7 +744,7 @@ public class Prologue {
                         }
                         break;
                     default:
-                        throw new VException("wrong datatype for primrec\n\t|" + param.value());
+                        throw new VException("err:primrec:datatype " + param.value(), "wrong datatype for primrec" );
                 }
                 Quote nq = new CmdQuote(nts, q);
                 nq.eval(q, true);
@@ -1395,7 +1393,7 @@ public class Prologue {
                     module.eval(q,true);
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
-                    throw new VException(">use failed \n\t|" + file.value());
+                    throw new VException("err:use " + file.value(), "use failed" );
                 }
             }
         };
@@ -1415,7 +1413,7 @@ public class Prologue {
                     module.eval(env.qvalue(),true);
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
-                    throw new VException(">*use failed \n\t|" + file.value());
+                    throw new VException("err:*use " + file.value(), "*use failed" );
                 }
             }
         };
@@ -1428,7 +1426,7 @@ public class Prologue {
                     evaluate(q, buff.svalue());
                     V.debug("eval @ " + q.id());
                 } catch (Exception e) {
-                    throw new VException(">eval failed \n\t|" + buff.value());
+                    throw new VException("err:eval " + buff.value(), "eval failed" );
                 }
             }
         };
@@ -1442,7 +1440,7 @@ public class Prologue {
                     evaluate(env.qvalue(), buff.svalue());
                     V.debug("eval @ " + env.qvalue().id());
                 } catch (Exception e) {
-                    throw new VException(">*eval failed \n\t|" + buff.value());
+                    throw new VException("err:*eval " + buff.value(), "*eval failed" );
                 }
             }
         };

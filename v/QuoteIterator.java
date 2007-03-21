@@ -20,6 +20,6 @@ public class QuoteIterator implements TokenIterator {
     }
 
     public void remove() {
-        throw new VException("Attempt to remove from QuoteIterator");
+        throw new VException("err:internal:remove","Attempt to remove from QuoteIterator");
     }
 }

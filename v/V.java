@@ -16,6 +16,8 @@ public class V {
     public static void main(final String[] args) {
         _stack = new QStack(); // our singleton eval stack.
         final boolean interactive = args.length == 0 ? true : false;
+        if (interactive)
+            pure = false; // it is a hinderance in interactive mode.
         // Setup the world quote.
         Quote world = new Quote() {
             HashMap<String, Quote> _dict = new HashMap<String, Quote>();
@@ -33,14 +35,14 @@ public class V {
             }
 
             public Quote clone() {
-                throw new VException("Attempt to clone world.");
+                throw new VException("err:world:clone","Attempt to clone world.");
             }
 
             public void eval(Quote scope, boolean on_parent) {
-                throw new VException("Attempt to eval world.");
+                throw new VException("err:world:eval","Attempt to eval world.");
             }
             public void eval(Quote scope) {
-                throw new VException("Attempt to eval world.");
+                throw new VException("err:world:eval","Attempt to eval world.");
             }
 
             public Quote lookup(String key) {
@@ -48,11 +50,11 @@ public class V {
             }
 
             public Quote parent() {
-                throw new VException("world does not have a parent.");
+                throw new VException("err:world:parent","world does not have a parent.");
             }
 
             public TokenStream tokens() {
-                throw new VException("world does not have a token stream.");
+                throw new VException("err:world:tokens","world does not have a token stream.");
             }
 
             public void def(String sym, Quote q) {

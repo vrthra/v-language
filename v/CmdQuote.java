@@ -21,16 +21,25 @@ public class CmdQuote implements Quote {
 
     // Our stack.
     QStack _stack = null;
-
-    public CmdQuote(TokenStream tokens, Quote parent) {
-        // we capture the parent at creation time.
-        _dict = new HashMap<String, Quote>();
+    
+    public void init(TokenStream tokens, Quote parent, HashMap<String,Quote> env) {
         _tokens = tokens;
         _tokens.scope(this); // set the scope for any future quotes
         _parent = parent;
         _idcount++;
         _id = _idcount;
         V.debug("Creating " + id() + " parent is " + _parent.id());
+        _dict = env;
+    }
+
+    public CmdQuote(TokenStream tokens, Quote parent, HashMap<String,Quote> env) {
+        init(tokens, parent, env);
+    }
+
+    public CmdQuote(TokenStream tokens, Quote parent) {
+        // we capture the parent at creation time.
+        HashMap<String, Quote> env = new HashMap<String, Quote>();
+        init(tokens, parent, env);
     }
 
     public Quote clone() {
@@ -116,10 +125,10 @@ public class CmdQuote implements Quote {
             // pop the first token in the stack
             Token sym = _stack.pop();
             if (sym.type() != Type.TSymbol)
-                throw new VException("\n>" + sym.value() + " (not a symbol)");
+                throw new VException("err:not_symbol "+sym.value(),"Not a symbol");
             Quote q = scope.lookup(sym.value());
             if (q == null) {
-                throw new VException("\n>" + sym.value()+ " (undefined symbol) [@" + id() + " ^@" + parent().id() + "]" );
+                throw new VException("err:undef_symbol "+sym.value(),"Undefined symbol");
             }
             q = q.clone();
             // Invoke the quote on our quote by passing us as the parent.
@@ -127,7 +136,7 @@ public class CmdQuote implements Quote {
             try {
                 q.eval(scope);
             } catch (VException e) {
-                throw new VException(e.getMessage() + "\n\t|" + sym.value() );
+                throw new VException(e, sym.value() );
             }
         } catch (VException e) {
             // do we have a $shield defined?
@@ -140,8 +149,8 @@ public class CmdQuote implements Quote {
             Shield current = stack.pop();
 
             while (current != null) {
-                Token error = _stack.peek();
                 // apply shield
+                scope.stack().push(new Term<Quote>(Type.TQuote, e.quote(scope)));
                 current.quote.eval(scope);
                 if(_stack.pop().bvalue()) {
                     //restore the stack and continue.
@@ -169,7 +178,7 @@ public class CmdQuote implements Quote {
 
     public void def(String sym, Quote q) {
         if (_dict.containsKey(sym) && V.pure)
-            throw new VException(">Attempt to redefine " + sym);
+            throw new VException("err:pure:redefine "+sym,"Attempt to redefine " + sym);
         _dict.put(sym, q);
     }
 

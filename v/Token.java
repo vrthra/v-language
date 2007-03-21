@@ -10,7 +10,7 @@ public abstract class Token {
             Term<Boolean> v = (Term<Boolean>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException(value() + ">Invalid type(need bool)");
+            throw new VException("err:type:bool "+value(),"Invalid type(need bool)");
         }
     }
     public char cvalue() {
@@ -18,7 +18,7 @@ public abstract class Token {
             Term<Character> v = (Term<Character>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException(value() + ">Invalid type(need bool)");
+            throw new VException("err:type:bool "+value(),"Invalid type(need bool)");
         }
     }
     public int ivalue() {
@@ -26,7 +26,7 @@ public abstract class Token {
             Term<Integer> v = (Term<Integer>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException(value() + ">Invalid type(need int)");
+            throw new VException("err:type:int "+value(),"Invalid type(need int)");
         }
     }
     public double dvalue() {
@@ -34,7 +34,7 @@ public abstract class Token {
             Term<Double> v = (Term<Double>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException(value() + ">Invalid type(need double)");
+            throw new VException("err:type:decimal "+value(),"Invalid type(need decimal)");
         }
     }
     public Number numvalue() {
@@ -42,14 +42,14 @@ public abstract class Token {
             return new Integer(ivalue());
         if (type() == Type.TDouble)
             return new Double(dvalue());
-        throw new VException("Type error(NaN)\n\t|" + value());
+        throw new VException("err:type:number "+value(),"Invalid type(NaN)");
     }
     public String svalue() {
         try {
             Term<String> v = (Term<String>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException(value() + ">Invalid type(need string)");
+            throw new VException("err:type:string "+value(),"Invalid type(need string)");
         }
     }
     public Quote qvalue() {
@@ -57,7 +57,7 @@ public abstract class Token {
             Term<Quote> v = (Term<Quote>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException(value() + ">Invalid type(need quote)");
+            throw new VException("err:type:quote "+value(),"Invalid type(need quote)");
         }
     }
     public Object ovalue() {
@@ -65,7 +65,7 @@ public abstract class Token {
             Term<Object> v = (Term<Object>)this;
             return v.val;
         } catch (Exception e) {
-            throw new VException(value() + ">Invalid type(need object)");
+            throw new VException("err:type:object "+value(),"Invalid type(need object)");
         }
     }
 }
