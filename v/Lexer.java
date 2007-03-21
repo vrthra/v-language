@@ -59,6 +59,23 @@ public class Lexer {
         _queue.clear();
     }
 
+    public char charconv(char n) {
+        switch(n) {
+            case 't':
+                return '\t';
+            case 'n':
+                return '\n';
+            case 'r':
+                return '\r';
+            case 'f':
+                return '\f';
+            case 'b':
+                return '\b';
+            default: 
+                return n;
+        }
+    }
+
     public void lex() {
         // Use the V.read to fetch the values.
         // loop on each char, and add the found
@@ -160,8 +177,7 @@ public class Lexer {
             c = _stream.read();
             if (c == '\\') { // escaped.
                 // read next char and continue.
-                _word.append(c);
-                _word.append(_stream.read());
+                _word.append(charconv(_stream.read()));
                 continue;
             }
             if (start == c)
