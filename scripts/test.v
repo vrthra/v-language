@@ -338,7 +338,7 @@ mycmd
 ]
 [
     1 2 3 [a b c : a b c] view unit cons cons
-] 'view(basci)' test
+] 'view(basic)' test
 
 # reverse
 # 1 2 3 [a b c : c b a] => 3 2 1
@@ -428,42 +428,42 @@ mycmd
 ]
 [
     ["I am here" length] java
-] 'view (java primitive)' test
+] 'java(primitive)' test
 
 [
     100 =
 ]
 [
     [-100 java.lang.Math abs] java
-] 'view (java static method)' test
+] 'java(static method)' test
 
 [
     integer? swap pop
 ]
 [
     [java.util.Date new] java unit [getDay] concat java
-] 'view (java constructor)' test
+] 'java(constructor)' test
 
 [
     'abc' =
 ]
 [
     [[~a ~b ~c] java.lang.String new] java
-] 'view (java array)' test
+] 'java(array)' test
 
 [
     '0.002' =
 ]
 [
     [v.V version$] java
-] 'view (java field read access)' test
+] 'java(field read access)' test
 
 [
     '0.001' =
 ]
 [
     ['0.001' v.V version$] java
-] 'view (java field write access)' test
+] 'java(field write access)' test
 
 #=============================================
 # math
