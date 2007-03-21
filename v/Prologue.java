@@ -348,7 +348,7 @@ public class Prologue {
         // a b c d e f [a *b : [a b]] V => a b c d [e f] -- we ignore the
         // *x on the first level and treat it as just an element.
 
-        Cmd _shuffle = new Cmd(parent) {
+        Cmd _view = new Cmd(parent) {
             public void eval(Quote q) {
                 // eval is passed in the quote representing the current scope.
                 QStack p = q.stack();
@@ -1465,7 +1465,7 @@ public class Prologue {
         parent.def("&i", _dequoteenv);
         parent.def("i", _dequote);
 
-        parent.def("V", _shuffle);
+        parent.def("view", _view);
         parent.def("java", _java);
 
         parent.def("true", _true);

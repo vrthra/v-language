@@ -261,24 +261,24 @@
 [[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort1] '(binrec let) qsort' test
 #=========================================
 [qsort2
-    [joinparts [p [*l1] [*l2] : [*l1 p *l2]] V].
+    [joinparts [p [*l1] [*l2] : [*l1 p *l2]] view].
     [small?]
     []
     [uncons [>] split&]
     [joinparts]
     binrec].
 
-[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort2] '(binrec V) qsort' test
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort2] '(binrec view) qsort' test
 #=========================================
 [qsort3
-    [joinparts [p [*l1] [*l2] : [*l1 p *l2]] V].
+    [joinparts [p [*l1] [*l2] : [*l1 p *l2]] view].
     [split_on_first_element uncons [>] split&].
     [small?]
         []
-        [split_on_first_element [l1 l2 : [l1 qsort3 l2 qsort3 joinparts]] V i]
+        [split_on_first_element [l1 l2 : [l1 qsort3 l2 qsort3 joinparts]] view i]
     ifte].
 
-[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort3] '(V) qsort' test
+[[0 2 4 6 6 7 8 9] =] [[0 9 6 7 8 4 6 2] qsort3] '(view) qsort' test
 #=========================================
 
 
@@ -315,7 +315,7 @@ mycmd
 
 #=========================================
 # stack shufflers that can be used for data structures
-# the common format is [x1 x2 x3 ... : y1 y2 y3] V
+# the common format is [x1 x2 x3 ... : y1 y2 y3] view
 # where the portions before ':' are the template for
 # stack and portions after it are the template for result.
 # the x1 x2 etc are symbols that gets bound to what
@@ -323,13 +323,13 @@ mycmd
 # on the left side, then they are replaced on the
 # body of left quote.
 # list destructuring is also possible this way.
-# ie: [1 2] [[a b] : a b] V => 1 2 on the stack.
+# ie: [1 2] [[a b] : a b] view => 1 2 on the stack.
 # '_' is used to ignore the value on the stack
 # '*' is used to indicate that there are 0 or more elements
 # left. and *xxx can be used to name them.
-# so [1 2 3 4 5] [[a *rest] : *rest a] V => 2 3 4 5 1 on the stack.
+# so [1 2 3 4 5] [[a *rest] : *rest a] view => 2 3 4 5 1 on the stack.
 # it can also be done on tail.
-# so [1 2 3 4 5] [[*rest a] : a *rest] V => 5 1 2 3 4 on the stack.
+# so [1 2 3 4 5] [[*rest a] : a *rest] view => 5 1 2 3 4 on the stack.
 #=========================================
 # basic
 # 1 2 3 [a b c : a b c] => 1 2 3
@@ -337,8 +337,8 @@ mycmd
     [1 2 3] =
 ]
 [
-    1 2 3 [a b c : a b c] V unit cons cons
-] 'V(basci)' test
+    1 2 3 [a b c : a b c] view unit cons cons
+] 'view(basci)' test
 
 # reverse
 # 1 2 3 [a b c : c b a] => 3 2 1
@@ -346,8 +346,8 @@ mycmd
     [3 2 1] =
 ]
 [
-    1 2 3 [a b c : c b a] V unit cons cons
-] 'V(reverse)' test
+    1 2 3 [a b c : c b a] view unit cons cons
+] 'view(reverse)' test
 
 #list
 # 1 2 3 [a b c : [a b c]] => [1 2 3]
@@ -355,16 +355,16 @@ mycmd
     [1 2 3] =
 ]
 [
-    1 2 3 [a b c : [a b c]] V
-] 'V(list:1)' test
+    1 2 3 [a b c : [a b c]] view
+] 'view(list:1)' test
 
 # 1 2 3 [a b c : a [a b] a] => 1 [1 2] 1
 [
     [1 [1 2] 1] =
 ]
 [
-    1 2 3 [a b c : a [a b] a] V unit cons cons
-] 'V(list:2)' test
+    1 2 3 [a b c : a [a b] a] view unit cons cons
+] 'view(list:2)' test
 
 # with extra data
 # 1 2 3 [a b c : a [5 5] a] => 1 [5 5] 1
@@ -372,8 +372,8 @@ mycmd
     [1 [5 5] 1] =
 ]
 [
-    1 2 3 [a b c : a [5 5] a] V unit cons cons
-] 'V(prefilled)' test
+    1 2 3 [a b c : a [5 5] a] view unit cons cons
+] 'view(prefilled)' test
 
 # more interesting stuff.
 # ignore some parts.
@@ -382,8 +382,8 @@ mycmd
     [2 3] =
 ]
 [
-    [1 2] 3 [[_ b] c : [b c]] V
-] 'V(_)' test
+    [1 2] 3 [[_ b] c : [b c]] view
+] 'view(_)' test
 
 # slurp
 # [1 2 4 5 6] 3 [[a *] b : [a b]] => [1 3]
@@ -391,8 +391,8 @@ mycmd
     [1 3] =
 ]
 [
-    [1 2 4 5 6] 3 [[a *] b : [a b]] V
-] 'V(*)' test
+    [1 2 4 5 6] 3 [[a *] b : [a b]] view
+] 'view(*)' test
 
 # reverse slurp
 # [1 2 4 5 6] 3 [[* a] b : [a b]] => [6 3]
@@ -400,8 +400,8 @@ mycmd
     [6 3] =
 ]
 [
-    [1 2 4 5 6] 3 [[* a] b : [a b]] V
-] 'V(reverse*)' test
+    [1 2 4 5 6] 3 [[* a] b : [a b]] view
+] 'view(reverse*)' test
 
 # named slurp
 # [1 2 4 5 6] 3 [[a *rest] b : [*rest b]] => [2 4 5 6 3]
@@ -409,8 +409,8 @@ mycmd
     [2 4 5 6 3] =
 ]
 [
-    [1 2 4 5 6] 3 [[a *rest] b : [*rest b]] V
-] 'V(named *)' test
+    [1 2 4 5 6] 3 [[a *rest] b : [*rest b]] view
+] 'view(named *)' test
 
 # named reverse slurp
 # [1 2 4 5 6] 3 [[*rest a] b : [[b *rest] a]] => [[3 1 2 4 5] 6]
@@ -418,8 +418,8 @@ mycmd
     [[3 1 2 4 5] 6] =
 ]
 [
-    [1 2 4 5 6] 3 [[*rest a] b : [[b *rest] a]] V
-] 'V(named reverse *)' test
+    [1 2 4 5 6] 3 [[*rest a] b : [[b *rest] a]] view
+] 'view(named reverse *)' test
 
 #=======================================
 #java
@@ -428,42 +428,42 @@ mycmd
 ]
 [
     ["I am here" length] java
-] 'V (java primitive)' test
+] 'view (java primitive)' test
 
 [
     100 =
 ]
 [
     [-100 java.lang.Math abs] java
-] 'V (java static method)' test
+] 'view (java static method)' test
 
 [
     integer? swap pop
 ]
 [
     [java.util.Date new] java unit [getDay] concat java
-] 'V (java constructor)' test
+] 'view (java constructor)' test
 
 [
     'abc' =
 ]
 [
     [[~a ~b ~c] java.lang.String new] java
-] 'V (java array)' test
+] 'view (java array)' test
 
 [
     '0.002' =
 ]
 [
     [v.V version$] java
-] 'V (java field read access)' test
+] 'view (java field read access)' test
 
 [
     '0.001' =
 ]
 [
     ['0.001' v.V version$] java
-] 'V (java field write access)' test
+] 'view (java field write access)' test
 
 #=============================================
 # math
