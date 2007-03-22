@@ -5,7 +5,7 @@ import java.util.*;
 public class V {
     public static String version = "0.002";
 
-    public static boolean pure = true;
+    public static boolean pure = false;
 
     static QStack _stack = null;
     static void banner() {
