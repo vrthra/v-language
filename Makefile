@@ -14,5 +14,15 @@ clean:
 	rm -rf pkg/v
 
 release: all test
-	tar -cf v_$(RELEASE).tar pkg/v.* v/*.java v/java/*.java v/*.v scripts/*.v Makefile
-	gzip -f v_$(RELEASE).tar
+	rm -rf pkg/v_$(RELEASE)
+	mkdir pkg/v_$(RELEASE)
+	cp -r v pkg/v_$(RELEASE)
+	cp -r scripts pkg/v_$(RELEASE)
+	cp Makefile pkg/v_$(RELEASE)
+	mkdir pkg/v_$(RELEASE)/pkg
+	cp pkg/v.* pkg/v_$(RELEASE)/pkg
+	cd pkg/ && \
+		tar -cf v_$(RELEASE).tar \
+	   		v_$(RELEASE)/pkg/v.* v_$(RELEASE)/v/*.java v_$(RELEASE)/v/java/*.java \
+			v_$(RELEASE)/v/*.v v_$(RELEASE)/scripts/*.v v_$(RELEASE)/Makefile && \
+		gzip -f v_$(RELEASE).tar && mv v_$(RELEASE).tar.gz ..
