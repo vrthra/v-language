@@ -452,18 +452,18 @@ mycmd
 ] 'java(array)' test
 
 [
-    '0.002' =
-]
-[
-    [v.V version$] java
-] 'java(field read access)' test
-
-[
     '0.001' =
 ]
 [
     ['0.001' v.V version$] java
 ] 'java(field write access)' test
+
+[
+    '0.001' =
+]
+[
+    [v.V version$] java
+] 'java(field read access)' test
 
 #=============================================
 # math

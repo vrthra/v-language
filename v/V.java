@@ -3,7 +3,7 @@ package v;
 import java.util.*;
 
 public class V {
-    public static String version = "0.002";
+    public static String version = "0.003";
 
     static QStack _stack = null;
     static void banner() {
