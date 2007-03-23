@@ -177,8 +177,8 @@ public class CmdQuote implements Quote {
     }
 
     public void def(String sym, Quote q) {
-        if (_dict.containsKey(sym) && V.pure)
-            throw new VException("err:pure:redefine "+sym,"Attempt to redefine " + sym);
+        /*if (_dict.containsKey(sym) && V.pure)
+            throw new VException("err:pure:redefine "+sym,"Attempt to redefine " + sym);*/
         _dict.put(sym, q);
     }
 

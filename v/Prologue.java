@@ -48,37 +48,6 @@ public class Prologue {
         return true;
     }
 
-    public static void evaluate(Quote q, String buff) {
-        getdef(q, buff).eval(q, true);
-    }
-
-    static Quote compile(Quote q, Quote v) {
-        QuoteStream nts = new QuoteStream();
-        for(Term t:  v.tokens())
-            nts.add(t);
-
-        return new CmdQuote(nts, q);
-    }
-
-    static Quote getdef(Quote q, String buf) {
-        CharStream cs = new BuffCharStream(buf);
-        return compile(q, new CmdQuote(new LexStream(cs), q));
-    }
-    
-    static String getresource(String s) {
-        try {
-            StringBuffer buf = new StringBuffer();
-            BufferedReader br = new BufferedReader(new InputStreamReader(Prologue.class.getResourceAsStream(s)));
-            String line;
-            while((line = br.readLine()) != null) {
-                buf.append(line);
-            }
-            return buf.toString();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     @SuppressWarnings("unchecked")
     static Map.Entry<String, CmdQuote> splitdef(Quote qval, Quote q) {
         HashMap<String, CmdQuote> map = new HashMap<String, CmdQuote>();
@@ -370,6 +339,62 @@ public class Prologue {
                     Term t = fstream.next();
                     res.add(t);
                 }
+
+                // collect as much params as there is from stack as there is in the template
+                // first level.
+                QuoteStream elem = new QuoteStream();
+                fstream = tmpl.iterator();
+                LinkedList<Term> st = new LinkedList<Term>();
+                while (fstream.hasNext()) {
+                    Term t = fstream.next();
+                    Term e = p.pop();
+                    st.addFirst(e);
+                }
+                for (Term e: st)
+                    elem.add(e);
+                
+                HashMap<String, Term> symbols = new HashMap<String, Term>();
+                /*V.outln(".......tmpl....");
+                for(Term t: tmpl)
+                    V.outln(t.value());
+                V.outln(".......res....");
+                for(Term t: res)
+                    V.outln(t.value());
+                V.outln(".......elem....");
+                for(Term t: elem)
+                    V.outln(t.value());*/
+                //Now take each elem and its pair templ and extract the symbols and their meanings.
+                evaltmpl(tmpl, elem, symbols, q);
+                /*for (String s : symbols.keySet()) {
+                    V.outln(s + ":" + symbols.get(s).value());
+                }*/
+
+                // now go over the quote we were just passed and replace each symbol with what we
+                // have if we do have a definition.
+                QuoteStream resstream = evalres(res, symbols, q);
+                CmdQuote qs = new CmdQuote(resstream, q);
+
+                Iterator<Term> i = qs.tokens().iterator();
+                while (i.hasNext())
+                    p.push(i.next());
+                //qs.eval(q);
+            }
+        };
+
+        Cmd _trans = new Cmd(parent) {
+            public void eval(Quote q) {
+                // eval is passed in the quote representing the current scope.
+                QStack p = q.stack();
+                Term v = p.pop();
+                Iterator<Term> fstream = v.qvalue().tokens().iterator();
+
+                // iterate through the quote, and find where ':' is then split it
+                // into two half and analyze the first.
+                QuoteStream tmpl = (QuoteStream)fstream.next().qvalue().tokens();
+                
+                QuoteStream res = new QuoteStream();
+                while (fstream.hasNext())
+                    res.add(fstream.next());
 
                 // collect as much params as there is from stack as there is in the template
                 // first level.
@@ -1386,7 +1411,7 @@ public class Prologue {
                 String val = file.svalue() + ".v";
                 try {
                     // Try and see if the file requested is any of the standard defined
-                    String chars = getresource(val);
+                    String chars = Util.getresource(val);
                     CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
 
                     CmdQuote module = new CmdQuote(new LexStream(cs), q);
@@ -1406,7 +1431,7 @@ public class Prologue {
                 String val = file.svalue() + ".v";
                 try {
                     // Try and see if the file requested is any of the standard defined
-                    String chars = getresource(val);
+                    String chars = Util.getresource(val);
                     CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
 
                     CmdQuote module = new CmdQuote(new LexStream(cs), env.qvalue());
@@ -1423,7 +1448,7 @@ public class Prologue {
                 QStack p = q.stack();
                 Term buff = p.pop();
                 try {
-                    evaluate(q, buff.svalue());
+                    Util.evaluate(q, buff.svalue());
                     V.debug("eval @ " + q.id());
                 } catch (Exception e) {
                     throw new VException("err:eval " + buff.value(), "eval failed" );
@@ -1437,7 +1462,7 @@ public class Prologue {
                 Term env = p.pop();
                 Term buff = p.pop();
                 try {
-                    evaluate(env.qvalue(), buff.svalue());
+                    Util.evaluate(env.qvalue(), buff.svalue());
                     V.debug("eval @ " + env.qvalue().id());
                 } catch (Exception e) {
                     throw new VException("err:*eval " + buff.value(), "*eval failed" );
@@ -1466,6 +1491,7 @@ public class Prologue {
         parent.def("i", _dequote);
 
         parent.def("view", _view);
+        parent.def("trans", _trans);
         parent.def("java", _java);
 
         parent.def("true", _true);
@@ -1559,7 +1585,7 @@ public class Prologue {
 
         parent.def("help", _help);
         
-        Quote libs = getdef(parent, "'std' use");
+        Quote libs = Util.getdef(parent, "'std' use");
         libs.eval(parent, true);
     }
 }

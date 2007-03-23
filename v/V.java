@@ -5,8 +5,6 @@ import java.util.*;
 public class V {
     public static String version = "0.002";
 
-    public static boolean pure = false;
-
     static QStack _stack = null;
     static void banner() {
         outln("\t|V|\t");
@@ -16,8 +14,6 @@ public class V {
     public static void main(final String[] args) {
         _stack = new QStack(); // our singleton eval stack.
         final boolean interactive = args.length == 0 ? true : false;
-        if (interactive)
-            pure = false; // it is a hinderance in interactive mode.
         // Setup the world quote.
         Quote world = new Quote() {
             HashMap<String, Quote> _dict = new HashMap<String, Quote>();

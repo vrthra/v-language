@@ -136,7 +136,7 @@ public class Lexer {
             case '[':
                 return ']';
             default:
-                throw new VException("err:internal:invalid_open","Invalid open (" + c + ")");
+                throw new VSynException("err:internal:invalid_open","Invalid open (" + c + ")");
         }
     }
 
@@ -153,12 +153,12 @@ public class Lexer {
     // and keep tab on the compound is complete or not.
     void cclose() {
         if (_cstack.empty())
-            throw new VException("err:internal:invalid_close","Invalid close "
+            throw new VSynException("err:internal:invalid_close","Invalid close "
                     + _stream.current() + " - No open statement.");
 
         char c = _cstack.pop();
         if (c != _stream.current())
-            throw new VException("err:internal:invalid_close","Invalid close "
+            throw new VSynException("err:internal:invalid_close","Invalid close "
                     + _stream.current() + " - Need " + c + "");
 
         add(new Term<Character>(Type.TClose, _stream.current()));
