@@ -14,4 +14,5 @@ clean:
 	rm -rf pkg/v
 
 release: all test
-	tar -cf v_$(RELEASE).tar.gz pkg/v.* v scripts Makefile
+	tar -cf v_$(RELEASE).tar pkg/v.* v/*.java v/java/*.java v/*.v scripts/*.v Makefile
+	gzip -f v_$(RELEASE).tar
