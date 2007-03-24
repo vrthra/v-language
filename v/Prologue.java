@@ -1132,7 +1132,6 @@ public class Prologue {
                 QStack p = q.stack();
                 Term list = p.pop();
                 Term i = p.pop();
-                int count = 0;
                 for(Term t: list.qvalue().tokens()) {
                     if (t.type() == i.type() && t.value().equals(i.value())) {
                         p.push(new Term<Boolean>(Type.TBool, true));
