@@ -1115,25 +1115,6 @@ public class Prologue {
             }
         };
 
-        Cmd _reverse = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
-
-                Term list = p.pop();
-
-                Iterator<Term> fstream = list.qvalue().tokens().iterator();
-                Stack<Term> st = new Stack<Term>();
-                // copy the rest of tokens to our own stream.
-                QuoteStream nts = new QuoteStream();
-                while (fstream.hasNext())
-                    st.push(fstream.next());
-
-                while(!st.empty())
-                    nts.add(st.pop());
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
-            }
-        };
-
         Cmd _size = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1600,7 +1581,6 @@ public class Prologue {
         parent.def("abort", _abort);
 
         //list
-        parent.def("reverse", _reverse);
         parent.def("size", _size);
         parent.def("in", _in);
         parent.def("at", _at);

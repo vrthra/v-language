@@ -1,3 +1,6 @@
+[swons swap cons].
+[reverse [] swap [swons] step].
+
 [let reverse [unit cons reverse $me &parent &. true] map pop].
 
 [abs unit [java.lang.Math abs] concat java].
@@ -14,6 +17,10 @@
 [swapd [swap] dip].
 [lroll [[a *rest] : [*rest a]] view].
 [rroll [[*rest a] : [a *rest]] view].
+
+[rollup [a b c : c a b] view].
+[rolldown [a b c : b c a] view].
+[rotate [a b c : c b a] view].
 
 
 [cons [a [*rest] : [a *rest]] view].
