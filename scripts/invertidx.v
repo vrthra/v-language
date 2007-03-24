@@ -1,8 +1,7 @@
 # This is an example association list from doc id to word id list.  
 # an example adapted from the code here http://www.kimbly.com/code/invidx/
 # V does not have the any bias towards numbers.
-
-[docs_to_words
+[data
     [ ['d1' ['AA' 'BB' 'CC']] 
       ['d2' ['AA' 'BB']] 
       ['d3' ['AA']]
@@ -10,18 +9,14 @@
     ]
 ].
 
-
 # invert :: Docs_to_words -> words_to_docs
 # takes an association list from docs to words, returns an association
 #   list from words to docs
-
 [invert
     dup word_list
-    [dup rollup                        # save the word, so we can cons it later
-      docs_with_word unit cons]        # combine the word and the docs list
+    [swap docs_with_word unit cons]        # combine the word and the docs list
     map&
 ].
-
 
 # word_list :: Docs_to_words -> words
 # returns the union of all words in all docs
@@ -36,9 +31,7 @@
 [doc_list [first] map&].        # just keep the doc ids
 
 # docs_with_word :: Docs_to_words word -> docs
-
 [docs_with_word
-    swap
     [rest first in?] filter&    # remove docs that don't have the given word
     doc_list
 ].
@@ -46,15 +39,13 @@
 # nub :: list -> list
 # Removes duplicate elements in a list.  The name "nub" comes from the 
 # function of the same name in haskell.  This implementation is O(n^2)
-
 [nub
-    []              # the accumulator begins as an empty list
-    [[swap in?]     # if the current element is already in the list,
-      [pop]         # ignore it
-      [swons]       # otherwise add it to the list
-      ifte]
-    fold&
+    [] [[has?]            # if the current element is already in the list,
+            [pop]         # ignore it
+            [swons]       # otherwise add it to the list
+        ifte
+    ] fold&
 ].
 
-docs_to_words invert ?
+data invert [puts] step
 

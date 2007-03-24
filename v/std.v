@@ -42,6 +42,7 @@
 [empty? size zero?].
 [null? [number?] [zero?] [empty?] ifte].
 [small? [list?] [dup size swap pop dup zero? swap 1 = or] [dup zero? swap 1 = or] ifte].
+[has? swap in?].
 
 [leaf? list? not].
 
