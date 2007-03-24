@@ -1146,6 +1146,84 @@ public class Prologue {
             }
         };
 
+        Cmd _in = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term list = p.pop();
+                Term i = p.pop();
+                int count = 0;
+                for(Term t: list.qvalue().tokens()) {
+                    if (t.type() == i.type() && t.value().equals(i.value())) {
+                        p.push(new Term<Boolean>(Type.TBool, true));
+                        return;
+                    }
+                }
+                p.push(new Term<Boolean>(Type.TBool, false));
+            }
+        };
+
+        Cmd _at = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term i = p.pop();
+                int idx = i.ivalue();
+                Term list = p.pop();
+                int count = 0;
+                for(Term t: list.qvalue().tokens()) {
+                    if (count == idx) {
+                        p.push(t);
+                        return;
+                    }
+                    ++count;
+                }
+                throw new VException("err:overflow " + list.value() + " " + idx,"Quote overflow");
+            }
+        };
+
+        Cmd _drop = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term i = p.pop();
+                int num = i.ivalue();
+                Term list = p.pop();
+
+                QuoteStream nts = new QuoteStream();
+                //for(String s: t.qvalue().bindings().keySet())
+                //    nts.add(new Term<String>(Type.TSymbol,s));
+ 
+                for(Term t: list.qvalue().tokens()) {
+                    if (num <= 0)
+                        nts.add(t);
+                    --num;
+                }
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts,q)));
+            }
+        };
+
+        Cmd _take = new Cmd(parent) {
+            public void eval(Quote q) {
+                QStack p = q.stack();
+                Term i = p.pop();
+                int num = i.ivalue();
+                Term list = p.pop();
+                int count = 0;
+
+                QuoteStream nts = new QuoteStream();
+                //for(String s: t.qvalue().bindings().keySet())
+                //    nts.add(new Term<String>(Type.TSymbol,s));
+ 
+                for(Term t: list.qvalue().tokens()) {
+                    if (count >= num)
+                        break;
+                    ++count;
+                    nts.add(t);
+                }
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts,q)));
+            }
+        };
+
+
+
         Cmd _dequote = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
@@ -1524,6 +1602,10 @@ public class Prologue {
         //list
         parent.def("reverse", _reverse);
         parent.def("size", _size);
+        parent.def("in", _in);
+        parent.def("at", _at);
+        parent.def("drop", _drop);
+        parent.def("take", _take);
        
 
         // on list

@@ -46,4 +46,5 @@
 
 [xor [a b : a b a b] view or [and not] dip and].
 
+[of swap at].
 
