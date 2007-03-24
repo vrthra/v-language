@@ -27,7 +27,7 @@ public class Vx extends RuntimeException {
 
     public Vx(String quote, String msg) {
         super(msg);
-        _msg = msg;
+        _msg = "[" + quote + "] " + msg;
         _qstr = quote;
     }
 }
