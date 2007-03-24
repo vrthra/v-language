@@ -22,6 +22,10 @@
 [rolldown [a b c : b c a] view].
 [rotate [a b c : c b a] view].
 
+[rollupd [rollup] dip].
+[rolldownd [rolldown] dip].
+[rotated [rotate] dip].
+
 
 [cons [a [*rest] : [a *rest]] view].
 [unit [] cons].
