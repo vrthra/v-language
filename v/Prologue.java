@@ -1127,7 +1127,7 @@ public class Prologue {
             }
         };
 
-        Cmd _in = new Cmd(parent) {
+        Cmd _isin = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
                 Term list = p.pop();
@@ -1581,7 +1581,7 @@ public class Prologue {
 
         //list
         parent.def("size", _size);
-        parent.def("in", _in);
+        parent.def("in?", _isin);
         parent.def("at", _at);
         parent.def("drop", _drop);
         parent.def("take", _take);

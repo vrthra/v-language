@@ -39,7 +39,7 @@
 
 [docs_with_word
     swap
-    [rest first in] filter&    # remove docs that don't have the given word
+    [rest first in?] filter&    # remove docs that don't have the given word
     doc_list
 ].
 
@@ -49,13 +49,12 @@
 
 [nub
     []              # the accumulator begins as an empty list
-    [ [swap in]     # if the current element is already in the list,
+    [[swap in?]     # if the current element is already in the list,
       [pop]         # ignore it
       [swons]       # otherwise add it to the list
       ifte]
     fold&
 ].
-
 
 docs_to_words invert ?
 
