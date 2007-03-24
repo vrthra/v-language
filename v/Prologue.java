@@ -1367,7 +1367,7 @@ public class Prologue {
         Cmd _isbool = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term a = p.peek();
+                Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TBool));
             }
         };
@@ -1375,7 +1375,7 @@ public class Prologue {
         Cmd _isinteger = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term a = p.peek();
+                Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TInt));
             }
         };
@@ -1383,7 +1383,7 @@ public class Prologue {
         Cmd _isdouble = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term a = p.peek();
+                Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TDouble));
             }
         };
@@ -1391,7 +1391,7 @@ public class Prologue {
         Cmd _issym = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term a = p.peek();
+                Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TSymbol));
             }
         };
@@ -1399,7 +1399,7 @@ public class Prologue {
         Cmd _islist = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term a = p.peek();
+                Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TQuote));
             }
         };
@@ -1407,7 +1407,7 @@ public class Prologue {
         Cmd _isstr = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term a = p.peek();
+                Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TString));
             }
         };
@@ -1415,7 +1415,7 @@ public class Prologue {
         Cmd _isnum = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term a = p.peek();
+                Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool,
                             a.type == Type.TInt || a.type == Type.TDouble));
             }
@@ -1424,7 +1424,7 @@ public class Prologue {
         Cmd _ischar = new Cmd(parent) {
             public void eval(Quote q) {
                 QStack p = q.stack();
-                Term a = p.peek();
+                Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TChar));
             }
         };
@@ -1615,10 +1615,6 @@ public class Prologue {
         parent.def(">=", _gteq);
 
         //predicates
-        //The predicates do not consume stuff off the stack. They just
-        //peek and push the result. the reason for this is that we generally
-        //do -> if (x is yyy) then {do some thing with x} so it is more
-        //natural to let x be there in the stack than to pop it off.
         parent.def("integer?", _isinteger);
         parent.def("double?", _isdouble);
         parent.def("boolean?", _isbool);

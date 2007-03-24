@@ -182,7 +182,7 @@
 [[4] =] [int2] 'internal (2)' test
 #=========================================
 [fact 
-    zero?
+    [zero?]
         [pop 1]
         [dup 1 - fact *]
     ifte].
@@ -438,7 +438,7 @@ mycmd
 ] 'java(static method)' test
 
 [
-    integer? swap pop
+    integer?
 ]
 [
     [java.util.Date new] java unit [getDay] concat java
