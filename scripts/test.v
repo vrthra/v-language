@@ -222,6 +222,13 @@
 
 [120 =] [5 pfact] '(primrec) pfact ' test
 #=========================================
+[pcomb
+    [[]]
+    [concat]
+    primrec].
+
+[[a b c d b c d c d d] =] [[a b c d] pcomb] '(primrec) pcomb' test
+#=========================================
 [area
   [pi 3.1415].
   [sq dup *].
