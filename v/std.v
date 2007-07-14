@@ -35,6 +35,7 @@
 [dip [a b : [b i a]] view i].
 [x dup i].
 [id [a : a] view].
+[dipd [dip] cons dip].
 
 [uncons [[a *rest] : a [*rest]] view].
 [first [[a *rest] : a] view].
@@ -61,4 +62,76 @@
 [xor [a b : a b a b] view or [and not] dip and].
 
 [of swap at].
+
+# note that swap is needed since dip does a swap
+[binrec
+    [if then rec1 rec2 :
+        [if
+            then
+            [rec1 i
+                # execute binrec on both parts.
+                [if then rec1 rec2 binrec] dip
+                [if then rec1 rec2 binrec] i
+             rec2 i]
+         ifte]] view i].
+
+[genrec
+    [if then rec1 rec2 :
+        [if
+            then
+            [rec1 i
+                [if then rec1 rec2 genrec]
+             rec2 i]
+         ifte]] view i].
+[linrec
+    [if then rec1 rec2 :
+        [if
+            then
+            [rec1 i
+                # we dont need [] i, it is just for clarity.
+                [if then rec1 rec2 linrec] i 
+             rec2 i]
+         ifte]] view i].
+[tailrec [] linrec].
+#[tailrec
+#    [if then rec :
+#        [if
+#            then
+#            [rec i
+#                [if then rec tailrec] i
+#            ]
+#         ifte]] view i].
+
+# from joy mailing list.
+#[primrec
+#    [pr 
+#        [pop pop small?]
+#        [pop pop]
+#        [[dup pred] dipd
+#            dup
+#            [pr] dip
+#            i]
+#        ifte
+#    ].
+#    [first] dip pr].
+
+[primrec
+    [lzero?
+        [list?] [empty?]
+        [zero?]
+        ifte].
+    [lnext
+        [list?] [rest]
+        [pred]
+        ifte].
+
+    [param then rec :
+        [[param lzero?]
+            then
+            # we dont need [] i, it is just for clarity.
+            [param
+                [param lnext then rec primrec] i
+            rec i]
+         ifte]] view i].
+
 

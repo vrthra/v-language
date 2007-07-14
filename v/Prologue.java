@@ -274,7 +274,7 @@ public class Prologue {
                 Term<VFrame> f = new Term<VFrame>(Type.TFrame, q);
                 QuoteStream fts = new QuoteStream();
                 fts.add(f);
-                V.outln("Def :" + module + "@" + q.parent().id());
+                V.debug("Def :" + module + "@" + q.parent().id());
                 q.parent().def('$' + module, new CmdQuote(fts));
 
                 // now bind all the published tokens to our parent namespace.
@@ -475,7 +475,7 @@ public class Prologue {
                 }
                 Stack<Shield> stack = (Stack<Shield>)shield.store().get("$info");
                 stack.push(s);
-                V.outln("Shield @ " + q.parent().id());
+                V.debug("Shield @ " + q.parent().id());
             }
         };
 
@@ -586,211 +586,7 @@ public class Prologue {
                 }
             }
         };
-
-        /* The genrec combinator takes four program parameters in addition to
-         * whatever data parameters it needs. Fourth from the top is an
-         * if-part, followed by a then-part. If the if-part yields true, then
-         * the then-part is executed and the combinator terminates. The other
-         * two parameters are the rec1-part and the rec2part. If the if-part
-         * yields false, the rec1-part is executed. Following that the four
-         * program parameters and the combinator are again pushed onto the
-         * stack bundled up in a quoted form. Then the rec2-part is executed,
-         * where it will find the bundled form. Typically it will then execute
-         * the bundled form, either with i or with app2, or some other combinator.*/
-        Cmd _genrec = new Cmd() {
-            public void eval(VFrame q) {
-                VStack p = q.stack();
-
-                Term rec2 = p.pop();
-                Term rec1 = p.pop();
-                Term thenp = p.pop();
-                Term tifp = p.pop();
-
-                // evaluate if and pop it back.
-                Node<Term> n = p.now;
-                tifp.qvalue().eval(q);
-                Term ifp = p.pop();
-                p.now = n;
-
-                // dequote the action and push it to stack.
-                if (ifp.bvalue()) {
-                    thenp.qvalue().eval(q);
-                    return;
-                } else {
-                    rec1.qvalue().eval(q);
-                    QuoteStream nts = new QuoteStream();
-                    nts.add(tifp);
-                    nts.add(thenp);
-                    nts.add(rec1);
-                    nts.add(rec2);
-                    nts.add(new Term<String>(Type.TSymbol, "genrec"));
-                    p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
-                    rec2.qvalue().eval(q);
-                }
-            }
-        };
-
-        Cmd _linrec = new Cmd() {
-            public void eval(VFrame q) {
-                VStack p = q.stack();
-
-                Term rec2 = p.pop();
-                Term rec1 = p.pop();
-                Term thenp = p.pop();
-                Term tifp = p.pop();
-
-                // evaluate if and pop it back.
-                Node<Term> n = p.now;
-                tifp.qvalue().eval(q);
-                Term ifp = p.pop();
-                p.now = n;
-
-                // dequote the action and push it to stack.
-                if (ifp.bvalue()) {
-                    thenp.qvalue().eval(q);
-                    return;
-                } else {
-                    rec1.qvalue().eval(q);
-                    QuoteStream nts = new QuoteStream();
-                    nts.add(tifp);
-                    nts.add(thenp);
-                    nts.add(rec1);
-                    nts.add(rec2);
-                    nts.add(new Term<String>(Type.TSymbol, "linrec"));
-                    (new CmdQuote(nts)).eval(q);
-                    rec2.qvalue().eval(q);
-                }
-            }
-        };
-
-        Cmd _binrec = new Cmd() {
-            public void eval(VFrame q) {
-                VStack p = q.stack();
-
-                Term rec2 = p.pop();
-                Term rec1 = p.pop();
-                Term thenp = p.pop();
-                Term tifp = p.pop();
-
-                // evaluate if and pop it back.
-                Node<Term> n = p.now;
-                tifp.qvalue().eval(q);
-                Term ifp = p.pop();
-                p.now = n;
-
-                // dequote the action and push it to stack.
-                if (ifp.bvalue()) {
-                    thenp.qvalue().eval(q);
-                } else {
-                    rec1.qvalue().eval(q);
-                    Term nvl = p.pop();
-                    QuoteStream nts = new QuoteStream();
-                    nts.add(tifp);
-                    nts.add(thenp);
-                    nts.add(rec1);
-                    nts.add(rec2);
-                    nts.add(new Term<String>(Type.TSymbol, "binrec"));
-                    Quote nq = new CmdQuote(nts);
-                    nq.eval(q);
-                    p.push(nvl);
-                    nq.eval(q);
-                    rec2.qvalue().eval(q);
-                }
-            }
-        };
-
-        Cmd _tailrec = new Cmd() {
-            public void eval(VFrame q) {
-                VStack p = q.stack();
-
-                Term rec = p.pop();
-                Term thenp = p.pop();
-                Term tifp = p.pop();
-
-                // evaluate if and pop it back.
-                Node<Term> n = p.now;
-                tifp.qvalue().eval(q);
-                Term ifp = p.pop();
-                p.now = n;
-
-                // dequote the action and push it to stack.
-                if (ifp.bvalue()) {
-                    thenp.qvalue().eval(q);
-                } else {
-                    rec.qvalue().eval(q);
-                    QuoteStream nts = new QuoteStream();
-                    nts.add(tifp);
-                    nts.add(thenp);
-                    nts.add(rec);
-                    nts.add(new Term<String>(Type.TSymbol, "tailrec"));
-                    Quote nq = new CmdQuote(nts);
-                    nq.eval(q);
-                }
-            }
-        };
-
-        Cmd _primrec = new Cmd() {
-            public void eval(VFrame q) {
-                VStack p = q.stack();
-
-                Term rec = p.pop();
-                Term thenp = p.pop();
-                Term param = p.peek();
-
-                QuoteStream nts = new QuoteStream();
-                switch (param.type) {
-                    case TInt:
-                        // evaluate if and pop it back.
-                        if (param.ivalue() == 0) {
-                            p.pop();
-                            thenp.qvalue().eval(q);
-                            return;
-                        } else {
-                            nts.add(new Term<String>(Type.TSymbol, "dup"));
-                            nts.add(new Term<String>(Type.TSymbol, "pred"));
-                        }
-                        break;
-                    case TDouble:
-                        // evaluate if and pop it back.
-                        if (param.dvalue() == 0) {
-                            p.pop();
-                            thenp.qvalue().eval(q);
-                            return;
-                        } else {
-                            nts.add(new Term<String>(Type.TSymbol, "dup"));
-                            nts.add(new Term<String>(Type.TSymbol, "pred"));
-                        }
-                        break;
-                    case TQuote:
-                        int i = 0;
-                        for(Term t: param.qvalue().tokens())
-                            ++i;
-                        if (i == 0) {
-                            p.pop();
-                            thenp.qvalue().eval(q);
-                            return;
-                        } else {
-                            nts.add(new Term<String>(Type.TSymbol, "dup"));
-                            nts.add(new Term<String>(Type.TSymbol, "rest"));
-                        }
-                        break;
-                    default:
-                        throw new VException("err:primrec:datatype " + param.value(), "wrong datatype for primrec" );
-                }
-                Quote nq = new CmdQuote(nts);
-                nq.eval(q);
-                // have the next param on stack now. apply primrec on it.
-                QuoteStream n = new QuoteStream();
-                n.add(thenp);
-                n.add(rec);
-                n.add(new Term<String>(Type.TSymbol, "primrec"));
-                nq = new CmdQuote(n);
-                nq.eval(q);
-                rec.qvalue().eval(q);
-
-            }
-        };
-
+        
         // Libraries
         Cmd _print = new Cmd() {
             public void eval(VFrame q) {
@@ -1630,13 +1426,6 @@ public class Prologue {
         iframe.def(">string", _tostring);
         iframe.def(">int", _toint);
         iframe.def(">decimal", _todecimal);
-
-        // recursion
-        iframe.def("genrec", _genrec);
-        iframe.def("linrec", _linrec);
-        iframe.def("binrec", _binrec);
-        iframe.def("tailrec", _tailrec);
-        iframe.def("primrec", _primrec);
 
         //modules
         iframe.def("use", _use);
