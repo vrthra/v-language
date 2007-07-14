@@ -491,17 +491,16 @@ mycmd
 
 #=============================================
 #modules
-#[tst
-#    [open 'abc'].
-#    [hide 'def'].
-#    [using hide].
-#    [using open] publish
-#] module
-#['abc' =] [tst:open] 'module' test
-#[put ' throw expected (success)' puts true] shield
-#['!' =] [tst:hide] 'module' test
-#['def' =] [tst:using] 'module' test
-#
+[tst [using open]
+    [open 'abc'].
+    [hide 'def'].
+    [using hide].
+] module
+
+['abc' =] [tst:open] 'module' test
+[put ' throw expected (success)' puts true] shield
+['def' =] [tst:using] 'module' test
+['!' =] [tst:hide] 'module' test
 
 ??
 "--------Success-----------" puts

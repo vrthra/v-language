@@ -76,7 +76,9 @@ public class CmdQuote implements Quote {
             }
         } catch (VException e) {
             // do we have a $shield defined?
-            V.debug("Shield?" + scope.id());
+            // the scope we get is the child scope of executing environment.
+            // so we take the parent since we are accessing dict directly.
+            V.debug("Shield?" + scope.id() + "|" + e.getMessage());
             Cmd q = (Cmd)scope.dict().get("$shield");
             if (q == null)
                 throw e;

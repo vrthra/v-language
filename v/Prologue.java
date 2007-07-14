@@ -251,41 +251,43 @@ public class Prologue {
                 Term t = p.pop();
                 
                 Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue());
-                String symbol = entry.getKey();
-                CmdQuote qval = entry.getValue();
-
-                //bind the symbol in q.
-                QuoteStream qs = new QuoteStream();
-                qs.add(new Term<String>(Type.TString, symbol));
-                t.fvalue().parent().def("$name", new CmdQuote(qs));
-                QuoteStream qe = new QuoteStream();
-                qe.add(new Term<VFrame>(Type.TFrame, q));
-                t.fvalue().parent().def("$env", new CmdQuote(qe));
+                String module = entry.getKey();
+                CmdQuote qfull = entry.getValue();
                 
-                // now evaluate the entire thing on the current env.
-                // and allow publish to do the work.
-                qval.eval(t.fvalue()); // parent??
-            }
-        };
+                // split it again to get exported defs. 
+                Iterator<Term> it = (Iterator<Term>)qfull.tokens().iterator();
+                Quote pub = it.next().qvalue();
 
-        Cmd _publish = new Cmd() {
-            public void eval(VFrame q) {
-                // eval is passed in the quote representing the current scope.
-                VStack p = q.stack();
-                String module = q.lookup("$name").tokens().iterator().next().value();
-                Quote qenv = q.lookup("$env");
-                VFrame env = qenv.tokens().iterator().next().fvalue();
-                Term t = p.pop();
-                Iterator <Term> i = t.qvalue().tokens().iterator();
+                QuoteStream nts = new QuoteStream();
+                while (it.hasNext())
+                    nts.add(it.next());
+
+                // we define it on the enclosing scope.
+                // so our new command's parent is actually q rather than
+                // parent.
+                CmdQuote qval = new CmdQuote(nts); 
+
+                // now evaluate the entire thing on the current env.
+                qval.eval(q);
+
+                // and save the frame in our parents namespace.
+                Term<VFrame> f = new Term<VFrame>(Type.TFrame, q);
+                QuoteStream fts = new QuoteStream();
+                fts.add(f);
+                V.outln("Def :" + module + "@" + q.parent().id());
+                q.parent().def('$' + module, new CmdQuote(fts));
+
+                // now bind all the published tokens to our parent namespace.
+                Iterator <Term> i = pub.tokens().iterator();
                 while(i.hasNext()) {
                     // look up their bindings and rebind it to parents.
                     String s = i.next().value();
-                    env.def(module + ':' + s, q.lookup(s));
+                    Quote libs = Util.getdef('$' + module + '[' + s + "] &i");
+                    q.parent().def(module + ':' + s ,libs);
                 }
 
             }
         };
-
 
         // [a b c obj method] java
         Cmd _java = new Cmd() {
@@ -444,7 +446,7 @@ public class Prologue {
 
                 // copy the rest of tokens to our own stream.
                 QuoteStream nts = new QuoteStream();
-                Set<String> ks = f.parent().dict().keySet();
+                Set<String> ks = f.dict().keySet();
                 LinkedList<String> ll = new LinkedList(ks);
                 Collections.sort(ll);
                 for(String s: ll)
@@ -473,7 +475,7 @@ public class Prologue {
                 }
                 Stack<Shield> stack = (Stack<Shield>)shield.store().get("$info");
                 stack.push(s);
-                V.debug("Shield @ " + q.id());
+                V.outln("Shield @ " + q.parent().id());
             }
         };
 
@@ -1221,8 +1223,9 @@ public class Prologue {
             public void eval(VFrame q) {
                 VStack p = q.stack();
 
-                Term env = p.pop();
                 Term prog = p.pop();
+                Term env = p.pop();
+                V.outln(prog.value());
                 prog.qvalue().eval(env.fvalue()); // apply on parent
             }
         };
@@ -1542,7 +1545,6 @@ public class Prologue {
         iframe.def(".", _def);
         iframe.def("&.", _defenv);
         iframe.def("module", _defmodule);
-        iframe.def("publish", _publish);
         iframe.def("&words", _words);
         iframe.def("&parent", _parent);
         iframe.def("$me", _me);

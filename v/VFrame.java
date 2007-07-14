@@ -21,11 +21,14 @@ public class VFrame {
     public VFrame() {
         _parent = null;
         _stack = new VStack();
+        _idcount++;
+        _id = _idcount;
     }
     private VFrame(VFrame parent) {
         _parent = parent;
         _stack = parent.stack();
         _idcount++;
+        _id = _idcount;
     }
     public Quote lookup(String key) {
         if (_dict.containsKey(key))
