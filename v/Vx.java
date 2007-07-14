@@ -10,9 +10,9 @@ public class Vx extends RuntimeException {
     private Quote _quote = null;
     private String _msg = null;
 
-    public Quote quote(Quote parent) {
+    public Quote quote() {
         if (_quote == null)
-            _quote = Util.getdef(parent, _qstr);
+            _quote = Util.getdef(_qstr);
         return _quote;
     }
 

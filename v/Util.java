@@ -4,25 +4,25 @@ import java.io.*;
 
 
 public class Util {
-    public static void evaluate(Quote q, String buff) {
+    public static void evaluate(String buff, VFrame q) {
         try {
-            getdef(q, buff).eval(q);
+            getdef(buff).eval(q);
         } catch (Exception e) {
             throw new VException("err:eval " + buff, "eval failed " + e.getMessage());
         }
     }
 
-    static Quote compile(Quote q, Quote v) {
+    static Quote compile(Quote v) {
         QuoteStream nts = new QuoteStream();
         for(Term t:  v.tokens())
             nts.add(t);
 
-        return new CmdQuote(nts, q);
+        return new CmdQuote(nts);
     }
 
-    static Quote getdef(Quote q, String buf) {
+    static Quote getdef(String buf) {
         CharStream cs = new BuffCharStream(buf);
-        return compile(q, new CmdQuote(new LexStream(cs), q));
+        return compile(new CmdQuote(new LexStream(cs)));
     }
 
     static String getresource(String s) {

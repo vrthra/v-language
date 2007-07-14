@@ -9,10 +9,10 @@ class Node<E> {
     }
 }
 
-public class QStack {
+public class VStack {
     Node<Term> now = null;
     Node<Term> first = null;
-    public QStack() {
+    public VStack() {
         now = new Node<Term>(null);
         first = now;
     }

@@ -5,65 +5,19 @@ import java.util.*;
 public class V {
     public static String version = "0.003";
 
-    static QStack _stack = null;
     static void banner() {
         outln("\t|V|\t");
     }
 
 
     public static void main(final String[] args) {
-        _stack = new QStack(); // our singleton eval stack.
+        final VFrame frame = new VFrame(); // our frame chain.
+        for(String s : args)
+            frame.stack().push(new Term<String>(Type.TString, s));
         final boolean interactive = args.length == 0 ? true : false;
         // Setup the world quote.
-        Quote world = new Quote() {
-            HashMap<String, Quote> _dict = new HashMap<String, Quote>();
-            {
-                for(String s : args)
-                    _stack.push(new Term<String>(Type.TString, s));
-            }
 
-            public QStack stack() {
-                return _stack;
-            }
-
-            public String id() {
-                return "Quote[world]";
-            }
-
-            public Quote clone() {
-                throw new VException("err:world:clone","Attempt to clone world.");
-            }
-
-            public void eval(Quote scope, boolean on_parent) {
-                throw new VException("err:world:eval","Attempt to eval world.");
-            }
-            public void eval(Quote scope) {
-                throw new VException("err:world:eval","Attempt to eval world.");
-            }
-
-            public Quote lookup(String key) {
-                return _dict.get(key);
-            }
-
-            public Quote parent() {
-                throw new VException("err:world:parent","world does not have a parent.");
-            }
-
-            public TokenStream tokens() {
-                throw new VException("err:world:tokens","world does not have a token stream.");
-            }
-
-            public void def(String sym, Quote q) {
-                _dict.put(sym, q);
-            }
-
-            public HashMap<String, Quote> bindings() {
-                return _dict;
-            }
-
-        };
-
-        Prologue.init(world);
+        Prologue.init(frame);
         try {
             // do we have any args?
             CharStream cs = null;
@@ -75,22 +29,21 @@ public class V {
                 cs = new ConsoleCharStream();
             }
 
-            CmdQuote program = new CmdQuote(new LexStream(cs), world){
-                public void dofunction(Quote scope) {
+            CmdQuote program = new CmdQuote(new LexStream(cs)) {
+                public void dofunction(VFrame scope) {
                     if (interactive) {
                         try {
                             super.dofunction(scope);
                         } catch (Exception e) {
                             outln(">" + e.getMessage());
-                            _stack.dump();
-                            _stack.clear();
+                            frame.dump();
+                            frame.reinit();
                             V.debug(e);
                         }
                     } else super.dofunction(scope);
                 }
             };
-            program.setout(new V());
-            program.eval(world);
+            program.eval(frame.child()); // we save the original defs.
         } catch (Exception e) {
             outln(e.getMessage());
             debug(e);

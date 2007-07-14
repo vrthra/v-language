@@ -2,7 +2,8 @@
 [swons swap cons].
 [reverse [] swap [swons] step].
 
-[let reverse [unit cons reverse . true] map pop].
+# parents 1 for map, 2 for let
+[let reverse [unit cons reverse $me &parent &parent &. true] map pop].
 
 [abs unit [java.lang.Math abs] concat java].
 [acos unit [java.lang.Math acos] concat java].

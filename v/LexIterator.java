@@ -53,7 +53,7 @@ public class LexIterator extends QuoteIterator {
             }
         }
 
-        CmdQuote cq = new CmdQuote(local, _qs.scope());
+        CmdQuote cq = new CmdQuote(local);
         return new Term<Quote>(Type.TQuote, cq);
     }
 

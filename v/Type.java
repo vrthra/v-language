@@ -2,6 +2,7 @@ package v;
 public enum Type {
     TSymbol,
     TQuote,
+    TFrame,
     TString,
     TInt,
     TDouble,

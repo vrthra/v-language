@@ -7,7 +7,7 @@ class Shield {
     // current stack
     Node<Term> stack;
     Quote quote;
-    Shield(QStack s, Quote q) {
+    Shield(VStack s, Quote q) {
         stack = s.now;
         quote = q;
     }
@@ -49,7 +49,7 @@ public class Prologue {
     }
 
     @SuppressWarnings("unchecked")
-    static Map.Entry<String, CmdQuote> splitdef(Quote qval, Quote q) {
+    static Map.Entry<String, CmdQuote> splitdef(Quote qval) {
         HashMap<String, CmdQuote> map = new HashMap<String, CmdQuote>();
         Iterator<Term> it = (Iterator<Term>)qval.tokens().iterator();
         Term<String> symbol = it.next();
@@ -65,12 +65,12 @@ public class Prologue {
 
         // we define it on the enclosing scope.
         // so our new command's parent is actually q rather than
-        // _parent.
-        map.put(symbol.val, new CmdQuote(nts, q)); 
+        // parent.
+        map.put(symbol.val, new CmdQuote(nts)); 
         return map.entrySet().iterator().next();
     }
 
-    static QuoteStream evalres(TokenStream res, HashMap<String, Term> symbols, Quote q) {
+    static QuoteStream evalres(TokenStream res, HashMap<String, Term> symbols) {
         QuoteStream r = new QuoteStream();
         Iterator<Term> rstream = res.iterator();
         while(rstream.hasNext()) {
@@ -78,8 +78,8 @@ public class Prologue {
             switch(t.type) {
 
                 case TQuote:
-                    QuoteStream nq = evalres(t.qvalue().tokens(), symbols, q);
-                    r.add(new Term<Quote>(Type.TQuote, new CmdQuote(nq, q)));
+                    QuoteStream nq = evalres(t.qvalue().tokens(), symbols);
+                    r.add(new Term<Quote>(Type.TQuote, new CmdQuote(nq)));
                     break;
                 case TSymbol:
                     // do we have it in our symbol table? if yes, replace, else just push it in.
@@ -108,7 +108,7 @@ public class Prologue {
         return r;
     }
 
-    static void evaltmpl(TokenStream tmpl, TokenStream elem, HashMap<String, Term> symbols, Quote q) {
+    static void evaltmpl(TokenStream tmpl, TokenStream elem, HashMap<String, Term> symbols) {
         //Take each point in tmpl, and proess elements accordingly.
         Iterator<Term> tstream = tmpl.iterator();
         Iterator<Term> estream = elem.iterator();
@@ -147,7 +147,7 @@ public class Prologue {
                                         symbols.put(tmplterm.svalue(), lastelem);
                                         break;
                                     case TQuote:
-                                        evaltmpl(tmplterm.qvalue().tokens(), lastelem.qvalue().tokens(), symbols, q);
+                                        evaltmpl(tmplterm.qvalue().tokens(), lastelem.qvalue().tokens(), symbols);
                                         break;
                                     default:
                                         if (tmplterm.value().equals(lastelem.value()))
@@ -163,7 +163,7 @@ public class Prologue {
                                     nlist.add(estream.next());
                             }
                             if (value.length() > 1) { // do we have a named list?
-                                symbols.put(value, new Term<Quote>(Type.TQuote, new CmdQuote(nlist, q)));
+                                symbols.put(value, new Term<Quote>(Type.TQuote, new CmdQuote(nlist)));
                             }
                         } else {
                             Term e = estream.next();
@@ -180,7 +180,7 @@ public class Prologue {
                     // evaluate this portion again in evaltmpl.
                     try {
                         Term et = estream.next();
-                        evaltmpl(t.qvalue().tokens(), et.qvalue().tokens(), symbols, q);
+                        evaltmpl(t.qvalue().tokens(), et.qvalue().tokens(), symbols);
                     } catch (VException e) {
                         throw new VException(e, t.value());
                     } catch (Exception e) {
@@ -198,84 +198,82 @@ public class Prologue {
         }
     }
 
-    public static void init(final Quote parent) {
+    public static void init(final VFrame iframe) {
         // accepts a quote as an argument.
-        Cmd _def = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _def = new Cmd() {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
+                VStack p = q.stack();
                 Term t = p.pop();
-                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
+                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue());
                 String symbol = entry.getKey();
                 
-                // we define it on the enclosing scope.
-                // so our new command's parent is actually q rather than
-                // _parent.
-                V.debug("Def [" + symbol + "] @ " + q.id() + ":" + parent.id());
-                q.def(symbol, entry.getValue());
+                // we define it on the enclosing scope. because the evaluation
+                // is done on child scope.
+                V.debug("Def [" + symbol + "] @ " + q.id());
+                q.parent().def(symbol, entry.getValue());
             }
         };
 
-        Cmd _me = new Cmd(parent) {
-            public void eval(Quote q) {
-                // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
-                p.push(new Term<Quote>(Type.TQuote, q));
+        Cmd _me = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
+                p.push(new Term<VFrame>(Type.TFrame, q.parent()));
             }
         };
 
-        Cmd _parent = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _parent = new Cmd() {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
-                Term t = p.pop();
-                p.push(new Term<Quote>(Type.TQuote, t.qvalue().parent()));
+                VStack p = q.stack();
+                VFrame t = p.pop().fvalue();
+                p.push(new Term<VFrame>(Type.TFrame, t.parent()));
             }
         };
 
-        Cmd _defenv = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _defenv = new Cmd() {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term t = p.pop();
                 
-                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
+                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue());
                 String symbol = entry.getKey();
-
-                V.debug("DefP [" + symbol + "] @ " + q.id() + ":" + parent.id());
-                b.qvalue().def(symbol, entry.getValue());
+                b.fvalue().def(symbol, entry.getValue());
             }
         };
 
-        Cmd _defmodule = new Cmd(parent) {
-            public void eval(Quote q) {
-                // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
+        Cmd _defmodule = new Cmd() {
+            public void eval(VFrame q) {
+               // eval is passed in the quote representing the current scope.
+                VStack p = q.stack();
                 Term t = p.pop();
                 
-                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue(), q);
+                Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue());
                 String symbol = entry.getKey();
                 CmdQuote qval = entry.getValue();
 
                 //bind the symbol in q.
                 QuoteStream qs = new QuoteStream();
                 qs.add(new Term<String>(Type.TString, symbol));
-                t.qvalue().parent().def("$name", new CmdQuote(qs, q));
-                t.qvalue().parent().def("$env", q);
+                t.fvalue().parent().def("$name", new CmdQuote(qs));
+                QuoteStream qe = new QuoteStream();
+                qe.add(new Term<VFrame>(Type.TFrame, q));
+                t.fvalue().parent().def("$env", new CmdQuote(qe));
                 
                 // now evaluate the entire thing on the current env.
                 // and allow publish to do the work.
-                qval.eval(t.qvalue().parent());
+                qval.eval(t.fvalue()); // parent??
             }
         };
 
-        Cmd _publish = new Cmd(parent) {
-            public void eval(Quote q) {
+        /*Cmd _publish = new Cmd(parent) {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
+                VStack p = q.stack();
                 String module = q.lookup("$name").tokens().iterator().next().value();
-                Quote env = q.lookup("$env");
+                CmdQuote env = (CmdQuote)q.lookup("$env");
                 Term t = p.pop();
                 Iterator <Term> i = t.qvalue().tokens().iterator();
                 while(i.hasNext()) {
@@ -285,14 +283,14 @@ public class Prologue {
                 }
 
             }
-        };
+        };*/
 
 
         // [a b c obj method] java
-        Cmd _java = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _java = new Cmd() {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
+                VStack p = q.stack();
                 Term v = p.pop();
                 LinkedList<Term> st = new LinkedList<Term>();
                 for(Term t: v.qvalue().tokens())
@@ -304,7 +302,7 @@ public class Prologue {
                 QuoteStream qs = new QuoteStream();
                 while(i.hasNext())
                     qs.add(i.next());
-                Term res = Helper.invoke(object, method, new CmdQuote(qs, q));
+                Term res = Helper.invoke(object, method, new CmdQuote(qs));
                 p.push(res);
             }
         };
@@ -317,10 +315,10 @@ public class Prologue {
         // a b c d e f [a *b : [a b]] V => a b c d [e f] -- we ignore the
         // *x on the first level and treat it as just an element.
 
-        Cmd _view = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _view = new Cmd() {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
+                VStack p = q.stack();
                 Term v = p.pop();
                 Iterator<Term> fstream = v.qvalue().tokens().iterator();
 
@@ -364,15 +362,15 @@ public class Prologue {
                 for(Term t: elem)
                     V.outln(t.value());*/
                 //Now take each elem and its pair templ and extract the symbols and their meanings.
-                evaltmpl(tmpl, elem, symbols, q);
+                evaltmpl(tmpl, elem, symbols);
                 /*for (String s : symbols.keySet()) {
                     V.outln(s + ":" + symbols.get(s).value());
                 }*/
 
                 // now go over the quote we were just passed and replace each symbol with what we
                 // have if we do have a definition.
-                QuoteStream resstream = evalres(res, symbols, q);
-                CmdQuote qs = new CmdQuote(resstream, q);
+                QuoteStream resstream = evalres(res, symbols);
+                CmdQuote qs = new CmdQuote(resstream);
 
                 Iterator<Term> i = qs.tokens().iterator();
                 while (i.hasNext())
@@ -381,10 +379,10 @@ public class Prologue {
             }
         };
 
-        Cmd _trans = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _trans = new Cmd() {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
+                VStack p = q.stack();
                 Term v = p.pop();
                 Iterator<Term> fstream = v.qvalue().tokens().iterator();
 
@@ -420,15 +418,15 @@ public class Prologue {
                 for(Term t: elem)
                     V.outln(t.value());*/
                 //Now take each elem and its pair templ and extract the symbols and their meanings.
-                evaltmpl(tmpl, elem, symbols, q);
+                evaltmpl(tmpl, elem, symbols);
                 /*for (String s : symbols.keySet()) {
                     V.outln(s + ":" + symbols.get(s).value());
                 }*/
 
                 // now go over the quote we were just passed and replace each symbol with what we
                 // have if we do have a definition.
-                QuoteStream resstream = evalres(res, symbols, q);
-                CmdQuote qs = new CmdQuote(resstream, q);
+                QuoteStream resstream = evalres(res, symbols);
+                CmdQuote qs = new CmdQuote(resstream);
 
                 Iterator<Term> i = qs.tokens().iterator();
                 while (i.hasNext())
@@ -437,25 +435,28 @@ public class Prologue {
             }
         };
 
-        Cmd _words = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _words = new Cmd() {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
-                Term t = p.pop();
+                VStack p = q.stack();
+                VFrame f = p.pop().fvalue();
 
                 // copy the rest of tokens to our own stream.
                 QuoteStream nts = new QuoteStream();
-                for(String s: t.qvalue().bindings().keySet())
+                Set<String> ks = f.parent().dict().keySet();
+                LinkedList<String> ll = new LinkedList(ks);
+                Collections.sort(ll);
+                for(String s: ll)
                     nts.add(new Term<String>(Type.TSymbol,s));
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
             }
         };
 
-        Cmd _shield = new Cmd(parent) {
+        /*Cmd _shield = new Cmd(parent) {
             @SuppressWarnings("unchecked")
-            public void eval(Quote q) {
+            public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
-                QStack p = q.stack();
+                VStack p = q.stack();
                 Term t = p.pop();
                 // save the stack.
                 // we can also have multiple shields
@@ -463,7 +464,7 @@ public class Prologue {
                 Cmd shield = (Cmd)q.bindings().get("$shield");
                 Shield s = new Shield(p,t.qvalue());
                 if (shield == null) {
-                    shield = new Cmd(q){public void eval(Quote q){}};
+                    shield = new Cmd(q){public void eval(VFrame q){}};
                     shield.store().put("$info", new Stack<Shield>());
                     q.bindings().put("$shield", shield);
                 }
@@ -471,36 +472,36 @@ public class Prologue {
                 stack.push(s);
                 V.debug("Shield @ " + q.id() + ":" + parent.id());
             }
-        };
+        };*/
 
-        Cmd _throw = new Cmd(parent) {
-            public void eval(Quote q) {
+        /*Cmd _throw = new Cmd(parent) {
+            public void eval(VFrame q) {
                 throw new VException("err:throw " + q.stack().peek().value(), "Throw(user)" );
             }
-        };
+        };*/
 
-        Cmd _abort = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _abort = new Cmd() {
+            public void eval(VFrame q) {
                 q.stack().clear();
             }
         };
 
-        Cmd _true = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _true = new Cmd() {
+            public void eval(VFrame q) {
                 q.stack().push(new Term<Boolean>(Type.TBool, true));
             }
         };
 
-        Cmd _false = new Cmd(parent) {
-            public void eval(Quote q) {
+        Cmd _false = new Cmd() {
+            public void eval(VFrame q) {
                 q.stack().push(new Term<Boolean>(Type.TBool, false));
             }
         };
 
         // Control structures
-        Cmd _if = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _if = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term cond = p.pop();
@@ -519,9 +520,9 @@ public class Prologue {
             }
         };
 
-        Cmd _choice = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _choice = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term af = p.pop();
                 Term at = p.pop();
@@ -535,9 +536,9 @@ public class Prologue {
         };
 
 
-        Cmd _ifte = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _ifte = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term eaction = p.pop();
                 Term action = p.pop();
@@ -558,9 +559,9 @@ public class Prologue {
             }
         };
 
-        Cmd _while = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _while = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term cond = p.pop();
@@ -591,9 +592,9 @@ public class Prologue {
          * stack bundled up in a quoted form. Then the rec2-part is executed,
          * where it will find the bundled form. Typically it will then execute
          * the bundled form, either with i or with app2, or some other combinator.*/
-        Cmd _genrec = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _genrec = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term rec2 = p.pop();
                 Term rec1 = p.pop();
@@ -618,15 +619,15 @@ public class Prologue {
                     nts.add(rec1);
                     nts.add(rec2);
                     nts.add(new Term<String>(Type.TSymbol, "genrec"));
-                    p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+                    p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
                     rec2.qvalue().eval(q);
                 }
             }
         };
 
-        Cmd _linrec = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _linrec = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term rec2 = p.pop();
                 Term rec1 = p.pop();
@@ -651,15 +652,15 @@ public class Prologue {
                     nts.add(rec1);
                     nts.add(rec2);
                     nts.add(new Term<String>(Type.TSymbol, "linrec"));
-                    (new CmdQuote(nts, q)).eval(q);
+                    (new CmdQuote(nts)).eval(q);
                     rec2.qvalue().eval(q);
                 }
             }
         };
 
-        Cmd _binrec = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _binrec = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term rec2 = p.pop();
                 Term rec1 = p.pop();
@@ -684,7 +685,7 @@ public class Prologue {
                     nts.add(rec1);
                     nts.add(rec2);
                     nts.add(new Term<String>(Type.TSymbol, "binrec"));
-                    Quote nq = new CmdQuote(nts, q);
+                    Quote nq = new CmdQuote(nts);
                     nq.eval(q);
                     p.push(nvl);
                     nq.eval(q);
@@ -693,9 +694,9 @@ public class Prologue {
             }
         };
 
-        Cmd _tailrec = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _tailrec = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term rec = p.pop();
                 Term thenp = p.pop();
@@ -717,15 +718,15 @@ public class Prologue {
                     nts.add(thenp);
                     nts.add(rec);
                     nts.add(new Term<String>(Type.TSymbol, "tailrec"));
-                    Quote nq = new CmdQuote(nts, q);
+                    Quote nq = new CmdQuote(nts);
                     nq.eval(q);
                 }
             }
         };
 
-        Cmd _primrec = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _primrec = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term rec = p.pop();
                 Term thenp = p.pop();
@@ -771,14 +772,14 @@ public class Prologue {
                     default:
                         throw new VException("err:primrec:datatype " + param.value(), "wrong datatype for primrec" );
                 }
-                Quote nq = new CmdQuote(nts, q);
+                Quote nq = new CmdQuote(nts);
                 nq.eval(q);
                 // have the next param on stack now. apply primrec on it.
                 QuoteStream n = new QuoteStream();
                 n.add(thenp);
                 n.add(rec);
                 n.add(new Term<String>(Type.TSymbol, "primrec"));
-                nq = new CmdQuote(n, q);
+                nq = new CmdQuote(n);
                 nq.eval(q);
                 rec.qvalue().eval(q);
 
@@ -786,25 +787,25 @@ public class Prologue {
         };
 
         // Libraries
-        Cmd _print = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _print = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term t = p.pop();
                 V.out(t.value());
             }
         };
 
-        Cmd _println = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _println = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term t = p.pop();
                 V.outln(t.value());
             }
         };
 
-        Cmd _peek = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _peek = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 if (p.empty()) {
                     V.outln("");
                 } else {
@@ -814,35 +815,35 @@ public class Prologue {
             }
         };
 
-        Cmd _show = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _show = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 p.dump();
             }
         };
 
-        Cmd _qdebug = new Cmd(parent) {
-            public void eval(Quote q) {
-                V.outln("Quote[c:" + q.id() + "^" + q.id() + "]");
-                q.stack().dump();                QStack p = q.stack();
+        Cmd _qdebug = new Cmd() {
+            public void eval(VFrame q) {
+                /*V.outln("Quote[c:" + q.id() + "^" + q.id() + "]");
+                q.stack().dump();                VStack p = q.stack();
 
                 for(String s: q.bindings().keySet())
                     V.out(":" + s + " ");
                 V.outln("\n________________");
- 
+                */ //TODO 
             }
         };
 
-        Cmd _debug = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _debug = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 V.debug(p.pop().bvalue());
             }
         };
 
-        Cmd _step = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _step = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term list = p.pop();
@@ -865,9 +866,9 @@ public class Prologue {
 
         // this map is not a stack invariant. specifically 
         // 1 2 3 4  [a b c d] [[] cons cons] map => [[4 a] [3 b] [2 c] [1 d]]
-        Cmd _map = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _map = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term list = p.pop();
@@ -890,15 +891,15 @@ public class Prologue {
                     Term res = p.pop();
                     nts.add(res);
                 }
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
             }
         };
 
         // map is a stack invariant. specifically 
         // 1 2 3 4  [a b c d] [[] cons cons] map => [[4 a] [4 b] [4 c] [4 d]]
-        Cmd _map_i = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _map_i = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term list = p.pop();
@@ -923,13 +924,13 @@ public class Prologue {
                     p.now = n;
                     nts.add(res);
                 }
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
             }
         };
 
-        Cmd _split = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _split = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term list = p.pop();
@@ -956,14 +957,14 @@ public class Prologue {
                     else
                         nts2.add(t);
                 }
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1, q)));
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2)));
             }
         };
 
-        Cmd _split_i = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _split_i = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term list = p.pop();
@@ -992,14 +993,14 @@ public class Prologue {
                     else
                         nts2.add(t);
                 }
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1, q)));
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2)));
             }
         };
 
-        Cmd _filter = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _filter = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term list = p.pop();
@@ -1023,13 +1024,13 @@ public class Prologue {
                     if (res.bvalue())
                         nts.add(t);
                 }
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
             }
         };
 
-        Cmd _filter_i = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _filter_i = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term list = p.pop();
@@ -1055,13 +1056,13 @@ public class Prologue {
                     if (res.bvalue())
                         nts.add(t);
                 }
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
             }
         };
 
-        Cmd _fold = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _fold = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term init = p.pop();
@@ -1086,9 +1087,9 @@ public class Prologue {
             }
         };
 
-        Cmd _fold_i = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _fold_i = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term action = p.pop();
                 Term init = p.pop();
@@ -1115,9 +1116,9 @@ public class Prologue {
             }
         };
 
-        Cmd _size = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _size = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term list = p.pop();
                 int count = 0;
                 for(Term t: list.qvalue().tokens())
@@ -1127,9 +1128,9 @@ public class Prologue {
             }
         };
 
-        Cmd _isin = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _isin = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term list = p.pop();
                 Term i = p.pop();
                 for(Term t: list.qvalue().tokens()) {
@@ -1142,9 +1143,9 @@ public class Prologue {
             }
         };
 
-        Cmd _at = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _at = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term i = p.pop();
                 int idx = i.ivalue();
                 Term list = p.pop();
@@ -1160,9 +1161,9 @@ public class Prologue {
             }
         };
 
-        Cmd _drop = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _drop = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term i = p.pop();
                 int num = i.ivalue();
                 Term list = p.pop();
@@ -1176,13 +1177,13 @@ public class Prologue {
                         nts.add(t);
                     --num;
                 }
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts,q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
             }
         };
 
-        Cmd _take = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _take = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term i = p.pop();
                 int num = i.ivalue();
                 Term list = p.pop();
@@ -1198,36 +1199,34 @@ public class Prologue {
                     ++count;
                     nts.add(t);
                 }
-                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts,q)));
+                p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
             }
         };
 
 
 
-        Cmd _dequote = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _dequote = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term prog = p.pop();
-                V.debug("Dequote @ " + q.id() + ":" + parent.id() + " prog " + prog.qvalue().id());
-                prog.qvalue().eval(q); // apply on parent
+                prog.qvalue().eval(q.parent()); // apply on parent
             }
         };
 
-        Cmd _dequoteenv = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _dequoteenv = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
 
                 Term env = p.pop();
                 Term prog = p.pop();
-                V.debug("Dequote @ " + q.id() + ":" + parent.id() + " prog " + prog.qvalue().id());
-                prog.qvalue().eval(env.qvalue()); // apply on parent
+                prog.qvalue().eval(env.fvalue()); // apply on parent
             }
         };
 
-        Cmd _add = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _add = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 double dres = a.numvalue().doubleValue() + b.numvalue().doubleValue();
@@ -1239,9 +1238,9 @@ public class Prologue {
             }
         };
 
-        Cmd _sub = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _sub = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 double dres = a.numvalue().doubleValue() - b.numvalue().doubleValue();
@@ -1253,9 +1252,9 @@ public class Prologue {
             }
         };
 
-        Cmd _mul = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _mul = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 double dres = a.numvalue().doubleValue() * b.numvalue().doubleValue();
@@ -1267,9 +1266,9 @@ public class Prologue {
             }
         };
 
-        Cmd _div = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _div = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 double dres = a.numvalue().doubleValue() / b.numvalue().doubleValue();
@@ -1281,81 +1280,81 @@ public class Prologue {
             }
         };
 
-        Cmd _gt = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _gt = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, isGt(a, b)));
             }
         };
 
-        Cmd _lt = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _lt = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, isLt(a, b)));
             }
         };
 
-        Cmd _lteq = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _lteq = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, !isGt(a, b)));
             }
         };
 
-        Cmd _gteq = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _gteq = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, !isLt(a, b)));
             }
         };
 
-        Cmd _eq = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _eq = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, isEq(a, b)));
             }
         };
 
-        Cmd _neq = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _neq = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, !isEq(a, b)));
             }
         };
 
-        Cmd _and = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _and = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, and(a, b)));
             }
         };
 
-        Cmd _or = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _or = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term b = p.pop();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, or(a, b)));
             }
         };
 
-        Cmd _not = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _not = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, !a.bvalue()));
             }
@@ -1363,90 +1362,90 @@ public class Prologue {
 
 
         // Predicates do not consume the element. 
-        Cmd _isbool = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _isbool = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TBool));
             }
         };
 
-        Cmd _isinteger = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _isinteger = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TInt));
             }
         };
 
-        Cmd _isdouble = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _isdouble = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TDouble));
             }
         };
 
-        Cmd _issym = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _issym = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TSymbol));
             }
         };
 
-        Cmd _islist = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _islist = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TQuote));
             }
         };
 
-        Cmd _isstr = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _isstr = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TString));
             }
         };
 
-        Cmd _isnum = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _isnum = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool,
                             a.type == Type.TInt || a.type == Type.TDouble));
             }
         };
 
-        Cmd _ischar = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _ischar = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Boolean>(Type.TBool, a.type == Type.TChar));
             }
         };
 
-        Cmd _tostring = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _tostring = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<String>(Type.TString, a.value()));
             }
         };
 
-        Cmd _toint = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _toint = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Integer>(Type.TInt, (new Double(a.value())).intValue()));
             }
         };
 
-        Cmd _todecimal = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _todecimal = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term a = p.pop();
                 p.push(new Term<Double>(Type.TDouble, new Double(a.value())));
             }
@@ -1462,9 +1461,9 @@ public class Prologue {
          * 'stdlib' use
          * [1 7 3 2 2] stdlib:qsort
          * */
-        Cmd _use = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _use = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term file = p.pop();
                 String val = file.svalue() + ".v";
                 try {
@@ -1472,8 +1471,8 @@ public class Prologue {
                     String chars = Util.getresource(val);
                     CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
 
-                    CmdQuote module = new CmdQuote(new LexStream(cs), q);
-                    module.eval(q);
+                    CmdQuote module = new CmdQuote(new LexStream(cs));
+                    module.eval(q.parent());
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
                     throw new VException("err:use " + file.value(), "use failed" );
@@ -1481,9 +1480,9 @@ public class Prologue {
             }
         };
 
-        Cmd _useenv = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _useenv = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term env = p.pop();
                 Term file = p.pop();
                 String val = file.svalue() + ".v";
@@ -1492,8 +1491,8 @@ public class Prologue {
                     String chars = Util.getresource(val);
                     CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
 
-                    CmdQuote module = new CmdQuote(new LexStream(cs), env.qvalue());
-                    module.eval(env.qvalue());
+                    CmdQuote module = new CmdQuote(new LexStream(cs));
+                    module.eval(env.fvalue());
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
                     throw new VException("err:*use " + file.value(), "*use failed" );
@@ -1501,12 +1500,12 @@ public class Prologue {
             }
         };
 
-        Cmd _eval = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        Cmd _eval = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term buff = p.pop();
                 try {
-                    Util.evaluate(q, buff.svalue());
+                    Util.evaluate(buff.svalue(), q);
                     V.debug("eval @ " + q.id());
                 } catch (Exception e) {
                     throw new VException("err:eval " + buff.value(), "eval failed" );
@@ -1514,136 +1513,136 @@ public class Prologue {
             }
         };
 
-        Cmd _evalenv = new Cmd(parent) {
-            public void eval(Quote q) {
-                QStack p = q.stack();
+        /*Cmd _evalenv = new Cmd() {
+            public void eval(VFrame q) {
+                VStack p = q.stack();
                 Term env = p.pop();
                 Term buff = p.pop();
                 try {
-                    Util.evaluate(env.qvalue(), buff.svalue());
+                    Util.evaluate(buff.svalue());
                     V.debug("eval @ " + env.qvalue().id());
                 } catch (Exception e) {
                     throw new VException("err:*eval " + buff.value(), "*eval failed" );
                 }
             }
-        };
+        };*/
 
-        Cmd _help = new Cmd(parent) {
-            public void eval(Quote q) {
-                HashMap <String,Quote> bind = parent.bindings();
+        Cmd _help = new Cmd() {
+            public void eval(VFrame q) {
+                HashMap <String,Quote> bind = q.dict();
                 for(String s : new TreeSet<String>(bind.keySet()))
                     V.outln(s);
             }
         };
 
         //meta
-        parent.def(".", _def);
-        parent.def("&.", _defenv);
-        parent.def("module", _defmodule);
-        parent.def("publish", _publish);
-        parent.def("&words", _words);
-        parent.def("&parent", _parent);
-        parent.def("$me", _me);
+        iframe.def(".", _def);
+        iframe.def("&.", _defenv);
+        iframe.def("module", _defmodule);
+        //parent.def("publish", _publish);
+        iframe.def("&words", _words);
+        iframe.def("&parent", _parent);
+        iframe.def("$me", _me);
 
-        parent.def("&i", _dequoteenv);
-        parent.def("i", _dequote);
+        iframe.def("&i", _dequoteenv);
+        iframe.def("i", _dequote);
 
-        parent.def("view", _view);
-        parent.def("trans", _trans);
-        parent.def("java", _java);
+        iframe.def("view", _view);
+        iframe.def("trans", _trans);
+        iframe.def("java", _java);
 
-        parent.def("true", _true);
-        parent.def("false", _false);
-        parent.def("shield", _shield);
-        parent.def("throw", _throw);
+        iframe.def("true", _true);
+        iframe.def("false", _false);
+        //iframe.def("shield", _shield);
+        //iframe.def("throw", _throw);
 
-        parent.def("and", _and);
-        parent.def("or", _or);
-        parent.def("not", _not);
+        iframe.def("and", _and);
+        iframe.def("or", _or);
+        iframe.def("not", _not);
 
         //control structures
-        parent.def("ifte", _ifte);
-        parent.def("if", _if);
-        parent.def("while", _while);
-        parent.def("choice", _choice);
+        iframe.def("ifte", _ifte);
+        iframe.def("if", _if);
+        iframe.def("while", _while);
+        iframe.def("choice", _choice);
 
         //io
-        parent.def("put", _print);
-        parent.def("puts", _println);
+        iframe.def("put", _print);
+        iframe.def("puts", _println);
 
         //others
-        parent.def("?", _peek);
-        parent.def("??", _show);
-        parent.def("???", _qdebug);
-        parent.def("debug", _debug);
+        iframe.def("?", _peek);
+        iframe.def("??", _show);
+        iframe.def("???", _qdebug);
+        iframe.def("debug", _debug);
 
-        parent.def("abort", _abort);
+        iframe.def("abort", _abort);
 
         //list
-        parent.def("size", _size);
-        parent.def("in?", _isin);
-        parent.def("at", _at);
-        parent.def("drop", _drop);
-        parent.def("take", _take);
+        iframe.def("size", _size);
+        iframe.def("in?", _isin);
+        iframe.def("at", _at);
+        iframe.def("drop", _drop);
+        iframe.def("take", _take);
        
 
         // on list
-        parent.def("step", _step);
-        parent.def("map", _map);
-        parent.def("map&", _map_i);
-        parent.def("filter", _filter);
-        parent.def("filter&", _filter_i);
-        parent.def("split", _split);
-        parent.def("split&", _split_i);
-        parent.def("fold", _fold);
-        parent.def("fold&", _fold_i);
+        iframe.def("step", _step);
+        iframe.def("map", _map);
+        iframe.def("map&", _map_i);
+        iframe.def("filter", _filter);
+        iframe.def("filter&", _filter_i);
+        iframe.def("split", _split);
+        iframe.def("split&", _split_i);
+        iframe.def("fold", _fold);
+        iframe.def("fold&", _fold_i);
 
         //arith
-        parent.def("+", _add);
-        parent.def("-", _sub);
-        parent.def("*", _mul);
-        parent.def("/", _div);
+        iframe.def("+", _add);
+        iframe.def("-", _sub);
+        iframe.def("*", _mul);
+        iframe.def("/", _div);
 
         //bool
-        parent.def("=", _eq);
-        parent.def("==", _eq);
-        parent.def("!=", _neq);
-        parent.def(">", _gt);
-        parent.def("<", _lt);
-        parent.def("<=", _lteq);
-        parent.def(">=", _gteq);
+        iframe.def("=", _eq);
+        iframe.def("==", _eq);
+        iframe.def("!=", _neq);
+        iframe.def(">", _gt);
+        iframe.def("<", _lt);
+        iframe.def("<=", _lteq);
+        iframe.def(">=", _gteq);
 
         //predicates
-        parent.def("integer?", _isinteger);
-        parent.def("double?", _isdouble);
-        parent.def("boolean?", _isbool);
-        parent.def("symbol?", _issym);
-        parent.def("list?", _islist);
-        parent.def("char?", _ischar);
-        parent.def("number?", _isnum);
-        parent.def("string?", _isstr);
+        iframe.def("integer?", _isinteger);
+        iframe.def("double?", _isdouble);
+        iframe.def("boolean?", _isbool);
+        iframe.def("symbol?", _issym);
+        iframe.def("list?", _islist);
+        iframe.def("char?", _ischar);
+        iframe.def("number?", _isnum);
+        iframe.def("string?", _isstr);
 
-        parent.def(">string", _tostring);
-        parent.def(">int", _toint);
-        parent.def(">decimal", _todecimal);
+        iframe.def(">string", _tostring);
+        iframe.def(">int", _toint);
+        iframe.def(">decimal", _todecimal);
 
         // recursion
-        parent.def("genrec", _genrec);
-        parent.def("linrec", _linrec);
-        parent.def("binrec", _binrec);
-        parent.def("tailrec", _tailrec);
-        parent.def("primrec", _primrec);
+        iframe.def("genrec", _genrec);
+        iframe.def("linrec", _linrec);
+        iframe.def("binrec", _binrec);
+        iframe.def("tailrec", _tailrec);
+        iframe.def("primrec", _primrec);
 
         //modules
-        parent.def("use", _use);
-        parent.def("*use", _useenv);
-        parent.def("eval", _eval);
-        parent.def("*eval", _evalenv);
+        iframe.def("use", _use);
+        iframe.def("*use", _useenv);
+        iframe.def("eval", _eval);
+        //iframe.def("*eval", _evalenv);
 
-        parent.def("help", _help);
+        iframe.def("help", _help);
         
-        Quote libs = Util.getdef(parent, "'std' use");
-        libs.eval(parent);
+        Quote libs = Util.getdef("'std' use");
+        libs.eval(iframe);
     }
 }
 

@@ -3,13 +3,11 @@ package v;
 import java.util.*;
 
 public abstract class Cmd implements Quote {
-    public Quote _parent = null;
 
-    public Cmd(Quote parent) {
-        _parent = parent;
+    public Cmd() {
         _idcount++;
         _id = _idcount;
-        V.debug("Creating " + id() + " parent is " + _parent.id());
+        V.debug("Creating " + id());
     }
 
     public Quote clone() {
@@ -32,11 +30,7 @@ public abstract class Cmd implements Quote {
         throw new VException("err:internal:cmd:bindings","Commands does not have bindings.");
     }
 
-    public Quote lookup(String key) {
-        return _parent.lookup(key);
-    }
-
-    public QStack stack() {
+    public VStack stack() {
         throw new VException("err:internal:cmd:stack","Commands does not have a stack.");
     }
 

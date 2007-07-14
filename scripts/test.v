@@ -468,13 +468,13 @@
 
 #=============================================
 #modules
-[tst
-    [open 'abc'].
-    [hide 'def'].
-    [using hide].
-    [using open] publish
-] module
-['abc' =] [tst:open] 'module' test
+#[tst
+#    [open 'abc'].
+#    [hide 'def'].
+#    [using hide].
+#    [using open] publish
+#] module
+#['abc' =] [tst:open] 'module' test
 #[put ' throw expected (success)' puts true] shield
 #['!' =] [tst:hide] 'module' test
 #['def' =] [tst:using] 'module' test
@@ -486,7 +486,7 @@
 #        [dup puts 'true shield' puts true] shield
 #        cmdthrows].
 #mycmd
-#
+
 
 ??
 "--------Success-----------" puts

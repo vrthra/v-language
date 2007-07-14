@@ -68,4 +68,14 @@ public abstract class Token {
             throw new VException("err:type:object "+value(),"Invalid type(need object)");
         }
     }
+// meta
+    public VFrame fvalue() {
+        try {
+            Term<VFrame> v = (Term<VFrame>)this;
+            return v.val;
+        } catch (Exception e) {
+            throw new VException("err:type:quote "+value(),"Invalid type(need quote)");
+        }
+    }
+
 }
