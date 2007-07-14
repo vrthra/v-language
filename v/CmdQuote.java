@@ -76,6 +76,7 @@ public class CmdQuote implements Quote {
             }
         } catch (VException e) {
             // do we have a $shield defined?
+            V.debug("Shield?" + scope.id());
             Cmd q = (Cmd)scope.dict().get("$shield");
             if (q == null)
                 throw e;

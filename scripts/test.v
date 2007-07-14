@@ -467,6 +467,29 @@
 ] 'math acos' test
 
 #=============================================
+#locals
+[
+    100 =
+]
+[
+    [myval 100].
+    [myfunc [myval 200]. ].
+    myfunc
+    myval
+] 'locals' test
+
+#=============================================
+#shield
+[cmdthrows
+        [dup puts 'false shield' puts false] shield
+        'hi there throw' throw].
+[mycmd
+        [dup puts 'true shield' puts true] shield
+        cmdthrows].
+mycmd
+
+
+#=============================================
 #modules
 #[tst
 #    [open 'abc'].
@@ -479,14 +502,6 @@
 #['!' =] [tst:hide] 'module' test
 #['def' =] [tst:using] 'module' test
 #
-#[cmdthrows
-#        [dup puts 'false shield' puts false] shield
-#        'hi there throw' throw].
-#[mycmd
-#        [dup puts 'true shield' puts true] shield
-#        cmdthrows].
-#mycmd
-
 
 ??
 "--------Success-----------" puts

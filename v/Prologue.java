@@ -268,12 +268,13 @@ public class Prologue {
             }
         };
 
-        /*Cmd _publish = new Cmd(parent) {
+        Cmd _publish = new Cmd() {
             public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
                 VStack p = q.stack();
                 String module = q.lookup("$name").tokens().iterator().next().value();
-                CmdQuote env = (CmdQuote)q.lookup("$env");
+                Quote qenv = q.lookup("$env");
+                VFrame env = qenv.tokens().iterator().next().fvalue();
                 Term t = p.pop();
                 Iterator <Term> i = t.qvalue().tokens().iterator();
                 while(i.hasNext()) {
@@ -283,7 +284,7 @@ public class Prologue {
                 }
 
             }
-        };*/
+        };
 
 
         // [a b c obj method] java
@@ -452,7 +453,7 @@ public class Prologue {
             }
         };
 
-        /*Cmd _shield = new Cmd(parent) {
+        Cmd _shield = new Cmd() {
             @SuppressWarnings("unchecked")
             public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
@@ -461,24 +462,26 @@ public class Prologue {
                 // save the stack.
                 // we can also have multiple shields
                 // Try and get the $shield if any
-                Cmd shield = (Cmd)q.bindings().get("$shield");
+                Cmd shield = (Cmd)q.dict().get("$shield");
                 Shield s = new Shield(p,t.qvalue());
                 if (shield == null) {
-                    shield = new Cmd(q){public void eval(VFrame q){}};
+                    shield = new Cmd(){public void eval(VFrame q){}};
                     shield.store().put("$info", new Stack<Shield>());
-                    q.bindings().put("$shield", shield);
+                    // define it in parent as the frame we are passed in
+                    // expires as soon as we exit.
+                    q.parent().def("$shield", shield);
                 }
                 Stack<Shield> stack = (Stack<Shield>)shield.store().get("$info");
                 stack.push(s);
-                V.debug("Shield @ " + q.id() + ":" + parent.id());
+                V.debug("Shield @ " + q.id());
             }
-        };*/
+        };
 
-        /*Cmd _throw = new Cmd(parent) {
+        Cmd _throw = new Cmd() {
             public void eval(VFrame q) {
                 throw new VException("err:throw " + q.stack().peek().value(), "Throw(user)" );
             }
-        };*/
+        };
 
         Cmd _abort = new Cmd() {
             public void eval(VFrame q) {
@@ -1513,19 +1516,19 @@ public class Prologue {
             }
         };
 
-        /*Cmd _evalenv = new Cmd() {
+        Cmd _evalenv = new Cmd() {
             public void eval(VFrame q) {
                 VStack p = q.stack();
-                Term env = p.pop();
+                Quote qenv = p.pop().qvalue();
+                VFrame env = qenv.tokens().iterator().next().fvalue();
                 Term buff = p.pop();
                 try {
-                    Util.evaluate(buff.svalue());
-                    V.debug("eval @ " + env.qvalue().id());
+                    Util.evaluate(buff.svalue(), env);
                 } catch (Exception e) {
                     throw new VException("err:*eval " + buff.value(), "*eval failed" );
                 }
             }
-        };*/
+        };
 
         Cmd _help = new Cmd() {
             public void eval(VFrame q) {
@@ -1539,7 +1542,7 @@ public class Prologue {
         iframe.def(".", _def);
         iframe.def("&.", _defenv);
         iframe.def("module", _defmodule);
-        //parent.def("publish", _publish);
+        iframe.def("publish", _publish);
         iframe.def("&words", _words);
         iframe.def("&parent", _parent);
         iframe.def("$me", _me);
@@ -1553,8 +1556,8 @@ public class Prologue {
 
         iframe.def("true", _true);
         iframe.def("false", _false);
-        //iframe.def("shield", _shield);
-        //iframe.def("throw", _throw);
+        iframe.def("shield", _shield);
+        iframe.def("throw", _throw);
 
         iframe.def("and", _and);
         iframe.def("or", _or);
@@ -1637,7 +1640,7 @@ public class Prologue {
         iframe.def("use", _use);
         iframe.def("*use", _useenv);
         iframe.def("eval", _eval);
-        //iframe.def("*eval", _evalenv);
+        iframe.def("*eval", _evalenv);
 
         iframe.def("help", _help);
         
