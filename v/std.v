@@ -2,7 +2,8 @@
 [swons swap cons].
 [reverse [] swap [swons] step].
 [shunt [swons] step].
-
+[swoncat swap concat].
+[unitlist [] cons].
 # parents 1 for map, 2 for let
 [let reverse [unit cons reverse $me &parent &parent &. true] map pop].
 
@@ -90,7 +91,7 @@
             then
             [rec1 i
                 # we dont need [] i, it is just for clarity.
-                [if then rec1 rec2 linrec] i 
+                [if then rec1 rec2 linrec] i
              rec2 i]
          ifte]] view i].
 [tailrec [] linrec].
@@ -105,7 +106,7 @@
 
 # from joy mailing list.
 #[primrec
-#    [pr 
+#    [pr
 #        [pop pop small?]
 #        [pop pop]
 #        [[dup pred] dipd
@@ -134,6 +135,13 @@
                 [param lnext then rec primrec] i
             rec i]
          ifte]] view i].
+
+[powerlist 
+    [null?]
+    [unitlist]
+    [uncons]
+    [dup swapd [cons] map popd swoncat]
+    linrec].
 
 # recursively apply rec to the leaves of a tree.
 [treestep

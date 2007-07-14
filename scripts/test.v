@@ -155,6 +155,13 @@
     [b] first unit
 ] 'list destructuring (2)' test
 
+[
+    [3 4 1 2] =
+]
+
+[
+    [1 2] [3 4] swoncat
+] 'list destructuring (swoncat)' test
 #internal definitions
 #=========================================
 [int0
@@ -514,7 +521,19 @@
 [
     [1 2 [3 4 [5 6 7] 8] ] treereverse
 ] 'treereverse' test
+[
+    [1 [4 9] [[[16]]] 25] =
+]
+[
+    [ 1 [2 3] [[[4]]] 5 ] [dup *] [map] treerec
+] 'treerec' test
 
+#[
+#    [ [1 2 3] [1 2] [1 3] [1] [2 3] [2] [3] [] ] =
+#]
+#[
+#    [1 2 3]  powerlist
+#]
 #=============================================
 #shield
 [cmdthrows
