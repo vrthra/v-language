@@ -508,6 +508,12 @@
 [
     [1 [22 11] [2 [22 [222] 33] 3] 4] treeflatten
 ] 'treeflatten' test
+[
+    [[8 [7 6 5] 4 3] 2 1] =
+]
+[
+    [1 2 [3 4 [5 6 7] 8] ] treereverse
+] 'treereverse' test
 
 #=============================================
 #shield
