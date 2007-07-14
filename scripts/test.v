@@ -305,14 +305,6 @@
 [-5.0 = swap 3.0 = and] [2 4 -30 roots] 'roots' test
 #=========================================
 
-[cmdthrows
-        [dup puts 'false shield' puts false] shield
-        'hi there throw' throw].
-[mycmd
-        [dup puts 'true shield' puts true] shield
-        cmdthrows].
-mycmd
-
 #=========================================
 # stack shufflers that can be used for data structures
 # the common format is [x1 x2 x3 ... : y1 y2 y3] view
@@ -476,17 +468,25 @@ mycmd
 
 #=============================================
 #modules
-[tst
-    [open 'abc'].
-    [hide 'def'].
-    [using hide].
-    [using open] publish
-] module
-['abc' =] [tst:open] 'module' test
-[put ' throw expected (success)' puts true] shield
-['!' =] [tst:hide] 'module' test
-['def' =] [tst:using] 'module' test
-
+#[tst
+#    [open 'abc'].
+#    [hide 'def'].
+#    [using hide].
+#    [using open] publish
+#] module
+#['abc' =] [tst:open] 'module' test
+#[put ' throw expected (success)' puts true] shield
+#['!' =] [tst:hide] 'module' test
+#['def' =] [tst:using] 'module' test
+#
+#[cmdthrows
+#        [dup puts 'false shield' puts false] shield
+#        'hi there throw' throw].
+#[mycmd
+#        [dup puts 'true shield' puts true] shield
+#        cmdthrows].
+#mycmd
+#
 
 ??
 "--------Success-----------" puts

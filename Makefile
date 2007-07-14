@@ -1,7 +1,8 @@
 RELEASE=0.000
 
+	#javac -Xlint:unchecked -d pkg v/*.java
 all:
-	javac -Xlint:unchecked -d pkg v/*.java
+	javac -d pkg v/*.java
 	cp v/*.v pkg/v
 	(cd pkg && jar -cmf v.mf v.jar v)
 

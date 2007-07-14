@@ -266,7 +266,7 @@ public class Prologue {
                 
                 // now evaluate the entire thing on the current env.
                 // and allow publish to do the work.
-                qval.eval(t.qvalue().parent(),true);
+                qval.eval(t.qvalue().parent());
             }
         };
 
@@ -515,7 +515,7 @@ public class Prologue {
 
                 // dequote the action and push it to stack.
                 if (cond.bvalue())
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
             }
         };
 
@@ -552,9 +552,9 @@ public class Prologue {
                 }
                 // dequote the action and push it to stack.
                 if (cond.bvalue())
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                 else
-                    eaction.qvalue().eval(q, true);
+                    eaction.qvalue().eval(q);
             }
         };
 
@@ -574,7 +574,7 @@ public class Prologue {
                     }
                     // dequote the action and push it to stack.
                     if (cond.bvalue())
-                        action.qvalue().eval(q, true);
+                        action.qvalue().eval(q);
                     else
                         break;
                 }
@@ -608,10 +608,10 @@ public class Prologue {
 
                 // dequote the action and push it to stack.
                 if (ifp.bvalue()) {
-                    thenp.qvalue().eval(q, true);
+                    thenp.qvalue().eval(q);
                     return;
                 } else {
-                    rec1.qvalue().eval(q, true);
+                    rec1.qvalue().eval(q);
                     QuoteStream nts = new QuoteStream();
                     nts.add(tifp);
                     nts.add(thenp);
@@ -619,7 +619,7 @@ public class Prologue {
                     nts.add(rec2);
                     nts.add(new Term<String>(Type.TSymbol, "genrec"));
                     p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts, q)));
-                    rec2.qvalue().eval(q, true);
+                    rec2.qvalue().eval(q);
                 }
             }
         };
@@ -641,18 +641,18 @@ public class Prologue {
 
                 // dequote the action and push it to stack.
                 if (ifp.bvalue()) {
-                    thenp.qvalue().eval(q, true);
+                    thenp.qvalue().eval(q);
                     return;
                 } else {
-                    rec1.qvalue().eval(q, true);
+                    rec1.qvalue().eval(q);
                     QuoteStream nts = new QuoteStream();
                     nts.add(tifp);
                     nts.add(thenp);
                     nts.add(rec1);
                     nts.add(rec2);
                     nts.add(new Term<String>(Type.TSymbol, "linrec"));
-                    (new CmdQuote(nts, q)).eval(q, true);
-                    rec2.qvalue().eval(q, true);
+                    (new CmdQuote(nts, q)).eval(q);
+                    rec2.qvalue().eval(q);
                 }
             }
         };
@@ -674,9 +674,9 @@ public class Prologue {
 
                 // dequote the action and push it to stack.
                 if (ifp.bvalue()) {
-                    thenp.qvalue().eval(q, true);
+                    thenp.qvalue().eval(q);
                 } else {
-                    rec1.qvalue().eval(q, true);
+                    rec1.qvalue().eval(q);
                     Term nvl = p.pop();
                     QuoteStream nts = new QuoteStream();
                     nts.add(tifp);
@@ -685,10 +685,10 @@ public class Prologue {
                     nts.add(rec2);
                     nts.add(new Term<String>(Type.TSymbol, "binrec"));
                     Quote nq = new CmdQuote(nts, q);
-                    nq.eval(q, true);
+                    nq.eval(q);
                     p.push(nvl);
-                    nq.eval(q, true);
-                    rec2.qvalue().eval(q, true);
+                    nq.eval(q);
+                    rec2.qvalue().eval(q);
                 }
             }
         };
@@ -709,16 +709,16 @@ public class Prologue {
 
                 // dequote the action and push it to stack.
                 if (ifp.bvalue()) {
-                    thenp.qvalue().eval(q, true);
+                    thenp.qvalue().eval(q);
                 } else {
-                    rec.qvalue().eval(q, true);
+                    rec.qvalue().eval(q);
                     QuoteStream nts = new QuoteStream();
                     nts.add(tifp);
                     nts.add(thenp);
                     nts.add(rec);
                     nts.add(new Term<String>(Type.TSymbol, "tailrec"));
                     Quote nq = new CmdQuote(nts, q);
-                    nq.eval(q, true);
+                    nq.eval(q);
                 }
             }
         };
@@ -737,7 +737,7 @@ public class Prologue {
                         // evaluate if and pop it back.
                         if (param.ivalue() == 0) {
                             p.pop();
-                            thenp.qvalue().eval(q, true);
+                            thenp.qvalue().eval(q);
                             return;
                         } else {
                             nts.add(new Term<String>(Type.TSymbol, "dup"));
@@ -748,7 +748,7 @@ public class Prologue {
                         // evaluate if and pop it back.
                         if (param.dvalue() == 0) {
                             p.pop();
-                            thenp.qvalue().eval(q, true);
+                            thenp.qvalue().eval(q);
                             return;
                         } else {
                             nts.add(new Term<String>(Type.TSymbol, "dup"));
@@ -761,7 +761,7 @@ public class Prologue {
                             ++i;
                         if (i == 0) {
                             p.pop();
-                            thenp.qvalue().eval(q, true);
+                            thenp.qvalue().eval(q);
                             return;
                         } else {
                             nts.add(new Term<String>(Type.TSymbol, "dup"));
@@ -772,15 +772,15 @@ public class Prologue {
                         throw new VException("err:primrec:datatype " + param.value(), "wrong datatype for primrec" );
                 }
                 Quote nq = new CmdQuote(nts, q);
-                nq.eval(q, true);
+                nq.eval(q);
                 // have the next param on stack now. apply primrec on it.
                 QuoteStream n = new QuoteStream();
                 n.add(thenp);
                 n.add(rec);
                 n.add(new Term<String>(Type.TSymbol, "primrec"));
                 nq = new CmdQuote(n, q);
-                nq.eval(q, true);
-                rec.qvalue().eval(q, true);
+                nq.eval(q);
+                rec.qvalue().eval(q);
 
             }
         };
@@ -858,7 +858,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                 }
             }
         };
@@ -885,7 +885,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                     // pop it back into a new quote
                     Term res = p.pop();
                     nts.add(res);
@@ -917,7 +917,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                     // pop it back into a new quote
                     Term res = p.pop();
                     p.now = n;
@@ -948,7 +948,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                     // pop it back into a new quote
                     Term res = p.pop();
                     if (res.bvalue())
@@ -983,7 +983,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                     // pop it back into a new quote
                     Term res = p.pop();
                     p.now = n;
@@ -1017,7 +1017,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                     // pop it back into a new quote
                     Term res = p.pop();
                     if (res.bvalue())
@@ -1048,7 +1048,7 @@ public class Prologue {
                     // apply the action
                     // We dont do the walk here since the action is in the form of a quote.
                     // we will have to dequote it, and walk one by one if we are to do this.
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                     // pop it back into a new quote
                     Term res = p.pop();
                     p.now = n;
@@ -1078,7 +1078,7 @@ public class Prologue {
                     // push it on our current stack
                     p.push(t);
                     // apply the action
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                 }
                 Term res = p.pop();
                 p.push(res);
@@ -1106,7 +1106,7 @@ public class Prologue {
                     // push it on our current stack
                     p.push(t);
                     // apply the action
-                    action.qvalue().eval(q, true);
+                    action.qvalue().eval(q);
                 }
                 Term res = p.pop();
                 p.now = n;
@@ -1210,7 +1210,7 @@ public class Prologue {
 
                 Term prog = p.pop();
                 V.debug("Dequote @ " + q.id() + ":" + parent.id() + " prog " + prog.qvalue().id());
-                prog.qvalue().eval(q, true); // apply on parent
+                prog.qvalue().eval(q); // apply on parent
             }
         };
 
@@ -1221,7 +1221,7 @@ public class Prologue {
                 Term env = p.pop();
                 Term prog = p.pop();
                 V.debug("Dequote @ " + q.id() + ":" + parent.id() + " prog " + prog.qvalue().id());
-                prog.qvalue().eval(env.qvalue(), true); // apply on parent
+                prog.qvalue().eval(env.qvalue()); // apply on parent
             }
         };
 
@@ -1473,7 +1473,7 @@ public class Prologue {
                     CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
 
                     CmdQuote module = new CmdQuote(new LexStream(cs), q);
-                    module.eval(q,true);
+                    module.eval(q);
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
                     throw new VException("err:use " + file.value(), "use failed" );
@@ -1493,7 +1493,7 @@ public class Prologue {
                     CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
 
                     CmdQuote module = new CmdQuote(new LexStream(cs), env.qvalue());
-                    module.eval(env.qvalue(),true);
+                    module.eval(env.qvalue());
                     V.debug("use @ " + q.id());
                 } catch (Exception e) {
                     throw new VException("err:*use " + file.value(), "*use failed" );
@@ -1643,7 +1643,7 @@ public class Prologue {
         parent.def("help", _help);
         
         Quote libs = Util.getdef(parent, "'std' use");
-        libs.eval(parent, true);
+        libs.eval(parent);
     }
 }
 

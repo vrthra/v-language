@@ -24,8 +24,6 @@ public interface Quote {
      * */
     public abstract void eval(Quote scope);
     
-    public abstract void eval(Quote scope, boolean on_parent);
-
     public abstract Quote parent();
 
     public abstract void def(String sym, Quote q);

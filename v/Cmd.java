@@ -51,8 +51,4 @@ public abstract class Cmd implements Quote {
     public TokenStream tokens() {
         throw new VException("err:internal:cmd:tokens","Commands can not have tokens.");
     }	
-
-    public void eval(Quote scope, boolean on_parent) {
-        throw new VException("err:internal:cmd:eval","Commands can not apply on parents.");
-    }
 }

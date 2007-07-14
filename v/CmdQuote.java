@@ -87,17 +87,14 @@ public class CmdQuote implements Quote {
      * tokenstream and repeat the procedure. If it is a compound '['
      * then push the entire quote rather than the first one.
      * */
-    public void eval(Quote scope) {
-        eval(scope, false);
-    }
 
-    public void eval(Quote scope, boolean on_parent) {
+    public void eval(Quote scope) {
         _stack = scope.stack();
         Iterator<Term> stream = _tokens.iterator();
         while(stream.hasNext()) {
             _stack.push(stream.next());
             if (cando())
-                dofunction(on_parent ? scope : this);
+                dofunction(scope);
         }
     }
 

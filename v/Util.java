@@ -6,7 +6,7 @@ import java.io.*;
 public class Util {
     public static void evaluate(Quote q, String buff) {
         try {
-            getdef(q, buff).eval(q, true);
+            getdef(q, buff).eval(q);
         } catch (Exception e) {
             throw new VException("err:eval " + buff, "eval failed " + e.getMessage());
         }
@@ -31,7 +31,7 @@ public class Util {
             BufferedReader br = new BufferedReader(new InputStreamReader(Prologue.class.getResourceAsStream(s)));
             String line;
             while((line = br.readLine()) != null) {
-                buf.append(line);
+                buf.append(line + '\n');
             }
             return buf.toString();
         } catch (Exception e) {
