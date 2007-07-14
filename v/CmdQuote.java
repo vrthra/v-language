@@ -101,23 +101,6 @@ public class CmdQuote implements Quote {
         }
     }
 
-    // the difference between eval and apply is that eval evaluates 
-    // the current stack with out any preconditions, while apply
-    // uses the current quote as 'the function' ie, pushing at least
-    // one term into stack before starting eval.
-    public void apply(Quote scope, boolean on_parent) {
-        _stack = scope.stack();
-        Iterator<Term> stream = _tokens.iterator();
-        _stack.push(stream.next()); // use the current quote as a function
-        while(stream.hasNext()) {
-            // TokenStream returns entire quotes as a single term
-            // of type TQuote
-            _stack.push(stream.next());
-            if (cando())
-                dofunction(on_parent ? scope : this);
-        }
-    }
-
     Object _pres = null;
     @SuppressWarnings ("unchecked")
     public void dofunction(Quote scope) {
