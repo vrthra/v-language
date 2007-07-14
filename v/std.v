@@ -1,6 +1,7 @@
 # Standard definitions.
 [swons swap cons].
 [reverse [] swap [swons] step].
+[shunt [swons] step].
 
 # parents 1 for map, 2 for let
 [let reverse [unit cons reverse $me &parent &parent &. true] map pop].
@@ -134,4 +135,51 @@
             rec i]
          ifte]] view i].
 
+# recursively apply rec to the leaves of a tree.
+[treestep
+    [tree rec] let
+    tree
+    [leaf?] rec
+        [[empty?] [pop]
+            [dup
+                [first rec treestep] dip
+                [rest rec treestep] i]
+       ifte]
+    ifte
+].
 
+# produce the same structure as input tree.
+[treemap
+    [tree rec] let
+    tree
+    [leaf?] rec
+        [[empty?] []
+            [dup
+                [first rec treemap] dip
+                [rest rec treemap] i cons]
+       ifte]
+    ifte
+].
+
+[treeshunt [swons] treestep].
+[treeflatten [] swap treeshunt reverse].
+#[treerec
+#    [tree then rec:
+#        [[leaf?]
+#            then
+#            [
+#                [then rec treerec]
+#             rec i]
+#         ifte]] view i].
+
+#[treegenrec
+#    [tree o1 o2 c] let
+#    tree
+#    [leaf?] o1
+#        [[empty?] [pop]
+#            [o2 c i]
+#        ifte]
+#    ifte
+#].
+#
+#[treereverse [] [reverse] [map] treegenrec].

@@ -486,6 +486,30 @@
 ] 'locals' test
 
 #=============================================
+#trees
+[
+    [1 484 121 4 484 49284 1089 9 16] = 
+]
+[
+    [1 [22 11] [2 [22 [222] 33] 3] 4] [dup *] treestep
+    unit cons cons cons cons cons cons cons cons
+] 'treestep' test
+
+[
+    [1 [484 121] [4 [484 [49284] 1089] 9] 16] =
+]
+[
+    [1 [22 11] [2 [22 [222] 33] 3] 4] [dup *] treemap
+] 'treemap' test
+
+[
+    [1 22 11 2 22 222 33 3 4] =
+]
+[
+    [1 [22 11] [2 [22 [222] 33] 3] 4] treeflatten
+] 'treeflatten' test
+
+#=============================================
 #shield
 [cmdthrows
         [dup puts 'false shield' puts false] shield
