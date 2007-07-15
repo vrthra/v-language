@@ -17,7 +17,7 @@ public class Lexer {
     }
 
     private boolean isStringBoundary(char c) {
-        if (c == '"' | c == '\'' || c == '`')
+        if (c == '"' || c == '\'' || c == '`')
             return true;
         return false;
     }
