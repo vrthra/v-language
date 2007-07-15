@@ -38,6 +38,9 @@ public class VFrame {
         return null;
     }
     public void def(String sym, Quote q) {
+        if (V.singleassign)
+            if (_dict.containsKey(sym))
+                throw new VException("err:symbol_already_bound "+sym,"symbol was bound earlier");
         _dict.put(sym,q);
     }
     public VFrame parent() {
