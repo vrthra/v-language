@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "type.h"
 #include "term.h"
+#include "vstack.h"
 #include "vframe.h"
 #include "v.h"
 #include "lexstream.h"
@@ -13,6 +14,9 @@
 const char* V::version = "0.004";
 bool V::singleassign = true;
 
+bool singleassign() {
+    return V::singleassign;
+}
 // TODO: replace it by varargs.
 void V::outln(char* var, char* c) {
     printf("%s%s\n", var,c);

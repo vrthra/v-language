@@ -9,8 +9,10 @@ class Term {
         Type _type;
         UToken _val;
     public:
-        Term(Type t, int v);
+        Term(Type t, long v);
+        Term(Type t, double v);
         Term(Type t, char* v);
+        Term(Type t, char v);
         Type type() {
             return _type;
         }

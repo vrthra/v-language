@@ -1,2 +1,2 @@
 all:
-	g++ *.cpp -o v
+	g++ -g *.cpp -o v

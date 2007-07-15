@@ -1,6 +1,5 @@
 #ifndef VFRAME_H
 #define VFRAME_H
-#include "vstack.h"
 #include <string>
 #include <map>
 class Quote;
@@ -11,11 +10,14 @@ struct cmp_str {
 };    
 
 typedef std::map<char*, Quote*, cmp_str> QMap;
+class VStack;
 class VFrame {
-    QMap _id;
+    QMap _dict;
+    VStack* _stack;
+    VFrame* _parent;
     public:
         QMap& dict();
-        char* id();
+        int id();
 
         VFrame();
         VFrame(VFrame* parent);
@@ -26,5 +28,9 @@ class VFrame {
         VStack* stack();
         void dump();
         void reinit();
+    private:
+        static int _idcount;
+        int _id;
+        bool hasKey(char* key);
 };
 #endif

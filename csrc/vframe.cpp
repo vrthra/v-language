@@ -1,28 +1,58 @@
 #include "vframe.h"
+#include "vstack.h"
+#include "vexception.h"
 
+bool singleassign(); // defined in v.cpp
+int VFrame::_idcount = 0;
 VFrame::VFrame() {
+    _parent = 0;
+    _stack = new VStack();
+    _idcount++;
+    _id = _idcount;
 }
 VFrame::VFrame(VFrame* parent) {
+    _parent = 0;
+    _stack = parent->stack();
+    _idcount++;
+    _id = _idcount;
 }
 QMap& VFrame::dict() {
+    return _dict;
+}
+int VFrame::id() {
     return _id;
 }
-char* VFrame::id() {
-    return 0;
+bool VFrame::hasKey(char* key) {
+    QMap::iterator i = _dict.find(key);
+    if (i != _dict.end())
+        return true;
+    return false;
 }
 Quote* VFrame::lookup(char* key) {
+    if (hasKey(key))
+        return _dict[key];
+    if (_parent)
+        return _parent->lookup(key);
     return 0;
 }
+void VFrame::def(char* sym, Quote* q) {
+    if (singleassign() && hasKey(sym))
+        throw VException("err:symbol_already_bound", sym);
+    _dict[sym] = q;
+}
+
 VFrame* VFrame::parent() {
-    return 0;
+    return _parent;
 }
 VFrame* VFrame::child() {
-    return 0;
+    return new VFrame(this);
 }
 VStack* VFrame::stack() {
-    return 0;
+    return _stack;
 }
 void VFrame::dump() {
+    _stack->dump();
 }
 void VFrame::reinit() {
+    _stack->clear();
 }
