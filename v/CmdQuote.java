@@ -14,7 +14,6 @@ public class CmdQuote implements Quote {
 
     public CmdQuote(TokenStream tokens) {
         _tokens = tokens;
-        _tokens.scope(this); // set the scope for any future quotes
     }
 
     private boolean cando(VStack stack) {

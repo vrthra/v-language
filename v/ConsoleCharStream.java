@@ -17,10 +17,8 @@ public class ConsoleCharStream implements CharStream {
         return _reader;
     }
 
-    public int _lineno = 0;
     String read_nobuf() {
         try {
-            ++_lineno; // starts at 1.
             if (_lexer.closed())
                 System.out.print("|");
             else
