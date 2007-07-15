@@ -83,10 +83,6 @@ public class Prologue {
                     break;
                 case TSymbol:
                     // do we have it in our symbol table? if yes, replace, else just push it in.
-                    /*V.outln("?" + t.svalue());
-                      for(String s: symbols.keySet()) {
-                      V.outln("-" + s + "+" + symbols.get(s).value());
-                      }*/
                     String sym = t.svalue();
                     if (symbols.containsKey(sym)) {
                         // does it look like *xxx ?? 
@@ -353,20 +349,8 @@ public class Prologue {
                 elem.add(e);
 
             HashMap<String, Term> symbols = new HashMap<String, Term>();
-            /*V.outln(".......tmpl....");
-              for(Term t: tmpl)
-              V.outln(t.value());
-              V.outln(".......res....");
-              for(Term t: res)
-              V.outln(t.value());
-              V.outln(".......elem....");
-              for(Term t: elem)
-              V.outln(t.value());*/
             //Now take each elem and its pair templ and extract the symbols and their meanings.
             evaltmpl(tmpl, elem, symbols);
-            /*for (String s : symbols.keySet()) {
-              V.outln(s + ":" + symbols.get(s).value());
-              }*/
 
             // now go over the quote we were just passed and replace each symbol with what we
             // have if we do have a definition.
@@ -376,10 +360,10 @@ public class Prologue {
             Iterator<Term> i = qs.tokens().iterator();
             while (i.hasNext())
                 p.push(i.next());
-            //qs.eval(q);
         }
     };
 
+    // trans looks for a [[xxx] [yyy]] instead of splitting with [xxx : yyy]
     static Cmd _trans = new Cmd() {
         public void eval(VFrame q) {
             // eval is passed in the quote representing the current scope.
@@ -387,8 +371,6 @@ public class Prologue {
             Term v = p.pop();
             Iterator<Term> fstream = v.qvalue().tokens().iterator();
 
-            // iterate through the quote, and find where ':' is then split it
-            // into two half and analyze the first.
             QuoteStream tmpl = (QuoteStream)fstream.next().qvalue().tokens();
 
             QuoteStream res = new QuoteStream();
@@ -409,20 +391,8 @@ public class Prologue {
                 elem.add(e);
 
             HashMap<String, Term> symbols = new HashMap<String, Term>();
-            /*V.outln(".......tmpl....");
-              for(Term t: tmpl)
-              V.outln(t.value());
-              V.outln(".......res....");
-              for(Term t: res)
-              V.outln(t.value());
-              V.outln(".......elem....");
-              for(Term t: elem)
-              V.outln(t.value());*/
             //Now take each elem and its pair templ and extract the symbols and their meanings.
             evaltmpl(tmpl, elem, symbols);
-            /*for (String s : symbols.keySet()) {
-              V.outln(s + ":" + symbols.get(s).value());
-              }*/
 
             // now go over the quote we were just passed and replace each symbol with what we
             // have if we do have a definition.
@@ -432,7 +402,6 @@ public class Prologue {
             Iterator<Term> i = qs.tokens().iterator();
             while (i.hasNext())
                 p.push(i.next());
-            //qs.eval(q);
         }
     };
 
@@ -444,10 +413,7 @@ public class Prologue {
 
             // copy the rest of tokens to our own stream.
             QuoteStream nts = new QuoteStream();
-            Set<String> ks = f.dict().keySet();
-            LinkedList<String> ll = new LinkedList(ks);
-            Collections.sort(ll);
-            for(String s: ll)
+            for(String s: sort(f.dict().keySet()))
                 nts.add(new Term<String>(Type.TSymbol,s));
             p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
         }
@@ -482,6 +448,22 @@ public class Prologue {
             throw new VException("err:throw " + q.stack().peek().value(), "Throw(user)" );
         }
     };
+
+    static Cmd _stack = new Cmd() {
+        public void eval(VFrame q) {
+            VStack p = q.stack();
+            q.stack().push(new Term<Quote>(Type.TQuote, p.quote()));
+        }
+    };
+
+    static Cmd _unstack = new Cmd() {
+        public void eval(VFrame q) {
+            VStack p = q.stack();
+            Term t = p.pop();
+            p.dequote(t.qvalue());
+        }
+    };
+
 
     static Cmd _abort = new Cmd() {
         public void eval(VFrame q) {
@@ -621,15 +603,34 @@ public class Prologue {
         }
     };
 
-    static Cmd _qdebug = new Cmd() {
-        public void eval(VFrame q) {
-            /*V.outln("Quote[c:" + q.id() + "^" + q.id() + "]");
-              q.stack().dump();                VStack p = q.stack();
+    static Collection<String> sort(Set<String> ks) {
+        LinkedList<String> ll = new LinkedList(ks);
+        Collections.sort(ll);
+        return ll;
+    }
 
-              for(String s: q.bindings().keySet())
-              V.out(":" + s + " ");
+    static Cmd _vdebug = new Cmd() {
+        public void eval(VFrame q) {
+            V.outln(q.parent().id());
+              q.stack().dump();
+              for(String s: sort(q.dict().keySet())) V.out(s + " ");
               V.outln("\n________________");
-              */ //TODO 
+        }
+    };
+
+    static Cmd _dframe = new Cmd() {
+        public void eval(VFrame q) {
+            q.stack().dump();
+            q = q.parent(); // remove the current child frame.
+            while(q != null) {
+                dumpframe(q);
+                q = q.parent();
+            }
+        }
+        public void dumpframe(VFrame q) {
+            V.outln(q.id());
+            for(String s: sort(q.dict().keySet())) V.out(s + " ");
+            V.outln("\n________________");
         }
     };
 
@@ -968,8 +969,6 @@ public class Prologue {
             Term list = p.pop();
 
             QuoteStream nts = new QuoteStream();
-            //for(String s: t.qvalue().bindings().keySet())
-            //    nts.add(new Term<String>(Type.TSymbol,s));
 
             for(Term t: list.qvalue().tokens()) {
                 if (num <= 0)
@@ -989,8 +988,6 @@ public class Prologue {
             int count = 0;
 
             QuoteStream nts = new QuoteStream();
-            //for(String s: t.qvalue().bindings().keySet())
-            //    nts.add(new Term<String>(Type.TSymbol,s));
 
             for(Term t: list.qvalue().tokens()) {
                 if (count >= num)
@@ -1356,6 +1353,8 @@ public class Prologue {
         iframe.def("false", _false);
         iframe.def("shield", _shield);
         iframe.def("throw", _throw);
+        iframe.def("stack", _stack);
+        iframe.def("unstack", _unstack);
 
         iframe.def("and", _and);
         iframe.def("or", _or);
@@ -1371,10 +1370,13 @@ public class Prologue {
         iframe.def("put", _print);
         iframe.def("puts", _println);
 
+
         //others
         iframe.def("?", _peek);
         iframe.def("??", _show);
-        iframe.def("???", _qdebug);
+        iframe.def("?debug", _vdebug);
+        iframe.def("?stack", _show);
+        iframe.def("?frame", _dframe);
         iframe.def("debug", _debug);
 
         iframe.def("abort", _abort);

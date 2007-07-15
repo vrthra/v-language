@@ -3,10 +3,10 @@ package v;
 import java.util.*;
 
 public class V {
-    public static String version = "0.003";
+    public static String version = "0.004";
 
     static void banner() {
-        outln("\t|V|\t");
+        outln("\tV\t");
     }
 
 
@@ -37,7 +37,7 @@ public class V {
                         } catch (Exception e) {
                             outln(">" + e.getMessage());
                             frame.dump();
-                            frame.reinit();
+                            //frame.reinit();
                             V.debug(e);
                         }
                     } else super.dofunction(scope);

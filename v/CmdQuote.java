@@ -15,16 +15,6 @@ public class CmdQuote implements Quote {
     public CmdQuote(TokenStream tokens) {
         _tokens = tokens;
         _tokens.scope(this); // set the scope for any future quotes
-        _idcount++;
-        _id = _idcount;
-        V.debug("Creating " + id());
-    }
-
-    static int _idcount = 0;
-    int _id;
-
-    public String id() {
-        return "CmdQuote[" + _id + "]";
     }
 
     private boolean cando(VStack stack) {
@@ -34,7 +24,6 @@ public class CmdQuote implements Quote {
             return true;
         return false;
     }
-
 
     /* Evaluate the current stack
      * logic:
@@ -54,7 +43,6 @@ public class CmdQuote implements Quote {
         }
     }
 
-    Object _pres = null;
     @SuppressWarnings ("unchecked")
     public void dofunction(VFrame scope) {
         VStack st = scope.stack();
@@ -64,9 +52,8 @@ public class CmdQuote implements Quote {
             if (sym.type() != Type.TSymbol)
                 throw new VException("err:not_symbol "+sym.value(),"Not a symbol");
             Quote q = scope.lookup(sym.value());
-            if (q == null) {
+            if (q == null)
                 throw new VException("err:undef_symbol ("+sym.value() +")","Undefined symbol");
-            }
             // Invoke the quote on our quote by passing us as the parent.
             V.debug("Using " + scope.id() + " val " + sym.value() );
             try {

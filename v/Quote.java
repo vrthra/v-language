@@ -4,11 +4,6 @@ import java.util.*;
 
 public interface Quote {
 
-    /* Try and fetch the definition of a symbol in the current quote.
-     * If not found in the current quote, look it up in parent quote.
-     * */
-    public abstract String id();
-
     /* Evaluate the current stack
      * logic:
      * 		Check if our stack has any applicable tokens (symbols).

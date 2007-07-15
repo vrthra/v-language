@@ -52,14 +52,39 @@ public class VStack {
     public Term peek() {
         return now.data;
     }
-   
-    public void dump() {
+
+    private List<Term> getlist() {
         LinkedList<Term> l = new LinkedList<Term>();
         Node<Term> current = now;
         while(current != null && current.link != null) {
             l.addFirst(current.data);
             current = current.link;
         }
+        return l;
+    }
+
+    public Quote quote() {
+        QuoteStream qs = new QuoteStream();
+        List<Term> l = getlist();
+        for(Term t: l)
+            qs.add(t);
+        return new CmdQuote(qs);
+    }
+  
+    public void dequote(Quote q) {
+        Node<Term> current = now;
+        Iterator<Term> it = (Iterator<Term>)q.tokens().iterator();
+
+        now = new Node<Term>(null);
+        first = now;
+
+        while(it.hasNext()) {
+            push(it.next());
+        }
+    }
+
+    public void dump() {
+        List<Term> l = getlist();
         V.out("(");
         boolean first = true;
         for(Term t: l) {
@@ -78,5 +103,4 @@ public class VStack {
         }
         V.outln(")");
     }
-
 }

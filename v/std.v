@@ -68,8 +68,7 @@
 # note that swap is needed since dip does a swap
 [binrec
     [if then rec1 rec2 :
-        [if
-            then
+        [if then
             [rec1 i
                 # execute binrec on both parts.
                 [if then rec1 rec2 binrec] dip
@@ -79,21 +78,28 @@
 
 [genrec
     [if then rec1 rec2 :
-        [if
-            then
+        [if then
             [rec1 i
                 [if then rec1 rec2 genrec]
              rec2 i]
          ifte]] view i].
 [linrec
     [if then rec1 rec2 :
-        [if
-            then
+        [if then
             [rec1 i
                 # we dont need [] i, it is just for clarity.
                 [if then rec1 rec2 linrec] i
              rec2 i]
          ifte]] view i].
+
+[powerlist 
+    [null?]
+    [unitlist]
+    [uncons]
+    [dup swapd [cons] map& popd swoncat]
+    linrec].
+
+
 [tailrec [] linrec].
 #[tailrec
 #    [if then rec :
@@ -128,20 +134,12 @@
         ifte].
 
     [param then rec :
-        [[param lzero?]
-            then
+        [[param lzero?] then
             # we dont need [] i, it is just for clarity.
             [param
                 [param lnext then rec primrec] i
             rec i]
          ifte]] view i].
-
-[powerlist 
-    [null?]
-    [unitlist]
-    [uncons]
-    [dup swapd [cons] map popd swoncat]
-    linrec].
 
 # recursively apply rec to the leaves of a tree.
 [treestep
@@ -192,6 +190,6 @@
     ifte
 ].
 
-[treereverse [] [reverse] [map] treegenrec].
-[treemap [] [map] treegenrec].
+[treereverse [] [reverse] [map&] treegenrec].
+[treemap [] [map&] treegenrec].
 #[treemap [map] treerec].
