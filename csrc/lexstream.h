@@ -5,5 +5,6 @@ class CharStream;
 class LexStream : public QuoteStream {
     public:
     LexStream(CharStream* c);    
+    // TODO: lexIterator.
 };
 #endif

@@ -1,6 +1,7 @@
 #ifndef TOKENSTREAM_H
 #define TOKENSTREAM_H
-class TokenStream {
-
+#include <list>
+class Term;
+class TokenStream : public std::list<Term*> {
 };
 #endif
