@@ -16,7 +16,21 @@ struct Cadd : public Cmd {
             p->push(new Term(TDouble, dres));
     }
 };
-
+struct Cputs : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Term* a = p->pop();
+        switch(a->type()) {
+            case TInt:
+                printf("%d\n",a->ivalue());
+            case TDouble:
+                printf("%f\n",a->dvalue());
+            default:
+                printf(">%d\n",a->dvalue());
+        }
+    }
+};
 void Prologue::init(VFrame* frame) {
     frame->def("+", new Cadd());
+    frame->def("puts", new Cputs());
 }

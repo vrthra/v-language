@@ -1,10 +1,7 @@
 #include "quoteiterator.h"
 #include "quotestream.h"
 
-QuoteIterator::QuoteIterator(QuoteStream* q) {
-    _qs = q;
-    _index = 0;
-}
+QuoteIterator::QuoteIterator(QuoteStream* q):_qs(q),_index(0) {}
 
 bool QuoteIterator::hasNext() {
     if (_qs->size() > _index)

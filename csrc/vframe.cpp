@@ -11,7 +11,7 @@ VFrame::VFrame() {
     _id = _idcount;
 }
 VFrame::VFrame(VFrame* parent) {
-    _parent = 0;
+    _parent = parent;
     _stack = parent->stack();
     _idcount++;
     _id = _idcount;

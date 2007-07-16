@@ -6,7 +6,7 @@
 #include "cmdquote.h"
 #include "vexception.h"
 LexIterator::LexIterator(QuoteStream* qs, CharStream* cs)
-    :QuoteIterator(qs),_lex(new Lexer(cs)) {}
+    :QuoteIterator(qs),_lex(new Lexer(cs)),_current(0) {}
 
 bool LexIterator::hasNext() {
     if (!_current)
@@ -16,13 +16,13 @@ bool LexIterator::hasNext() {
     return true;
 }
 Token* LexIterator::next() {
-    Token* t = lex_next();
+    Term* t = (Term*)lex_next();
     if (t->type() == TOpen)
-        return compound(t);
-    return t;
+        return compound((Token*)t);
+    return (Token*)t;
 }
 Token* LexIterator::lex_next() {
-    if (!_current) {
+    if (_current) {
         Token* t = _current;
         _current = 0;
         return t;

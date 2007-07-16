@@ -1,26 +1,26 @@
 #include "term.h"
 
-Term::Term(Type t,char val) {
+Term::Term(Type t,char val):_type(t) {
     _cval = val;
 }
 
-Term::Term(Type t,char* val) {
+Term::Term(Type t,char* val):_type(t) {
     _sval = val;
 }
 
-Term::Term(Type t,long val):_num(val) {
+Term::Term(Type t,long val):_num(val),_type(t) {
     _lval = val;
 }
 
-Term::Term(Type t,double val):_num(val) {
+Term::Term(Type t,double val):_num(val),_type(t) {
     _dval = val;
 }
 
-Term::Term(Type t,Quote* val) {
+Term::Term(Type t,Quote* val):_type(t) {
     _qval = val;
 }
 
-Term::Term(Type t,VFrame* val) {
+Term::Term(Type t,VFrame* val):_type(t) {
     _fval = val;
 }
 

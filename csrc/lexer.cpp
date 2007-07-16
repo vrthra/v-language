@@ -185,7 +185,7 @@ void Lexer::string() {
         _word->push_back(c);
     }
     _word->push_back('\0');
-    add(new Term(TString, (char*)&_word));
+    add(new Term(TString, (char*)&(*_word)[0]));
     _word = new std::vector<char>();
 }
 void Lexer::space() {
@@ -223,7 +223,7 @@ void Lexer::word() {
 
     // does it look like a number?
     _word->push_back('\0');
-    char* word = (char*)&_word;
+    char* word = (char*)&(*_word)[0];
 
     if (isint(word))
         add(new Term(TInt, atol(word)));
@@ -231,4 +231,5 @@ void Lexer::word() {
         add(new Term(TDouble, atof(word)));
     else
         add(new Term(TSymbol, word));
+    _word = new std::vector<char>();
 }
