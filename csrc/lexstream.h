@@ -4,7 +4,9 @@
 class CharStream;
 class LexStream : public QuoteStream {
     public:
-    LexStream(CharStream* c);    
-    // TODO: lexIterator.
+        LexStream(CharStream* c);
+        virtual TokenIterator* iterator();
+    private:
+        CharStream* _stream;
 };
 #endif

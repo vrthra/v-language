@@ -7,7 +7,7 @@ struct cmp_str {
     bool operator()(char const *a, char const *b) {
         return std::strcmp(a, b) < 0;
     }
-};    
+};
 
 typedef std::map<char*, Quote*, cmp_str> QMap;
 class VStack;

@@ -1,17 +1,17 @@
 #ifndef CMDQUOTE_H
 #define CMDQUOTE_H
 #include "quote.h"
-class LexStream;
 class VFrame;
 class VStack;
 class CmdQuote : public Quote {
-    TokenStream* _tokens;
     public:
-    void eval(VFrame* scope);
-    TokenStream* tokens();
-    CmdQuote(TokenStream* l);
-    void dofunction(VFrame* scope);
+        CmdQuote(TokenStream* l);
+        virtual void eval(VFrame* scope);
+        virtual TokenStream* tokens();
+        virtual void dofunction(VFrame* scope);
     private:
-    bool cando(VStack* stack);
+        bool cando(VStack* stack);
+    private:
+        TokenStream* _tokens;
 };
 #endif

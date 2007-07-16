@@ -15,12 +15,13 @@ class Lexer {
     public:
 
     Lexer(CharStream* q);
-    void lex(); 
+    void lex();
     void reset();
     bool closed();
     void dump();
     bool hasNext();
     Term* next();
+    static char closeCompound(char c);
 
     private:
 
@@ -31,7 +32,6 @@ class Lexer {
     bool isBoundary(char c);
     void add(Term* term);
     char charconv(char n);
-    char closeCompound(char c);
     void copen();
     void cclose();
     void lcomment();

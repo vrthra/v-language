@@ -3,10 +3,10 @@
 #include "charstream.h"
 class FileCharStream : public CharStream {
     public:
-    char read();
-    char peek();
-    char current();
-    void lexer(Lexer* l);
-    FileCharStream(char* filename);
+        FileCharStream(char* filename);
+        virtual char read();
+        virtual char peek();
+        virtual char current();
+        virtual void lexer(Lexer* l);
 };
 #endif

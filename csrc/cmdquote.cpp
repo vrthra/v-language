@@ -2,12 +2,13 @@
 #include "vframe.h"
 #include "vstack.h"
 #include "quotestream.h"
+#include "quoteiterator.h"
 
 void CmdQuote::eval(VFrame* scope) {
     VStack* stack = scope->stack();
-    QuoteStream::iterator stream = _tokens->begin();
-    while(stream != _tokens->end()) {
-        stack->push(*stream);
+    TokenIterator* stream = _tokens->iterator();
+    while(stream->hasNext()) {
+        stack->push((Term*)stream->next());
         if (cando(stack))
             dofunction(scope);
     }
