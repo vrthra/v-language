@@ -23,8 +23,10 @@ struct Cputs : public Cmd {
         switch(a->type()) {
             case TInt:
                 printf("%d\n",a->ivalue());
+                break;
             case TDouble:
                 printf("%f\n",a->dvalue());
+                break;
             default:
                 printf(">%d\n",a->dvalue());
         }
