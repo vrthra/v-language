@@ -1,8 +1,10 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 #include "type.h"
+#include "num.h"
 class Quote;
 class VFrame;
+class Num;
 class Token {
     public:
         virtual char* value()=0;
@@ -14,5 +16,6 @@ class Token {
         virtual char* svalue();
         virtual Quote* qvalue();
         virtual VFrame* fvalue();
+        virtual Num numvalue();
 };
 #endif

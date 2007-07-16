@@ -1,6 +1,7 @@
 #ifndef TERM_H
 #define TERM_H
 #include "type.h"
+#include "num.h"
 class VFrame;
 class Quote;
 class Term {
@@ -13,6 +14,7 @@ class Term {
             Quote* _qval;
             VFrame* _fval;
         };
+        Num _num;
 
     public:
 
@@ -31,6 +33,7 @@ class Term {
         long ivalue();
         double dvalue();
         char* svalue();
+        Num numvalue();
         Quote* qvalue();
         VFrame* fvalue();
 };

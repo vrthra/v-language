@@ -8,11 +8,11 @@ Term::Term(Type t,char* val) {
     _sval = val;
 }
 
-Term::Term(Type t,long val) {
+Term::Term(Type t,long val):_num(val) {
     _lval = val;
 }
 
-Term::Term(Type t,double val) {
+Term::Term(Type t,double val):_num(val) {
     _dval = val;
 }
 
@@ -58,5 +58,9 @@ long Term::ivalue() {
 
 double Term::dvalue() {
     return _dval;
+}
+
+Num Term::numvalue() {
+    return _num;
 }
 
