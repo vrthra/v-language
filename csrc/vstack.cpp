@@ -1,3 +1,4 @@
+#include <stack>
 #include "vstack.h"
 #include "vexception.h"
 VStack::VStack() {
@@ -46,4 +47,18 @@ Quote* VStack::quote() {
 void VStack::dequote(Quote* q) {
 }
 void VStack::dump() {
+    std::stack<Node*> s;
+    Node* current = _now;
+    while (current && current->link) {
+        s.push(current);
+        current = current->link;
+    }
+    printf("(");
+    bool first = true;
+    while(!s.empty()) {
+        printf("%s%s", first ? "" : " ",s.top()->data->value());
+        first = false;
+        s.pop();
+    }
+    printf(")\n");
 }

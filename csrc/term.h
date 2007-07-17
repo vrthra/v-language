@@ -6,6 +6,7 @@ class VFrame;
 class Quote;
 class Term {
     public:
+        Term(Type t, bool v);
         Term(Type t, long v);
         Term(Type t, double v);
         Term(Type t, char* v);
@@ -26,6 +27,7 @@ class Term {
     private:
         Type _type;
         union {
+            bool _bval;
             char _cval;
             long _lval;
             double _dval;

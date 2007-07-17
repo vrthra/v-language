@@ -35,7 +35,16 @@ struct Cputs : public Cmd {
         }
     }
 };
+
+struct Cshow : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        p->dump();
+    }
+};
+
 void Prologue::init(VFrame* frame) {
     frame->def("+", new Cadd());
     frame->def("puts", new Cputs());
+    frame->def("??", new Cshow());
 }

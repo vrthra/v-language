@@ -1,4 +1,9 @@
+#include <string>
 #include "term.h"
+
+Term::Term(Type t,bool val):_type(t) {
+    _bval = val;
+}
 
 Term::Term(Type t,char val):_type(t) {
     _cval = val;
@@ -32,8 +37,34 @@ Type Term::type() {
     return _type;
 }
 
+char buffer[1024];
 char* Term::value() {
-    return 0; //TODO
+    //TSymbol, TQuote, TFrame, TString, TInt, TDouble, TChar,TBool,
+    switch(_type) {
+        case TInt:
+            std::sprintf(buffer,"%d", ivalue());
+            break;
+        case TDouble:
+            std::sprintf(buffer,"%f", dvalue());
+            break;
+        case TSymbol:
+            return svalue();
+        case TString:
+            return svalue();
+        case TChar:
+            buffer[0] = cvalue();
+            buffer[1] = 0;
+            break;
+        case TBool:
+            return (char*) (bvalue() ? "true": "false");
+        case TQuote:
+            return "<quote>";
+        case TFrame:
+            return "<frame>";
+        default:
+            return "<default>";
+    }
+    return buffer;
 }
 
 char* Term::svalue() {
@@ -63,4 +94,6 @@ double Term::dvalue() {
 Num Term::numvalue() {
     return _num;
 }
-
+bool Term::bvalue() {
+    return _bval;
+}
