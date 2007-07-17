@@ -3,9 +3,9 @@
 #include "term.h"
 
 struct Node {
-    Term* data;
+    Token* data;
     Node* link;
-    Node(Term* e) {
+    Node(Token* e) {
         data = e;
     }
 };
@@ -15,11 +15,11 @@ class VStack {
         VStack();
         Node* now();
         Node* now(Node* n);
-        Term* push(Term* t);
-        Term* pop();
+        Token* push(Token* t);
+        Token* pop();
         bool empty();
         void clear();
-        Term* peek();
+        Token* peek();
         Quote* quote();
         void dequote(Quote* q);
         void dump();

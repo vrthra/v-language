@@ -1,10 +1,10 @@
 #ifndef TERM_H
 #define TERM_H
 #include "type.h"
-#include "num.h"
+#include "token.h"
 class VFrame;
 class Quote;
-class Term {
+class Term : public Token {
     public:
         Term(Type t, bool v);
         Term(Type t, long v);

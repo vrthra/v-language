@@ -68,8 +68,8 @@ bool Lexer::closed() {
     return _cstack.empty();
 }
 void Lexer::dump() {
-    /*for (Token e: _queue) {
-        V.outln("; " + e.value());
+    /*(for (std::queue<Token*>::iterator i = _queue.begin(); i != _queue.end(); i++;) {
+        V.outln("; " + *i.value());
     }*/
 }
 bool Lexer::hasNext() {

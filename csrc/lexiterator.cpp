@@ -10,7 +10,7 @@ LexIterator::LexIterator(QuoteStream* qs, CharStream* cs)
 
 bool LexIterator::hasNext() {
     if (!_current)
-        _current = (Token*)_lex->next();
+        _current = _lex->next();
     if (!_current)
         return false;
     return true;
@@ -18,8 +18,8 @@ bool LexIterator::hasNext() {
 Token* LexIterator::next() {
     Term* t = (Term*)lex_next();
     if (t->type() == TOpen)
-        return compound((Token*)t);
-    return (Token*)t;
+        return compound(t);
+    return t;
 }
 Token* LexIterator::lex_next() {
     if (_current) {
@@ -27,7 +27,7 @@ Token* LexIterator::lex_next() {
         _current = 0;
         return t;
     }
-    return (Token*)_lex->next();
+    return _lex->next();
 }
 Token* LexIterator::compound(Token* open) {
     QuoteStream* local = new QuoteStream();
@@ -44,5 +44,5 @@ Token* LexIterator::compound(Token* open) {
             local->add(t);
     }
     CmdQuote* cq = new CmdQuote(local);
-    return (Token*)new Term(TQuote, cq);
+    return new Term(TQuote, cq);
 }

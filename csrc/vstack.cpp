@@ -14,17 +14,17 @@ Node* VStack::now(Node* n) {
     return _now = n;
 }
 
-Term* VStack::push(Term* t) {
+Token* VStack::push(Token* t) {
     Node* n = new Node(t);
     n->link = _now;
     _now = n;
     return _now->data;
 }
 
-Term* VStack::pop() {
+Token* VStack::pop() {
     if (!_now || !_now->data)
         throw VException("err:stack_empty", "Empty Stack.");
-    Term* t = _now->data;
+    Token* t = _now->data;
     _now = _now->link;
     return t;
 }
@@ -37,7 +37,7 @@ void VStack::clear() {
     _now = _first;
 }
 
-Term* VStack::peek() {
+Token* VStack::peek() {
     return _now->data;
 }
 

@@ -10,5 +10,5 @@ bool QuoteIterator::hasNext() {
 }
 
 Token* QuoteIterator::next() {
-    return (Token*)_qs->get(_index++);
+    return _qs->get(_index++);
 }
