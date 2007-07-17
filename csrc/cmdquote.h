@@ -11,7 +11,6 @@ class CmdQuote : public Quote {
         virtual void dofunction(VFrame* scope);
     private:
         bool cando(VStack* stack);
-    private:
         TokenStream* _tokens;
 };
 #endif

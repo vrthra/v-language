@@ -11,20 +11,21 @@ struct Node {
 };
 struct Quote;
 class VStack {
-    Node* _now;
-    Node* _first;
     public:
-    VStack();
-    Node* now();
-    Node* now(Node* n);
-    Term* push(Term* t);
-    Term* pop();
-    bool empty();
-    void clear();
-    Term* peek();
-    Quote* quote();
-    void dequote(Quote* q);
-    void dump();
+        VStack();
+        Node* now();
+        Node* now(Node* n);
+        Term* push(Term* t);
+        Term* pop();
+        bool empty();
+        void clear();
+        Term* peek();
+        Quote* quote();
+        void dequote(Quote* q);
+        void dump();
+    private:
+        Node* _now;
+        Node* _first;
 };
 
 #endif

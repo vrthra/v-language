@@ -12,9 +12,6 @@ struct cmp_str {
 typedef std::map<char*, Quote*, cmp_str> QMap;
 class VStack;
 class VFrame {
-    QMap _dict;
-    VStack* _stack;
-    VFrame* _parent;
     public:
         QMap& dict();
         int id();
@@ -32,5 +29,8 @@ class VFrame {
         static int _idcount;
         int _id;
         bool hasKey(char* key);
+        QMap _dict;
+        VStack* _stack;
+        VFrame* _parent;
 };
 #endif

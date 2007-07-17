@@ -5,7 +5,6 @@ struct VException : public Vx {
     VException(char* v, char* u);
 };
 struct VSynException : public VException {
-    VSynException(char* v, char* u):VException(v,u){
-    }
+    VSynException(char* v, char* u):VException(v,u) {}
 };
 #endif

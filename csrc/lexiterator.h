@@ -1,10 +1,10 @@
 #ifndef LEXITERATOR_H
 #define LEXITERATOR_H
+#include "quoteiterator.h"
 class Token;
 class Lexer;
 class QuoteStream;
 class CharStream;
-#include "quoteiterator.h"
 class LexIterator : public QuoteIterator {
     public:
         LexIterator(QuoteStream* qs, CharStream* cs);
@@ -13,7 +13,6 @@ class LexIterator : public QuoteIterator {
     private:
         Token* lex_next();
         Token* compound(Token* open);
-    private:
         Lexer* _lex;
         Token* _current;
 };
