@@ -3,6 +3,9 @@
 #include "cmd.h"
 #include "vstack.h"
 #include "vframe.h"
+char* buff =
+#include "std.h"
+;
 struct Cadd : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
