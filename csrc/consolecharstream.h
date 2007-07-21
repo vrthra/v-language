@@ -10,12 +10,12 @@ class ConsoleCharStream : public CharStream {
         virtual char peek();
         virtual char current();
         virtual void lexer(Lexer* l);
-        virtual int index();
     private:
         char _buf[1024];
         int _index;
         Lexer* _lexer;
         char _current;
         char* read_nobuf();
+        virtual int index();
 };
 #endif

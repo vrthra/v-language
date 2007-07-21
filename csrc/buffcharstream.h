@@ -8,5 +8,9 @@ class BuffCharStream : public CharStream {
         virtual char peek();
         virtual char current();
         virtual void lexer(Lexer* l);
+    private:
+        char* _buf;
+        int _current;
+        char _next;
 };
 #endif
