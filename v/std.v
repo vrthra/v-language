@@ -1,24 +1,11 @@
 # Standard definitions.
-[swons swap cons].
-[reverse [] swap [swons] step].
-[shunt [swons] step].
-[swoncat swap concat].
-[unitlist [] cons].
-# parents 1 for map, 2 for let
-[let reverse [unit cons reverse $me &parent &parent &. true] map pop].
 
-[abs unit [java.lang.Math abs] concat java].
-[acos unit [java.lang.Math acos] concat java].
-[sqrt >string unit [java.lang.Double new] concat java unit [java.lang.Math sqrt] concat java].
 [pred 1 -].
 [succ 1 +].
 
 [dup [a : a a] view].
-[dupd [dup] dip].
 [pop [a :] view].
-[popd [pop] dip].
 [swap [a b : b a] view].
-[swapd [swap] dip].
 [lroll [[a *rest] : [*rest a]] view].
 [rroll [[*rest a] : [a *rest]] view].
 
@@ -34,10 +21,15 @@
 [cons [a [*rest] : [a *rest]] view].
 [unit [] cons].
 [concat [[*a] [*b] : [*a *b]] view].
+
 [dip [a b : [b i a]] view i].
+[dupd [dup] dip].
+[popd [pop] dip].
+[swapd [swap] dip].
+[dipd [dip] cons dip].
+
 [x dup i].
 [id [a : a] view].
-[dipd [dip] cons dip].
 
 [uncons [[a *rest] : a [*rest]] view].
 [first [[a *rest] : a] view].
@@ -64,6 +56,18 @@
 [xor [a b : a b a b] view or [and not] dip and].
 
 [of swap at].
+
+[swons swap cons].
+[reverse [] swap [swons] step].
+[shunt [swons] step].
+[swoncat swap concat].
+[unitlist [] cons].
+# parents 1 for map, 2 for let
+[let reverse [unit cons reverse $me &parent &parent &. true] map pop].
+
+[abs unit [java.lang.Math abs] concat java].
+[acos unit [java.lang.Math acos] concat java].
+[sqrt >string unit [java.lang.Double new] concat java unit [java.lang.Math sqrt] concat java].
 
 # note that swap is needed since dip does a swap
 [binrec
