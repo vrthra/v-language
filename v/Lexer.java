@@ -108,13 +108,13 @@ public class Lexer {
 
                 //compound.
             case '[':
-            case '(':
             case '{':
                 copen();
                 break;
-
+            case '(':
+                scomment();
+                break;
             case ']':
-            case ')':
             case '}':
                 cclose();
                 break;
@@ -166,6 +166,12 @@ public class Lexer {
 
     void lcomment() {
         while (_stream.read() != '\n');
+    }
+
+    void scomment() {
+        _cstack.push(closeCompound(_stream.current()));
+        while (_stream.read() != ')');
+        _cstack.pop();
     }
 
     // we can recognize the string here itself so no point passing it to the parser.
