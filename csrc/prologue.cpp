@@ -9,6 +9,8 @@
 #include "vframe.h"
 #include "quotestream.h"
 #include "quoteiterator.h"
+#include "filecharstream.h"
+#include "lexstream.h"
 #include "vexception.h"
 char* buff =
 #include "std.h"
@@ -250,6 +252,25 @@ struct Cdef : public Cmd {
     }
 };
 
+struct Cuse : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* file = p->pop();
+        try {
+            char* v = file->svalue();
+            int len = strlen(v);
+            char* val = new char[len + 3];
+            std::sprintf(val,"%s%s",v,".v");
+
+            FileCharStream* cs = new FileCharStream(val);
+            CmdQuote* module = new CmdQuote(new LexStream(cs));
+            module->eval(q->parent());
+        } catch (...) {
+            throw new VException("err:use", file->svalue());
+        }
+    }
+};
+
 
 void Prologue::init(VFrame* frame) {
     frame->def("+", new Cadd());
@@ -257,4 +278,5 @@ void Prologue::init(VFrame* frame) {
     frame->def("??", new Cshow());
     frame->def("view", new Cview());
     frame->def(".", new Cdef());
+    frame->def("use", new Cuse());
 }
