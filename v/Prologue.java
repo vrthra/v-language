@@ -501,7 +501,7 @@ public class Prologue {
 
             // dequote the action and push it to stack.
             if (cond.bvalue())
-                action.qvalue().eval(q);
+                action.qvalue().eval(q.parent());
         }
     };
 
@@ -538,9 +538,9 @@ public class Prologue {
             }
             // dequote the action and push it to stack.
             if (cond.bvalue())
-                action.qvalue().eval(q);
+                action.qvalue().eval(q.parent());
             else
-                eaction.qvalue().eval(q);
+                eaction.qvalue().eval(q.parent());
         }
     };
 
@@ -1302,7 +1302,7 @@ public class Prologue {
             VStack p = q.stack();
             Term buff = p.pop();
             try {
-                Util.evaluate(buff.svalue(), q);
+                Util.evaluate(buff.svalue(), q.parent());
                 V.debug("eval @ " + q.id());
             } catch (Exception e) {
                 throw new VException("err:eval " + buff.value(), "eval failed" );
