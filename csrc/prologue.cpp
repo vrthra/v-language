@@ -14,7 +14,7 @@ char* buff =
 #include "std.h"
 ;
 
-typedef std::map<char*, Token*> SymbolMap;
+typedef std::map<char*, Token*, cmp_str> SymbolMap;
 
 void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
     //Take each point in tmpl, and proess elements accordingly.
@@ -194,7 +194,7 @@ struct Cview : public Cmd {
         QuoteStream* tmpl = new QuoteStream();
         while(fstream->hasNext()) {
             Token* t = fstream->next();
-            if (t->type() == TSymbol && t->cvalue() == ':' )
+            if (t->type() == TSymbol && (!strcmp(t->svalue(),":")))
                 break;
             tmpl->add(t);
         }
