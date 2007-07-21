@@ -501,7 +501,7 @@ public class Prologue {
 
             // dequote the action and push it to stack.
             if (cond.bvalue())
-                action.qvalue().eval(q.parent());
+                action.qvalue().eval(q);
         }
     };
 
@@ -538,9 +538,9 @@ public class Prologue {
             }
             // dequote the action and push it to stack.
             if (cond.bvalue())
-                action.qvalue().eval(q.parent());
+                action.qvalue().eval(q);
             else
-                eaction.qvalue().eval(q.parent());
+                eaction.qvalue().eval(q);
         }
     };
 
