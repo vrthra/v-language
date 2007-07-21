@@ -56,3 +56,6 @@ void VFrame::dump() {
 void VFrame::reinit() {
     _stack->clear();
 }
+char* VFrame::to_s() {
+    return "<frame>";
+}

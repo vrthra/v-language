@@ -61,16 +61,16 @@ void Lexer::lex() {
     }
 }
 void Lexer::reset() {
-    while(!_queue.empty())
-        _queue.pop();
+    _queue.erase(_queue.begin(), _queue.end());
 }
 bool Lexer::closed() {
     return _cstack.empty();
 }
 void Lexer::dump() {
-    /*(for (std::queue<Token*>::iterator i = _queue.begin(); i != _queue.end(); i++;) {
-        V.outln("; " + *i.value());
-    }*/
+    for (std::list<Term*>::iterator i = _queue.begin(); i != _queue.end(); i++) {
+        printf("%s;", *i);
+    }
+    printf("\n");
 }
 bool Lexer::hasNext() {
     return _has;
@@ -82,7 +82,7 @@ Term* Lexer::next() {
     // else run lex and try again.
     if (_queue.size() != 0) {
         Term* t = _queue.front();
-        _queue.pop();
+        _queue.pop_front();
         return t;
     } else {
         lex();
@@ -121,7 +121,7 @@ bool Lexer::isBoundary(char c) {
     return false;
 }
 void Lexer::add(Term* term) {
-    _queue.push(term);
+    _queue.push_back(term);
     //_word->clear();
 }
 char Lexer::charconv(char n) {

@@ -1,5 +1,8 @@
 #include <string>
 #include "term.h"
+#include "quote.h"
+#include "quotestream.h"
+#include "vframe.h"
 
 Term::Term(Type t,bool val):_type(t) {
     _bval = val;
@@ -30,7 +33,9 @@ Term::Term(Type t,VFrame* val):_type(t) {
 }
 
 int Term::size() {
-    return 0;
+    if (_type != TQuote)
+        return 1;
+    return ((QuoteStream*)qvalue()->tokens())->size();
 }
 
 Type Term::type() {
@@ -58,9 +63,9 @@ char* Term::value() {
         case TBool:
             return (char*) (bvalue() ? "true": "false");
         case TQuote:
-            return "<quote>";
+            return qvalue()->to_s();
         case TFrame:
-            return "<frame>";
+            return fvalue()->to_s();
         default:
             return "<default>";
     }

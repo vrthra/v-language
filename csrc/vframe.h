@@ -25,6 +25,7 @@ class VFrame {
         VStack* stack();
         void dump();
         void reinit();
+        char* to_s();
     private:
         static int _idcount;
         int _id;

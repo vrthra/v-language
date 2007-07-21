@@ -45,6 +45,9 @@ class PQuote : public CmdQuote {
                 CmdQuote::dofunction(scope);
             }
         }
+        char* to_s() {
+            return "<shell>";
+        }
 };
 
 void V::main(int argc, char** argv) {

@@ -1,3 +1,4 @@
+#include <sstream>
 #include "cmdquote.h"
 #include "vframe.h"
 #include "vstack.h"
@@ -45,4 +46,19 @@ bool CmdQuote::cando(VStack* stack) {
     if (stack->peek()->type() == TSymbol)
         return true;
     return false;
+}
+
+char* CmdQuote::to_s() {
+    std::ostringstream outs;
+    outs << '[';
+    TokenIterator* i = _tokens->iterator();
+    while(i->hasNext()) {
+        outs << i->next()->value();
+        if (i->hasNext())
+            outs << ' ';
+    }
+    outs << ']';
+    char* out = new char[outs.str().length()];
+    std::strcpy(out, outs.str().c_str());
+    return out;
 }

@@ -9,6 +9,7 @@ class CmdQuote : public Quote {
         virtual void eval(VFrame* scope);
         virtual TokenStream* tokens();
         virtual void dofunction(VFrame* scope);
+        virtual char* to_s();
     private:
         bool cando(VStack* stack);
         TokenStream* _tokens;

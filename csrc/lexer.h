@@ -2,7 +2,7 @@
 #define LEXER_H
 #include <vector>
 #include <stack>
-#include <queue>
+#include <list>
 class CharStream;
 class Term;
 class Lexer {
@@ -33,7 +33,7 @@ class Lexer {
 
         std::vector<char>* _word;
         std::stack<char> _cstack;
-        std::queue<Term*> _queue;
+        std::list<Term*> _queue;
         CharStream* _stream;
         bool _has;
 };
