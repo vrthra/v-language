@@ -167,7 +167,7 @@ void Lexer::cclose() {
         add(new Term(TClose, _stream->current()));
 }
 void Lexer::lcomment() {
-    while(_stream->read() != '\n');
+    while((_stream->read() != '\n') && (!_stream->eof()));
 }
 void Lexer::string() {
     char start = _stream->current();
@@ -179,7 +179,8 @@ void Lexer::string() {
             // read next char and continue.
             _word->push_back(charconv(_stream->read()));
             continue;
-        }
+        } else if (c == 0)
+            break;
         if (start == c)
             break;
         _word->push_back(c);

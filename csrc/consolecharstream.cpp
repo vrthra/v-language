@@ -39,3 +39,6 @@ char* ConsoleCharStream::read_nobuf() {
 int ConsoleCharStream::index() {
     return _index;
 }
+bool ConsoleCharStream::eof() {
+    return false;
+}
