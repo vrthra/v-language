@@ -15,6 +15,18 @@ char* buff =
 ;
 
 typedef std::map<char*, Token*, cmp_str> SymbolMap;
+typedef std::pair<char*, Quote*> SymPair;
+
+SymPair splitdef(Quote* qval) {
+    TokenIterator* it = qval->tokens()->iterator();
+    Token* symbol = it->next();
+
+    QuoteStream* nts = new QuoteStream();
+    while(it->hasNext())
+        nts->add(it->next());
+
+    return std::make_pair<char*, Quote*>(symbol->svalue(), new CmdQuote(nts));
+}
 
 void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
     //Take each point in tmpl, and proess elements accordingly.
@@ -228,10 +240,21 @@ struct Cview : public Cmd {
     }
 };
 
+struct Cdef : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* t = p->pop();
+        SymPair entry = splitdef(t->qvalue());
+        char* symbol = entry.first;
+        q->parent()->def(symbol, entry.second);
+    }
+};
+
 
 void Prologue::init(VFrame* frame) {
     frame->def("+", new Cadd());
     frame->def("puts", new Cputs());
     frame->def("??", new Cshow());
     frame->def("view", new Cview());
+    frame->def(".", new Cdef());
 }
