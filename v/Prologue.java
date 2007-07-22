@@ -428,7 +428,7 @@ public class Prologue {
                 // save the stack.
                 // we can also have multiple shields
                 // Try and get the $shield if any
-                Cmd shield = (Cmd)q.dict().get("$shield");
+                Cmd shield = (Cmd)q.parent().dict().get("$shield");
                 Shield s = new Shield(p,t.qvalue());
                 if (shield == null) {
                     shield = new Cmd(){public void eval(VFrame q){}};
