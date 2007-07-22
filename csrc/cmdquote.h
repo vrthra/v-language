@@ -10,6 +10,7 @@ class CmdQuote : public Quote {
         virtual TokenStream* tokens();
         virtual void dofunction(VFrame* scope);
         virtual char* to_s();
+        static Quote* getdef(char* def);
     private:
         bool cando(VStack* stack);
         TokenStream* _tokens;

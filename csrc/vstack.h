@@ -26,6 +26,7 @@ class VStack {
     private:
         Node* _now;
         Node* _first;
+        Node* getList();
 };
 
 #endif

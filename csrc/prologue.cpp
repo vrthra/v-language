@@ -13,7 +13,6 @@
 #include "lexstream.h"
 #include "vexception.h"
 #include "v.h"
-#include "util.h"
 char* buff =
 #include "std.h"
 ;
@@ -243,6 +242,49 @@ struct Cdiv : public Cmd {
     }
 };
 
+struct Cand : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        bool res = a->bvalue() && b->bvalue();
+        p->push(new Term(TBool, res));
+    }
+};
+
+struct Cor : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        bool res = a->bvalue() || b->bvalue();
+        p->push(new Term(TBool, res));
+    }
+};
+
+struct Cnot : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        bool res = !a->bvalue();
+        p->push(new Term(TBool, res));
+    }
+};
+
+struct Cchoice : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* af = p->pop();
+        Token* at = p->pop();
+        Token* cond = p->pop();
+
+        if (cond->bvalue())
+            p->push(at);
+        else
+            p->push(af);
+    }
+};
+
 struct Cputs : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
@@ -444,7 +486,7 @@ struct Cmodule : public Cmd {
             char* s = i->next()->svalue();
             char* def = new char[strlen(s) + strlen(module) + 9]; // sizeof("$ [ ] &i");
             sprintf(def, "$%s[%s] &i", module, s);
-            Quote* libs = Util::getdef(def);
+            Quote* libs = CmdQuote::getdef(def);
             sprintf(def, "%s:%s", module, s);
             q->parent()->def(def, libs);
         }
@@ -476,6 +518,21 @@ struct Cdequoteenv : public Cmd {
     }
 };
 
+struct Cstack : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        q->stack()->push(new Term(TQuote, p->quote()));
+    }
+};
+
+struct Cunstack : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* t = p->pop();
+        p->dequote(t->qvalue());
+    }
+};
+
 void Prologue::init(VFrame* frame) {
     frame->def(".", new Cdef());
     frame->def("&.", new Cdefenv());
@@ -495,6 +552,8 @@ void Prologue::init(VFrame* frame) {
     frame->def("&use", new Cuseenv());
     frame->def("eval", new Ceval());
     frame->def("&eval", new Cevalenv());
+    frame->def("stack", new Cstack());
+    frame->def("unstack", new Cunstack());
 
     frame->def("true", new Ctrue());
     frame->def("false", new Cfalse());
@@ -504,9 +563,14 @@ void Prologue::init(VFrame* frame) {
     frame->def("*", new Cmul());
     frame->def("/", new Cdiv());
     
+    frame->def("and", new Cand());
+    frame->def("or", new Cor());
+    frame->def("not", new Cnot());
+
+    frame->def("choice", new Cchoice());
+
     frame->def("??", new Cshow());
 /*
-
         iframe.def("trans", _trans);
         iframe.def("java", _java);
 
@@ -515,15 +579,10 @@ void Prologue::init(VFrame* frame) {
         iframe.def("stack", _stack);
         iframe.def("unstack", _unstack);
 
-        iframe.def("and", _and);
-        iframe.def("or", _or);
-        iframe.def("not", _not);
-
         //control structures
         iframe.def("ifte", _ifte);
         iframe.def("if", _if);
         iframe.def("while", _while);
-        iframe.def("choice", _choice);
 
         //others
         iframe.def("?", _peek);

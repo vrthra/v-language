@@ -3,6 +3,8 @@
 #include "vframe.h"
 #include "vstack.h"
 #include "quotestream.h"
+#include "lexstream.h"
+#include "buffcharstream.h"
 #include "quoteiterator.h"
 #include "vexception.h"
 
@@ -62,4 +64,8 @@ char* CmdQuote::to_s() {
     char* out = new char[outs.str().length()];
     std::strcpy(out, outs.str().c_str());
     return out;
+}
+
+Quote* CmdQuote::getdef(char* buf) {
+    return new CmdQuote(new LexStream(new BuffCharStream(buf)));
 }

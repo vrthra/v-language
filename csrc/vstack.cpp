@@ -1,5 +1,8 @@
 #include <stack>
 #include "vstack.h"
+#include "tokeniterator.h"
+#include "quotestream.h"
+#include "cmdquote.h"
 #include "vexception.h"
 VStack::VStack() {
     _now = new Node(0);
@@ -41,24 +44,50 @@ Token* VStack::peek() {
     return _now->data;
 }
 
-Quote* VStack::quote() {
-    return 0;
-}
-void VStack::dequote(Quote* q) {
-}
-void VStack::dump() {
-    std::stack<Node*> s;
+Node* VStack::getList() {
     Node* current = _now;
+    Node* result = new Node(0);
+    result->link = 0;
+    Node* t = 0;
     while (current && current->link) {
-        s.push(current);
+        result->data = current->data;
+        t = new Node(0);
+        t->link = result;
+        result = t;
         current = current->link;
     }
+    return result->link;
+}
+
+Quote* VStack::quote() {
+    Node* s = getList();
+    QuoteStream* qs = new QuoteStream();
+    while(s) {
+        qs->add(s->data);
+        s = s->link;
+    }
+    return new CmdQuote(qs);
+}
+
+void VStack::dequote(Quote* q) {
+    Node* current = _now;
+    TokenIterator* it = q->tokens()->iterator();
+
+    _now = new Node(0);
+    _first = _now;
+
+    while(it->hasNext())
+        push(it->next());
+}
+
+void VStack::dump() {
+    Node* s = getList();
     printf("(");
     bool first = true;
-    while(!s.empty()) {
-        printf("%s%s", first ? "" : " ",s.top()->data->value());
+    while(s) {
+        printf("%s%s", first ? "" : " ",s->data->value());
         first = false;
-        s.pop();
+        s = s->link;
     }
     printf(")\n");
 }
