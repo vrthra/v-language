@@ -359,6 +359,107 @@ struct Cisnum : public Cmd {
     }
 };
 
+struct Ctostr : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TString, a->value()));
+    }
+};
+
+struct Ctoint : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        switch (a->type()) {
+            case TInt:
+                p->push(a);
+                break;
+            case TDouble:
+                p->push(new Term(TInt, a->numvalue().i()));
+                break;
+            case TChar:
+                p->push(new Term(TInt, a->cvalue()));
+                break;
+            case TString:
+                p->push(new Term(TInt, atol(a->svalue())));
+            default:
+                throw VException("err:>int", "%s cant convert", a->value());
+        }
+    }
+};
+
+struct Ctodouble : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        switch (a->type()) {
+            case TDouble:
+                p->push(a);
+                break;
+            case TInt:
+                p->push(new Term(TDouble, a->numvalue().d()));
+                break;
+            case TChar:
+                p->push(new Term(TDouble, (double)a->cvalue()));
+                break;
+            case TString:
+                p->push(new Term(TDouble, atof(a->svalue())));
+            default:
+                throw VException("err:>decimal", "%s cant convert", a->value());
+        }
+    }
+};
+
+struct Ctobool : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        switch (a->type()) {
+            case TInt:
+                p->push(new Term(TBool, a->ivalue() != 0));
+                break;
+            case TDouble:
+                p->push(new Term(TBool, a->dvalue() != 0.0));
+                break;
+            case TChar:
+                p->push(new Term(TBool, a->cvalue() != 'f'));
+                break;
+            case TString:
+                p->push(new Term(TBool, (bool)strcmp(a->svalue(), "false")));
+                break;
+            case TQuote:
+                p->push(new Term(TBool, ((Term*)a)->size() != 0));
+                break;
+            default:
+                throw VException("err:>bool", "%s cant convert", a->value());
+        }
+    }
+};
+
+struct Ctochar : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        switch (a->type()) {
+            case TInt:
+                p->push(a);
+                break;
+            case TDouble:
+                p->push(new Term(TInt, a->numvalue().i()));
+                break;
+            case TChar:
+                p->push(a);
+                break;
+            case TString:
+                p->push(new Term(TChar, a->value()[0]));
+                break;
+            default:
+                throw VException("err:>char", "%s cant convert", a->value());
+        }
+    }
+};
+
 struct Cgt : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
@@ -521,10 +622,26 @@ struct Cpeek : public Cmd {
 
 struct Cvdebug : public Cmd {
     void eval(VFrame* q) {
-        V::outln("%d",q->parent()->id());
+        V::outln("Q:%d",q->parent()->id());
         VStack* p = q->stack();
         p->dump();
-        //V::outln(q->words()->value());
+        V::outln(q->parent()->words()->to_s());
+    }
+};
+
+struct Cdframe : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        p->dump();
+        q = q->parent();
+        while(q) {
+            dumpframe(q);
+            q = q->parent();
+        }
+    }
+    void dumpframe(VFrame* q) {
+        V::outln("Q:%d", q->id());
+        V::outln(q->words()->to_s());
     }
 };
 
@@ -753,6 +870,57 @@ struct Cunstack : public Cmd {
     }
 };
 
+struct Cabort : public Cmd {
+    void eval(VFrame* q) {
+        q->stack()->clear();
+    }
+};
+
+struct Csize : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* t = p->pop();
+        q->stack()->push(new Term(TInt, (long)((Term*)t)->size()));
+    }
+};
+
+struct Cin : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* list = p->pop();
+        Token* i = p->pop();
+        TokenIterator* ti = list->qvalue()->tokens()->iterator();
+        while(ti->hasNext()) {
+            Token* t = ti->next();
+            if (t->type() == i->type() && !strcmp(t->value(), i->value())) {
+                p->push(new Term(TBool, true));
+                return;
+            }
+        }
+        p->push(new Term(TBool, false));
+    }
+};
+
+struct Cat : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* i = p->pop();
+        int idx = i->ivalue();
+        Token* list = p->pop();
+        TokenIterator* ti = list->qvalue()->tokens()->iterator();
+        int count = 0;
+        while(ti->hasNext()) {
+            Token* t = ti->next();
+            if (count == idx) {
+                p->push(t);
+                return;
+            }
+            ++count;
+        }
+        throw VException("err:at:overflow", "[%s]:%d",list->value(), idx);
+    }
+};
+
 void Prologue::init(VFrame* frame) {
     frame->def(".", new Cdef());
     frame->def("&.", new Cdefenv());
@@ -804,36 +972,35 @@ void Prologue::init(VFrame* frame) {
     frame->def("?stack", new Cshow());
     frame->def("?", new Cpeek());
     frame->def("?debug", new Cvdebug());
+    frame->def("?frame", new Cdframe());
     
-    frame->def("integer?", new Cisinteger);
-    frame->def("double?", new Cisdouble);
-    frame->def("boolean?", new Cisbool);
-    frame->def("symbol?", new Cissym);
-    frame->def("list?", new Cisquote);
-    frame->def("char?", new Cischar);
-    frame->def("number?", new Cisnum);
-    frame->def("string?", new Cisstr);
+    frame->def("int?", new Cisinteger);
+    frame->def("decimal?", new Cisdouble);
+    frame->def("bool?", new Cisbool());
+    frame->def("symbol?", new Cissym());
+    frame->def("list?", new Cisquote());
+    frame->def("char?", new Cischar());
+    frame->def("number?", new Cisnum());
+    frame->def("string?", new Cisstr());
 
+    frame->def(">string", new Ctostr());
+    frame->def(">int", new Ctoint());
+    frame->def(">decimal", new Ctodouble());
+    frame->def(">bool", new Ctobool());
+    frame->def(">char", new Ctochar());
+
+    frame->def("abort", new Cabort());
+    frame->def("size", new Csize());
+    frame->def("in?", new Cin());
+    frame->def("at", new Cat());
 /*
         iframe.def("trans", _trans);
         iframe.def("java", _java);
-
         iframe.def("shield", _shield);
         iframe.def("throw", _throw);
-
-        //others
-        iframe.def("?", _peek);
-        iframe.def("?debug", _vdebug);
-        iframe.def("?stack", _show);
-        iframe.def("?frame", _dframe);
-        iframe.def("debug", _debug);
-
-        iframe.def("abort", _abort);
+        iframe.def("help", _help);
 
         //list
-        iframe.def("size", _size);
-        iframe.def("in?", _isin);
-        iframe.def("at", _at);
         iframe.def("drop", _drop);
         iframe.def("take", _take);
 
@@ -848,12 +1015,6 @@ void Prologue::init(VFrame* frame) {
         iframe.def("split", _split_i);
         iframe.def("fold!", _fold);
         iframe.def("fold", _fold_i);
-
-        iframe.def(">string", _tostring);
-        iframe.def(">int", _toint);
-        iframe.def(">decimal", _todecimal);
-
-        iframe.def("help", _help);
 
         Quote libs = Util.getdef("'std' use");
         libs.eval(iframe);
