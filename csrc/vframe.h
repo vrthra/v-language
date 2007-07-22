@@ -19,6 +19,7 @@ class VFrame {
         VFrame();
         VFrame(VFrame* parent);
         Quote* lookup(char* key);
+        Quote* words();
         void def(char* sym, Quote* q);
         VFrame* parent();
         VFrame* child();

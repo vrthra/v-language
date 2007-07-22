@@ -1,6 +1,9 @@
 #include "vframe.h"
 #include "vstack.h"
 #include "vexception.h"
+#include "quotestream.h"
+#include "term.h"
+#include "cmdquote.h"
 
 bool singleassign(); // defined in v.cpp
 int VFrame::_idcount = 0;
@@ -34,6 +37,13 @@ Quote* VFrame::lookup(char* key) {
     if (_parent)
         return _parent->lookup(key);
     return 0;
+}
+Quote* VFrame::words() {
+    QuoteStream* nts = new QuoteStream();
+    for(QMap::iterator i = _dict.begin(); i!= _dict.end(); i++) {
+        nts->add(new Term(TSymbol, i->first));
+    }
+    return new CmdQuote(nts); 
 }
 void VFrame::def(char* sym, Quote* q) {
     if (singleassign() && hasKey(sym))

@@ -13,6 +13,7 @@
 #include "lexstream.h"
 #include "vexception.h"
 #include "v.h"
+#include "util.h"
 char* buff =
 #include "std.h"
 ;
@@ -29,6 +30,14 @@ SymPair splitdef(Quote* qval) {
         nts->add(it->next());
 
     return std::make_pair<char*, Quote*>(symbol->svalue(), new CmdQuote(nts));
+}
+
+char* special(char* name) {
+    int len = strlen(name);
+    char* buf = new char[len + 2];
+    buf[0] = '$';
+    std::strcpy(buf+1, name);
+    return buf;
 }
 
 void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
@@ -184,6 +193,48 @@ struct Cadd : public Cmd {
         Token* a = p->pop();
         Token* b = p->pop();
         double dres = a->numvalue().d() + b->numvalue().d();
+        long ires = (long)dres;
+        if (dres == ires)
+            p->push(new Term(TInt, ires));
+        else
+            p->push(new Term(TDouble, dres));
+    }
+};
+
+struct Csub : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        double dres = a->numvalue().d() - b->numvalue().d();
+        long ires = (long)dres;
+        if (dres == ires)
+            p->push(new Term(TInt, ires));
+        else
+            p->push(new Term(TDouble, dres));
+    }
+};
+
+struct Cmul : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        double dres = a->numvalue().d() * b->numvalue().d();
+        long ires = (long)dres;
+        if (dres == ires)
+            p->push(new Term(TInt, ires));
+        else
+            p->push(new Term(TDouble, dres));
+    }
+};
+
+struct Cdiv : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        double dres = a->numvalue().d() / b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
             p->push(new Term(TInt, ires));
@@ -365,6 +416,49 @@ struct Cevalenv : public Cmd {
     }
 };
 
+struct Cmodule : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* t = p->pop();
+        SymPair entry = splitdef(t->qvalue());
+        char* module = entry.first;
+        Quote* qfull = entry.second;
+
+        TokenIterator* it = qfull->tokens()->iterator();
+        Quote* pub = it->next()->qvalue();
+
+        QuoteStream* nts = new QuoteStream();
+        while(it->hasNext())
+            nts->add(it->next());
+
+        CmdQuote* qval = new CmdQuote(nts);
+        qval->eval(q);
+
+        QuoteStream* fts = new QuoteStream();
+        fts->add(new Term(TFrame, q));
+        q->parent()->def(special(module), new CmdQuote(fts));
+
+        // bind all published tokens to parent namespace.
+        TokenIterator* i = pub->tokens()->iterator();
+        while(i->hasNext()) {
+            char* s = i->next()->svalue();
+            char* def = new char[strlen(s) + strlen(module) + 9]; // sizeof("$ [ ] &i");
+            sprintf(def, "$%s[%s] &i", module, s);
+            Quote* libs = Util::getdef(def);
+            sprintf(def, "%s:%s", module, s);
+            q->parent()->def(def, libs);
+        }
+    }
+};
+
+struct Cwords : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        VFrame* b = p->pop()->fvalue();
+        p->push(new Term(TQuote, b->words())); 
+    }
+};
+
 struct Cdequote : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
@@ -387,6 +481,8 @@ void Prologue::init(VFrame* frame) {
     frame->def("&.", new Cdefenv());
     frame->def("&parent", new Cparent());
     frame->def("$me", new Cme());
+    frame->def("module", new Cmodule());
+    frame->def("&words", new Cwords());
 
     frame->def("puts", new Cputs());
     frame->def("put", new Cputs());
@@ -404,11 +500,12 @@ void Prologue::init(VFrame* frame) {
     frame->def("false", new Cfalse());
 
     frame->def("+", new Cadd());
+    frame->def("-", new Csub());
+    frame->def("*", new Cmul());
+    frame->def("/", new Cdiv());
     
     frame->def("??", new Cshow());
 /*
-        iframe.def("module", _defmodule);
-        iframe.def("&words", _words);
 
         iframe.def("trans", _trans);
         iframe.def("java", _java);
@@ -455,12 +552,6 @@ void Prologue::init(VFrame* frame) {
         iframe.def("split", _split_i);
         iframe.def("fold!", _fold);
         iframe.def("fold", _fold_i);
-
-        //arith
-        iframe.def("+", _add);
-        iframe.def("-", _sub);
-        iframe.def("*", _mul);
-        iframe.def("/", _div);
 
         //bool
         iframe.def("=", _eq);
