@@ -172,6 +172,30 @@ TokenStream* evalres(TokenStream* res, SymbolMap& symbols) {
 
 }
 
+bool isEq(Token* a, Token* b) {
+    switch(a->type()) {
+        case TInt:
+        case TDouble:
+            return a->numvalue().d() == b->numvalue().d();
+        case TString:
+            if (b->type() != TString)
+                throw VException("err:type:eq", "%s != %s (type)", a->value(), b->value());
+            return !strcmp(a->svalue(), b->svalue());
+        default:
+            return !strcmp(a->value(), b->value());
+    }
+}
+
+bool isGt(Token* a, Token* b) {
+    return a->numvalue().d() > b->numvalue().d();
+}
+
+bool isLt(Token* a, Token* b) {
+    if (isGt(a,b)) return false;
+    if (isEq(a,b)) return false;
+    return true;
+}
+
 struct Ctrue : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
@@ -271,6 +295,124 @@ struct Cnot : public Cmd {
     }
 };
 
+struct Cisinteger : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TBool, a->type() == TInt));
+    }
+};
+
+struct Cisdouble : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TBool, a->type() == TDouble));
+    }
+};
+
+struct Cisbool : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TBool, a->type() == TBool));
+    }
+};
+
+struct Cissym : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TBool, a->type() == TSymbol));
+    }
+};
+
+struct Cisquote : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TBool, a->type() == TQuote));
+    }
+};
+
+struct Cisstr : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TBool, a->type() == TString));
+    }
+};
+
+struct Cischar : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TBool, a->type() == TChar));
+    }
+};
+
+struct Cisnum : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        p->push(new Term(TBool, a->type() == TInt || a->type() == TDouble));
+    }
+};
+
+struct Cgt : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        p->push(new Term(TBool, isGt(a,b)));
+    }
+};
+
+struct Clt : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        p->push(new Term(TBool, isLt(a,b)));
+    }
+};
+
+struct Clteq : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        p->push(new Term(TBool, !isGt(a,b)));
+    }
+};
+
+struct Cgteq : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        p->push(new Term(TBool, !isLt(a,b)));
+    }
+};
+
+struct Ceq : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        p->push(new Term(TBool, isEq(a,b)));
+    }
+};
+
+struct Cneq : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* a = p->pop();
+        Token* b = p->pop();
+        p->push(new Term(TBool, !isEq(a,b)));
+    }
+};
+
 struct Cchoice : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
@@ -282,6 +424,63 @@ struct Cchoice : public Cmd {
             p->push(at);
         else
             p->push(af);
+    }
+};
+
+struct Cif : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* action = p->pop();
+        Token* cond = p->pop();
+
+        if (cond->type() == TQuote) {
+            Node* n = p->now();
+            cond->qvalue()->eval(q);
+            cond = p->pop();
+            p->now(n);
+        }
+        if (cond->bvalue())     
+            action->qvalue()->eval(q);
+    }
+};
+
+struct Cifte : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* eaction = p->pop();
+        Token* action = p->pop();
+        Token* cond = p->pop();
+
+        if (cond->type() == TQuote) {
+            Node* n = p->now();
+            cond->qvalue()->eval(q);
+            cond = p->pop();
+            p->now(n);
+        }
+        if (cond->bvalue())     
+            action->qvalue()->eval(q);
+        else
+            eaction->qvalue()->eval(q);
+    }
+};
+
+struct Cwhile : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* action = p->pop();
+        Token* cond = p->pop();
+        while(true) {
+            if (cond->type() == TQuote) {
+                Node* n = p->now();
+                cond->qvalue()->eval(q);
+                cond = p->pop();
+                p->now(n);
+            }
+            if (cond->bvalue())     
+                action->qvalue()->eval(q);
+            else
+                break;
+        }
     }
 };
 
@@ -568,21 +767,35 @@ void Prologue::init(VFrame* frame) {
     frame->def("not", new Cnot());
 
     frame->def("choice", new Cchoice());
+    frame->def("ifte", new Cifte());
+    frame->def("if", new Cif());
+    frame->def("while", new Cwhile());
+    
+    frame->def("=", new Ceq());
+    frame->def("==", new Ceq());
+    frame->def("!=", new Cneq());
+    frame->def(">", new Cgt());
+    frame->def("<", new Clt());
+    frame->def("<=", new Clteq());
+    frame->def(">=", new Cgteq());
 
     frame->def("??", new Cshow());
+    
+    frame->def("integer?", new Cisinteger);
+    frame->def("double?", new Cisdouble);
+    frame->def("boolean?", new Cisbool);
+    frame->def("symbol?", new Cissym);
+    frame->def("list?", new Cisquote);
+    frame->def("char?", new Cischar);
+    frame->def("number?", new Cisnum);
+    frame->def("string?", new Cisstr);
+
 /*
         iframe.def("trans", _trans);
         iframe.def("java", _java);
 
         iframe.def("shield", _shield);
         iframe.def("throw", _throw);
-        iframe.def("stack", _stack);
-        iframe.def("unstack", _unstack);
-
-        //control structures
-        iframe.def("ifte", _ifte);
-        iframe.def("if", _if);
-        iframe.def("while", _while);
 
         //others
         iframe.def("?", _peek);
@@ -611,25 +824,6 @@ void Prologue::init(VFrame* frame) {
         iframe.def("split", _split_i);
         iframe.def("fold!", _fold);
         iframe.def("fold", _fold_i);
-
-        //bool
-        iframe.def("=", _eq);
-        iframe.def("==", _eq);
-        iframe.def("!=", _neq);
-        iframe.def(">", _gt);
-        iframe.def("<", _lt);
-        iframe.def("<=", _lteq);
-        iframe.def(">=", _gteq);
-
-        //predicates
-        iframe.def("integer?", _isinteger);
-        iframe.def("double?", _isdouble);
-        iframe.def("boolean?", _isbool);
-        iframe.def("symbol?", _issym);
-        iframe.def("list?", _islist);
-        iframe.def("char?", _ischar);
-        iframe.def("number?", _isnum);
-        iframe.def("string?", _isstr);
 
         iframe.def(">string", _tostring);
         iframe.def(">int", _toint);
