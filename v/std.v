@@ -47,9 +47,9 @@
 [min [a b : [[a b <] [a] [b] ifte]] view i].
 
 
-[all map true [and] fold].
+[all? map true [and] fold].
 [all! map! true [and] fold].
-[some map false [or] fold].
+[some? map false [or] fold].
 [some! map! false [or] fold].
 
 
