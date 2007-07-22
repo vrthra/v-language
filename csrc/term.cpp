@@ -59,8 +59,9 @@ char* Term::value() {
         case TString:
             return svalue();
         case TChar:
-            buffer[0] = cvalue();
-            buffer[1] = 0;
+            buffer[0] = '~';
+            buffer[1] = cvalue();
+            buffer[2] = 0;
             break;
         case TBool:
             return (char*) (bvalue() ? "true": "false");
