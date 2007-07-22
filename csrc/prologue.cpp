@@ -620,6 +620,12 @@ struct Cpeek : public Cmd {
     }
 };
 
+struct Chelp : public Cmd {
+    void eval(VFrame* q) {
+        V::outln(q->parent()->words()->to_s());
+    }
+};
+
 struct Cvdebug : public Cmd {
     void eval(VFrame* q) {
         V::outln("Q:%d",q->parent()->id());
@@ -658,6 +664,42 @@ struct Cview : public Cmd {
             tmpl->add(t);
         }
 
+        QuoteStream* res = new QuoteStream();
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            res->add(t);
+        }
+
+        QuoteStream* elem = new QuoteStream();
+        fstream = tmpl->iterator();
+        std::stack<Token*> st;
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            Token* e = p->pop();
+            st.push(e);
+        }
+        while(st.size()) {
+            elem->add(st.top());
+            st.pop();
+        }
+        SymbolMap symbols;
+        evaltmpl(tmpl, elem, symbols);
+
+        TokenStream* resstream = evalres(res, symbols);
+        CmdQuote* qs = new CmdQuote(resstream);
+        TokenIterator* i = qs->tokens()->iterator();
+        while(i->hasNext())
+            p->push(i->next());
+    }
+};
+
+struct Ctrans : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* v = p->pop();
+        TokenIterator* fstream =v->qvalue()->tokens()->iterator();
+        TokenStream* tmpl = fstream->next()->qvalue()->tokens();
+        
         QuoteStream* res = new QuoteStream();
         while(fstream->hasNext()) {
             Token* t = fstream->next();
@@ -921,6 +963,261 @@ struct Cat : public Cmd {
     }
 };
 
+struct Cmap : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+
+        QuoteStream* nts = new QuoteStream(); 
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+            Token* res = p->pop();
+            nts->add(res);
+        }
+        p->push(new Term(TQuote, new CmdQuote(nts)));
+    }
+};
+
+struct Cmap_i : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+
+        QuoteStream* nts = new QuoteStream(); 
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            Node* n = p->now();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+            Token* res = p->pop();
+            p->now(n);
+            nts->add(res);
+        }
+        p->push(new Term(TQuote, new CmdQuote(nts)));
+    }
+};
+
+struct Csplit : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+
+        QuoteStream* nts1 = new QuoteStream(); 
+        QuoteStream* nts2 = new QuoteStream(); 
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+            Token* res = p->pop();
+            if (res->bvalue())
+                nts1->add(res);
+            else
+                nts2->add(res);
+        }
+        p->push(new Term(TQuote, new CmdQuote(nts1)));
+        p->push(new Term(TQuote, new CmdQuote(nts2)));
+    }
+};
+
+struct Csplit_i : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+
+        QuoteStream* nts1 = new QuoteStream(); 
+        QuoteStream* nts2 = new QuoteStream(); 
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            Node* n = p->now();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+            Token* res = p->pop();
+            p->now(n);
+            if (res->bvalue())
+                nts1->add(res);
+            else
+                nts2->add(res);
+        }
+        p->push(new Term(TQuote, new CmdQuote(nts1)));
+        p->push(new Term(TQuote, new CmdQuote(nts2)));
+    }
+};
+
+struct Cfilter : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+
+        QuoteStream* nts = new QuoteStream(); 
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+            Token* res = p->pop();
+            if (res->bvalue())
+                nts->add(res);
+        }
+        p->push(new Term(TQuote, new CmdQuote(nts)));
+    }
+};
+
+struct Cfilter_i : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+
+        QuoteStream* nts = new QuoteStream(); 
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            Node* n = p->now();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+            Token* res = p->pop();
+            p->now(n);
+            if (res->bvalue())
+                nts->add(res);
+        }
+        p->push(new Term(TQuote, new CmdQuote(nts)));
+    }
+};
+
+struct Cfold : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* init = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        p->push(init);
+        QuoteStream* nts = new QuoteStream(); 
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+        }
+        // The result will be on the stack at the end of the cycle.
+        //Term* res = p->pop();
+        //p->push(res);
+    }
+};
+
+struct Cfold_i : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* init = p->pop();
+        Token* list = p->pop();
+
+        Node* n = p->now();
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        p->push(init);
+        QuoteStream* nts = new QuoteStream(); 
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+        }
+        // The result will be on the stack at the end of the cycle.
+        Token* res = p->pop();
+        p->now(n);
+        p->push(res);
+    }
+};
+
+struct Cstep : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+        }
+    }
+};
+
+struct Cdrop : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        int num = p->pop()->ivalue();
+        Token* list = p->pop();
+
+        QuoteStream* nts = new QuoteStream();
+        TokenIterator* i = list->qvalue()->tokens()->iterator();
+        while(i->hasNext()) {
+            Token* t = i->next();
+            if (num <= 0)
+                nts->add(t);
+            --num;
+        }
+        p->push(new Term(TQuote, new CmdQuote(nts)));
+    }
+};
+
+struct Ctake : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        int num = p->pop()->ivalue();
+        Token* list = p->pop();
+        int count = 0;
+
+        QuoteStream* nts = new QuoteStream();
+        TokenIterator* i = list->qvalue()->tokens()->iterator();
+        while(i->hasNext()) {
+            Token* t = i->next();
+            if (count >= num)
+                break;
+            ++count;
+            nts->add(t);
+        }
+        p->push(new Term(TQuote, new CmdQuote(nts)));
+    }
+};
+
 void Prologue::init(VFrame* frame) {
     frame->def(".", new Cdef());
     frame->def("&.", new Cdefenv());
@@ -936,6 +1233,7 @@ void Prologue::init(VFrame* frame) {
     frame->def("&i", new Cdequote());
 
     frame->def("view", new Cview());
+    frame->def("trans", new Ctrans());
     frame->def("use", new Cuse());
     frame->def("&use", new Cuseenv());
     frame->def("eval", new Ceval());
@@ -993,28 +1291,25 @@ void Prologue::init(VFrame* frame) {
     frame->def("size", new Csize());
     frame->def("in?", new Cin());
     frame->def("at", new Cat());
+
+    frame->def("step", new Cstep);
+    frame->def("map!", new Cmap);
+    frame->def("map", new Cmap_i);
+    frame->def("filter!", new Cfilter);
+    frame->def("filter", new Cfilter_i);
+    frame->def("split!", new Csplit);
+    frame->def("split", new Csplit_i);
+    frame->def("fold!", new Cfold);
+    frame->def("fold", new Cfold_i);
+
+    frame->def("drop", new Cdrop);
+    frame->def("take", new Ctake);
+    
+    frame->def("help", new Chelp);
 /*
-        iframe.def("trans", _trans);
         iframe.def("java", _java);
         iframe.def("shield", _shield);
         iframe.def("throw", _throw);
-        iframe.def("help", _help);
-
-        //list
-        iframe.def("drop", _drop);
-        iframe.def("take", _take);
-
-
-        // on list
-        iframe.def("step", _step);
-        iframe.def("map!", _map);
-        iframe.def("map", _map_i);
-        iframe.def("filter!", _filter);
-        iframe.def("filter", _filter_i);
-        iframe.def("split!", _split);
-        iframe.def("split", _split_i);
-        iframe.def("fold!", _fold);
-        iframe.def("fold", _fold_i);
 
         Quote libs = Util.getdef("'std' use");
         libs.eval(iframe);
