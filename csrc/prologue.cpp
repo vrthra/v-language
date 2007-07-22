@@ -507,6 +507,27 @@ struct Cshow : public Cmd {
     }
 };
 
+struct Cpeek : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        if (p->empty())
+            V::outln("");
+        else {
+            Token* t = p->peek();
+            V::outln(t->value());
+        }
+    }
+};
+
+struct Cvdebug : public Cmd {
+    void eval(VFrame* q) {
+        V::outln("%d",q->parent()->id());
+        VStack* p = q->stack();
+        p->dump();
+        //V::outln(q->words()->value());
+    }
+};
+
 struct Cview : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
@@ -780,6 +801,9 @@ void Prologue::init(VFrame* frame) {
     frame->def(">=", new Cgteq());
 
     frame->def("??", new Cshow());
+    frame->def("?stack", new Cshow());
+    frame->def("?", new Cpeek());
+    frame->def("?debug", new Cvdebug());
     
     frame->def("integer?", new Cisinteger);
     frame->def("double?", new Cisdouble);
