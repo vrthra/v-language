@@ -46,17 +46,15 @@ Token* VStack::peek() {
 
 Node* VStack::getList() {
     Node* current = _now;
-    Node* result = new Node(0);
-    result->link = 0;
+    Node* result = 0;
     Node* t = 0;
-    while (current && current->link) {
-        result->data = current->data;
-        t = new Node(0);
+    while (current && current->data) {
+        t = new Node(current->data);
         t->link = result;
         result = t;
         current = current->link;
     }
-    return result->link;
+    return result;
 }
 
 Quote* VStack::quote() {
