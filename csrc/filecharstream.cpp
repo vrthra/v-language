@@ -6,11 +6,11 @@
 FileCharStream::FileCharStream(char* filename):BuffCharStream(0) {
     std::stringstream os;
     std::filebuf fb;
-    char buffer[1024];
+    char buffer[MaxBuf];
     fb.open(filename, std::ios::in);
     std::istream is(&fb);
     while(!is.eof()) {
-        is.getline(buffer, 1024);
+        is.getline(buffer, MaxBuf);
         os << buffer;
     }
     _buf = new char[os.str().length() +1];

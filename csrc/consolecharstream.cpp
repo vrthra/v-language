@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lexer.h"
+#include "v.h"
 char ConsoleCharStream::read() {
     if (strlen(_buf) > (_index + 1)) {
         ++_index;
@@ -30,9 +31,7 @@ ConsoleCharStream::ConsoleCharStream() {
 char* ConsoleCharStream::read_nobuf() {
     if (_lexer->closed())
         printf("|");
-    else
-        printf("");
-    if(!fgets(_buf, 1024, stdin))
+    if(!fgets(_buf, MaxBuf, stdin))
         exit(0); //^D
     return _buf;
 }

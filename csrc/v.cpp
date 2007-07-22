@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include "type.h"
 #include "term.h"
 #include "vstack.h"
@@ -17,12 +18,21 @@ bool V::singleassign = true;
 bool singleassign() {
     return V::singleassign;
 }
-// TODO: replace it by varargs.
-void V::outln(char* var, char* c) {
-    printf("%s%s\n", var,c);
+
+void V::out(char *var, ...) {
+    va_list argp;
+    va_start(argp, var);
+    vfprintf(stdout, var, argp);
+    va_end(argp);
+
 }
-void V::outln(char* var) {
-    printf("%s\n", var);
+
+void V::outln(char *var, ...) {
+    va_list argp;
+    va_start(argp, var);
+    vfprintf(stdout, var, argp);
+    va_end(argp);
+    fprintf(stdout, "\n");
 }
 
 void V::banner() {
@@ -38,7 +48,7 @@ class PQuote : public CmdQuote {
                 try {
                     CmdQuote::dofunction(scope);
                 } catch (Vx& e) {
-                    V::outln(">", e.message());
+                    V::outln(">%s", e.message());
                     scope->dump();
                 }
             } else {

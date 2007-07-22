@@ -3,6 +3,7 @@
 #include "term.h"
 #include "charstream.h"
 #include "vexception.h"
+#include "v.h"
 Lexer::Lexer(CharStream* q) {
     _stream = q;
     _stream->lexer(this);
@@ -68,9 +69,9 @@ bool Lexer::closed() {
 }
 void Lexer::dump() {
     for (std::list<Term*>::iterator i = _queue.begin(); i != _queue.end(); i++) {
-        printf("%s;", *i);
+        V::out("%s;", *i);
     }
-    printf("\n");
+    V::outln("");
 }
 bool Lexer::hasNext() {
     return _has;

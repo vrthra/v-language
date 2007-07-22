@@ -1,13 +1,20 @@
 #ifndef VEXCEPTION_H
 #define VEXCEPTION_H
+#include <sstream>
 #include "vx.h"
-struct VException : public Vx {
-    char _message[1024];
-    char _detail[2048];
-    VException(char* v, char* u);
-    char* message();
+class VException : public Vx {
+    public:
+        VException(char* err, char* msgfmt, ...);
+        virtual char* message();
+        virtual void addLine(char* v, ...);
+        std::stringstream* info;
 };
-struct VSynException : public VException {
-    VSynException(char* v, char* u):VException(v,u) {}
+
+class VSynException : public Vx {
+    public:
+        VSynException(char* err, char* msgfmt, ...);
+        virtual char* message();
+        virtual void addLine(char* v, ...);
+        std::stringstream* info;
 };
 #endif

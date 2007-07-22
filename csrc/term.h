@@ -36,5 +36,7 @@ class Term : public Token {
             VFrame* _fval;
         };
         Num _num;
+        char* stype(Type t);
+        void checkType(Type t, Term* term);
 };
 #endif

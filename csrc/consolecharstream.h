@@ -12,7 +12,7 @@ class ConsoleCharStream : public CharStream {
         virtual void lexer(Lexer* l);
         virtual bool eof();
     private:
-        char _buf[1024];
+        char _buf[MaxBuf];
         int _index;
         Lexer* _lexer;
         char _current;

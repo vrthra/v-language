@@ -12,6 +12,7 @@
 #include "filecharstream.h"
 #include "lexstream.h"
 #include "vexception.h"
+#include "v.h"
 char* buff =
 #include "std.h"
 ;
@@ -176,20 +177,12 @@ struct Cadd : public Cmd {
             p->push(new Term(TDouble, dres));
     }
 };
+
 struct Cputs : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
         Token* a = p->pop();
-        switch(a->type()) {
-            case TInt:
-                printf("%d\n",a->ivalue());
-                break;
-            case TDouble:
-                printf("%f\n",a->dvalue());
-                break;
-            default:
-                printf(">%d\n",a->dvalue());
-        }
+        V::outln(a->value());
     }
 };
 
