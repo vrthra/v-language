@@ -2,11 +2,13 @@
 #include "cmdquote.h"
 #include "vframe.h"
 #include "vstack.h"
+#include "cmd.h"
 #include "quotestream.h"
 #include "lexstream.h"
 #include "buffcharstream.h"
 #include "quoteiterator.h"
 #include "vexception.h"
+#include "prologue.h"
 
 void CmdQuote::eval(VFrame* scope) {
     VStack* stack = scope->stack();
@@ -39,7 +41,23 @@ void CmdQuote::dofunction(VFrame* scope) {
             throw e;
         }
     } catch (VException& e) {
-        // TODO: shield
+        if(scope->dict().find("$shield") == scope->dict().end())
+            throw e;
+        Cmd* q = (Cmd*)scope->dict()["$shield"];
+        if (q->store().find("$info") == q->store().end())
+            throw e;
+        Shield* current = q->store()["$info"];
+        while(current) {
+            // apply shield
+            scope->stack()->push(new Term(TQuote, e.quote()));
+            current->quote->eval(scope);
+            if (st->pop()->bvalue()) {
+                // restore the stack and continue.
+                st->now(current->stack);
+                return;
+            }
+            current = current->next;
+        }
         throw e;
     }
 }

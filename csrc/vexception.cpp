@@ -1,11 +1,12 @@
 #include "vexception.h"
 #include "charstream.h"
+#include "cmdquote.h"
 #include <stdarg.h>
 
 VException::VException(char* err, char* msgfmt, ...) {
     info = new std::stringstream();
     *info << err;
-
+    _err = err;
     char buffer[MaxBuf];
     va_list argp;
     va_start(argp, msgfmt);
@@ -16,6 +17,10 @@ VException::VException(char* err, char* msgfmt, ...) {
 
 char* VException::message() {
     return (char*)info->str().c_str();
+}
+
+Quote* VException::quote() {
+    return CmdQuote::getdef(_err);
 }
 
 void VException::addLine(char* v, ...) {
