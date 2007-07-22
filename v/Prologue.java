@@ -1391,14 +1391,14 @@ public class Prologue {
 
         // on list
         iframe.def("step", _step);
-        iframe.def("map", _map);
-        iframe.def("map&", _map_i);
-        iframe.def("filter", _filter);
-        iframe.def("filter&", _filter_i);
-        iframe.def("split", _split);
-        iframe.def("split&", _split_i);
-        iframe.def("fold", _fold);
-        iframe.def("fold&", _fold_i);
+        iframe.def("map!", _map);
+        iframe.def("map", _map_i);
+        iframe.def("filter!", _filter);
+        iframe.def("filter", _filter_i);
+        iframe.def("split!", _split);
+        iframe.def("split", _split_i);
+        iframe.def("fold!", _fold);
+        iframe.def("fold", _fold_i);
 
         //arith
         iframe.def("+", _add);

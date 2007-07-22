@@ -256,7 +256,7 @@
 [qsort
     [small?]
     []
-    [uncons [>] split&]
+    [uncons [>] split]
     [[swap] dip cons concat]
     binrec].
 
@@ -268,7 +268,7 @@
         l1 p l2 cons concat].
     [small?]
     []
-    [uncons [>] split&]
+    [uncons [>] split]
     [joinparts]
     binrec].
 
@@ -278,7 +278,7 @@
     [joinparts [p [*l1] [*l2] : [*l1 p *l2]] view].
     [small?]
     []
-    [uncons [>] split&]
+    [uncons [>] split]
     [joinparts]
     binrec].
 
@@ -286,7 +286,7 @@
 #=========================================
 [qsort3
     [joinparts [p [*l1] [*l2] : [*l1 p *l2]] view].
-    [split_on_first_element uncons [>] split&].
+    [split_on_first_element uncons [>] split].
     [small?]
         []
         [split_on_first_element [l1 l2 : [l1 qsort3 l2 qsort3 joinparts]] view i]

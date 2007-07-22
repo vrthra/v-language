@@ -48,9 +48,9 @@
 
 
 [all map true [and] fold].
-[all& map& true [and] fold].
+[all! map! true [and] fold].
 [some map false [or] fold].
-[some& map& false [or] fold].
+[some! map! false [or] fold].
 
 
 [xor [a b : a b a b] view or [and not] dip and].
@@ -63,7 +63,7 @@
 [swoncat swap concat].
 [unitlist [] cons].
 # parents 1 for map, 2 for let
-[let reverse [unit cons reverse $me &parent &parent &. true] map pop].
+[let reverse [unit cons reverse $me &parent &parent &. true] map! pop].
 
 [abs unit [java.lang.Math abs] concat java].
 [acos unit [java.lang.Math acos] concat java].
@@ -100,7 +100,7 @@
     [null?]
     [unitlist]
     [uncons]
-    [dup swapd [cons] map& popd swoncat]
+    [dup swapd [cons] map popd swoncat]
     linrec].
 
 
@@ -194,6 +194,6 @@
     ifte
 ].
 
-[treereverse [] [reverse] [map&] treegenrec].
-[treemap [] [map&] treegenrec].
+[treereverse [] [reverse] [map] treegenrec].
+[treemap [] [map] treegenrec].
 #[treemap [map] treerec].
