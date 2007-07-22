@@ -1431,9 +1431,9 @@ public class Prologue {
 
         //modules
         iframe.def("use", _use);
-        iframe.def("*use", _useenv);
+        iframe.def("&use", _useenv);
         iframe.def("eval", _eval);
-        iframe.def("*eval", _evalenv);
+        iframe.def("&eval", _evalenv);
 
         iframe.def("help", _help);
 
