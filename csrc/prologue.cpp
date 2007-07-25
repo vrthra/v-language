@@ -178,7 +178,7 @@ bool isEq(Token* a, Token* b) {
     switch(a->type()) {
         case TInt:
         case TDouble:
-            return (b->numvalue().d() - a->numvalue().d()) < Precision;
+            return fabs(b->numvalue().d() - a->numvalue().d()) < Precision;
         case TString:
             if (b->type() != TString)
                 throw VException("err:type:eq", "%s != %s (type)", a->value(), b->value());
