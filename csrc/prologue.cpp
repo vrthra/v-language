@@ -781,7 +781,7 @@ struct Cuse : public Cmd {
             CmdQuote* module = new CmdQuote(new LexStream(cs));
             module->eval(q->parent());
         } catch (...) {
-            throw new VException("err:use", file->value());
+            throw VException("err:use", file->value());
         }
     }
 };
@@ -801,7 +801,7 @@ struct Cuseenv : public Cmd {
             CmdQuote* module = new CmdQuote(new LexStream(cs));
             module->eval(env->fvalue());
         } catch (...) {
-            throw new VException("err:*use", "%s %s",env->value(), file->value());
+            throw VException("err:*use", "%s %s",env->value(), file->value());
         }
     }
 };
@@ -817,7 +817,7 @@ struct Ceval : public Cmd {
             CmdQuote* module = new CmdQuote(new LexStream(cs));
             module->eval(q->parent());
         } catch (...) {
-            throw new VException("err:eval", str->value());
+            throw VException("err:eval", str->value());
         }
     }
 };
@@ -834,7 +834,7 @@ struct Cevalenv : public Cmd {
             CmdQuote* module = new CmdQuote(new LexStream(cs));
             module->eval(env->fvalue());
         } catch (...) {
-            throw new VException("err:*eval", "%s %s", env->value(), str->value());
+            throw VException("err:*eval", "%s %s", env->value(), str->value());
         }
     }
 };
@@ -1341,9 +1341,6 @@ void Prologue::init(VFrame* frame) {
     frame->def("help", new Chelp);
     frame->def("throw", new Cthrow);
     frame->def("shield", new Cshield);
-/*
-        iframe.def("java", _java);
-        Quote libs = Util.getdef("'std' use");
-        libs.eval(iframe);
- */
+    Quote* libs = CmdQuote::getdef("'std' use");
+    libs->eval(frame);
 }

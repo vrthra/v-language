@@ -68,24 +68,24 @@ void V::main(int argc, char** argv) {
     // setup the world quote
 
     Prologue::init(frame);
-    try {
-        // do we have any args?
-        CharStream* cs = 0;
-        if (argc > 1) {
-            cs = new FileCharStream(argv[1]);
-        } else {
-            banner();
-            cs = new ConsoleCharStream();
-        }
-        PQuote* program = new PQuote(new LexStream(cs), i);
-        program->eval(frame->child());
-    } catch (Vx& e) {
-        V::outln(e.message());
+    // do we have any args?
+    CharStream* cs = 0;
+    if (argc > 1) {
+        cs = new FileCharStream(argv[1]);
+    } else {
+        banner();
+        cs = new ConsoleCharStream();
     }
+    PQuote* program = new PQuote(new LexStream(cs), i);
+    program->eval(frame->child());
 }
 
 
 int main(int argc, char** argv) {
-    V::main(argc, argv);
+    try {
+        V::main(argc, argv);
+    } catch (Vx& e) {
+        V::outln(e.message());
+    }
     return 0;
 }
