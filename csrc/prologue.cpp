@@ -780,6 +780,9 @@ struct Cuse : public Cmd {
             FileCharStream* cs = new FileCharStream(val);
             CmdQuote* module = new CmdQuote(new LexStream(cs));
             module->eval(q->parent());
+        } catch (VException& e) {
+            e.addLine("use %s", file->value());
+            throw e;
         } catch (...) {
             throw VException("err:use", file->value());
         }
@@ -800,6 +803,8 @@ struct Cuseenv : public Cmd {
             FileCharStream* cs = new FileCharStream(val);
             CmdQuote* module = new CmdQuote(new LexStream(cs));
             module->eval(env->fvalue());
+        } catch (VException& e) {
+            e.addLine("*use %s", file->value());
         } catch (...) {
             throw VException("err:*use", "%s %s",env->value(), file->value());
         }
@@ -816,6 +821,8 @@ struct Ceval : public Cmd {
             BuffCharStream* cs = new BuffCharStream(v);
             CmdQuote* module = new CmdQuote(new LexStream(cs));
             module->eval(q->parent());
+        } catch (VException& e) {
+            e.addLine("eval %s", str->value());
         } catch (...) {
             throw VException("err:eval", str->value());
         }
@@ -833,6 +840,8 @@ struct Cevalenv : public Cmd {
             BuffCharStream* cs = new BuffCharStream(v);
             CmdQuote* module = new CmdQuote(new LexStream(cs));
             module->eval(env->fvalue());
+        } catch (VException& e) {
+            e.addLine("*eval %s", str->value());
         } catch (...) {
             throw VException("err:*eval", "%s %s", env->value(), str->value());
         }

@@ -11,9 +11,10 @@ FileCharStream::FileCharStream(char* filename):BuffCharStream(0) {
     std::istream is(&fb);
     while(!is.eof()) {
         is.getline(buffer, MaxBuf);
-        os << buffer;
+        os << buffer << "\n";
     }
-    _buf = new char[os.str().length() +1];
+    _len = os.str().length();
+    _buf = new char[_len +1];
     std::strcpy(_buf, os.str().c_str());
     _buf[strlen(_buf)] = 0;
 }
