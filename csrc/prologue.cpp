@@ -1269,7 +1269,7 @@ void Prologue::init(VFrame* frame) {
     frame->def("&words", new Cwords());
 
     frame->def("puts", new Cputs());
-    frame->def("put", new Cputs());
+    frame->def("put", new Cput());
 
     frame->def("i", new Cdequote());
     frame->def("&i", new Cdequote());
