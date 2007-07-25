@@ -1,5 +1,6 @@
 #ifndef NUM_H
 #define NUM_H
+#include <math.h>
 struct Num {
     union {
         long _i;
@@ -27,7 +28,7 @@ struct Num {
     double d() {
         switch (type) {
             case 0:
-                return (double)_i;
+                return _i * 1.0;
             case 1:
                 return _d;
         }

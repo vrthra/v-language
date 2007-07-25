@@ -211,12 +211,16 @@ bool isint(char* v) {
     return true;
 }
 bool isfloat(char* v) {
-    while(*v) {
-        if (!isdigit(*v) || *v == '.')
-            return false;
-        ++v;
-    }
-    return true;
+    int len = strlen(v);
+    if (len < 2)
+        return false;
+    char* one = strchr(v, '.');
+    if (!one)
+        return false;
+    *one = '1';
+    bool res = isint(v);
+    *one = '.';
+    return res;
 }
 void Lexer::word() {
     _word->push_back(_stream->current());

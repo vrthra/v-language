@@ -178,7 +178,7 @@ bool isEq(Token* a, Token* b) {
     switch(a->type()) {
         case TInt:
         case TDouble:
-            return a->numvalue().d() == b->numvalue().d();
+            return (b->numvalue().d() - a->numvalue().d()) < Precision;
         case TString:
             if (b->type() != TString)
                 throw VException("err:type:eq", "%s != %s (type)", a->value(), b->value());
@@ -215,8 +215,8 @@ struct Cfalse : public Cmd {
 struct Cadd : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         double dres = a->numvalue().d() + b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
@@ -229,8 +229,8 @@ struct Cadd : public Cmd {
 struct Csub : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         double dres = a->numvalue().d() - b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
@@ -243,8 +243,8 @@ struct Csub : public Cmd {
 struct Cmul : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         double dres = a->numvalue().d() * b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
@@ -257,8 +257,8 @@ struct Cmul : public Cmd {
 struct Cdiv : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         double dres = a->numvalue().d() / b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
@@ -271,8 +271,8 @@ struct Cdiv : public Cmd {
 struct Cand : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         bool res = a->bvalue() && b->bvalue();
         p->push(new Term(TBool, res));
     }
@@ -281,8 +281,8 @@ struct Cand : public Cmd {
 struct Cor : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         bool res = a->bvalue() || b->bvalue();
         p->push(new Term(TBool, res));
     }
@@ -465,8 +465,8 @@ struct Ctochar : public Cmd {
 struct Cgt : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         p->push(new Term(TBool, isGt(a,b)));
     }
 };
@@ -474,8 +474,8 @@ struct Cgt : public Cmd {
 struct Clt : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         p->push(new Term(TBool, isLt(a,b)));
     }
 };
@@ -483,8 +483,8 @@ struct Clt : public Cmd {
 struct Clteq : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         p->push(new Term(TBool, !isGt(a,b)));
     }
 };
@@ -492,8 +492,8 @@ struct Clteq : public Cmd {
 struct Cgteq : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         p->push(new Term(TBool, !isLt(a,b)));
     }
 };
@@ -501,8 +501,8 @@ struct Cgteq : public Cmd {
 struct Ceq : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         p->push(new Term(TBool, isEq(a,b)));
     }
 };
@@ -510,8 +510,8 @@ struct Ceq : public Cmd {
 struct Cneq : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* a = p->pop();
         Token* b = p->pop();
+        Token* a = p->pop();
         p->push(new Term(TBool, !isEq(a,b)));
     }
 };

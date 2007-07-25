@@ -1,6 +1,7 @@
 #ifndef CHARSTREAM_H
 #define CHARSTREAM_H
 struct Lexer;
+static const double Precision = 0.0000000000000001;
 static const int MaxBuf = 1024;
 struct CharStream {
    virtual char read()=0;
