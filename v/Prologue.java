@@ -613,7 +613,7 @@ public class Prologue {
         public void eval(VFrame q) {
             V.outln(q.parent().id());
               q.stack().dump();
-              for(String s: sort(q.dict().keySet())) V.out(s + " ");
+              for(String s: sort(q.parent().dict().keySet())) V.out(s + " ");
               V.outln("\n________________");
         }
     };
