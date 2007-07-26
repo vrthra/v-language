@@ -428,59 +428,6 @@
 ] 'view(named reverse *)' test
 
 #=======================================
-#java
-[
-    9 =
-]
-[
-    ["I am here" length] java
-] 'java(primitive)' test
-
-[
-    100 =
-]
-[
-    [-100 java.lang.Math abs] java
-] 'java(static method)' test
-
-[
-    integer?
-]
-[
-    [java.util.Date new] java unit [getDay] concat java
-] 'java(constructor)' test
-
-[
-    'abc' =
-]
-[
-    [[~a ~b ~c] java.lang.String new] java
-] 'java(array)' test
-
-[
-    '0.001' =
-]
-[
-    ['0.001' v.V version$] java
-] 'java(field write access)' test
-
-[
-    '0.001' =
-]
-[
-    [v.V version$] java
-] 'java(field read access)' test
-
-#=============================================
-# math
-[
-    0.8762980611683406 =
-]
-[
-    0.64 acos
-] 'math acos' test
-
-#=============================================
 #locals
 [
     100 =
@@ -535,17 +482,6 @@
     [1 2 3]  powerlist
 ] 'powerlist' test
 #=============================================
-#shield
-[cmdthrows
-        [dup puts 'false shield' puts false] shield
-        'hi there throw' throw].
-[mycmd
-        [dup puts 'true shield' puts true] shield
-        cmdthrows].
-mycmd
-
-
-#=============================================
 #modules
 [tst [using open]
     [open 'abc'].
@@ -557,6 +493,70 @@ mycmd
 [put ' throw expected (success)' puts true] shield
 ['def' =] [tst:using] 'module' test
 ['!' =] [tst:hide] 'module' test
+#=============================================
+#shield
+[cmdthrows
+        [dup puts 'false shield' puts false] shield
+        'hi there throw' throw].
+[mycmd
+        [dup puts 'true shield' puts true] shield
+        cmdthrows].
+mycmd
+
+#=============================================
+#java
+[
+    9 =
+]
+[
+    ["I am here" length] java
+] 'java(primitive)' test
+
+[
+    100 =
+]
+[
+    [-100 java.lang.Math abs] java
+] 'java(static method)' test
+
+[
+    integer?
+]
+[
+    [java.util.Date new] java unit [getDay] concat java
+] 'java(constructor)' test
+
+[
+    'abc' =
+]
+[
+    [[~a ~b ~c] java.lang.String new] java
+] 'java(array)' test
+
+[
+    '0.001' =
+]
+[
+    ['0.001' v.V version$] java
+] 'java(field write access)' test
+
+[
+    '0.001' =
+]
+[
+    [v.V version$] java
+] 'java(field read access)' test
+
+#=============================================
+# math
+[
+    0.8762980611683406 =
+]
+[
+    0.64 acos
+] 'math acos' test
+
+#=============================================
 
 ??
 "--------Success-----------" puts
