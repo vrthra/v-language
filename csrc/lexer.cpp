@@ -203,6 +203,9 @@ void Lexer::character() {
     add(new Term(TChar, _stream->read()));
 }
 bool isint(char* v) {
+    if (*v == '-') ++v;
+    if(!strlen(v))
+        return false;
     while(*v) {
         if (!isdigit(*v))
             return false;
@@ -211,6 +214,7 @@ bool isint(char* v) {
     return true;
 }
 bool isfloat(char* v) {
+    if (*v == '-') ++v;
     int len = strlen(v);
     if (len < 2)
         return false;
