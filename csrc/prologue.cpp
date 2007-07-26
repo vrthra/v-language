@@ -866,8 +866,10 @@ struct Cmodule : public Cmd {
         CmdQuote* qval = new CmdQuote(nts);
         qval->eval(q);
 
+        Term* f = new Term(TFrame, q);
+
         QuoteStream* fts = new QuoteStream();
-        fts->add(new Term(TFrame, q));
+        fts->add(new Term(TFrame, f));
         q->parent()->def(special(module), new CmdQuote(fts));
 
         // bind all published tokens to parent namespace.
@@ -1284,7 +1286,7 @@ void Prologue::init(VFrame* frame) {
     frame->def("put", new Cput());
 
     frame->def("i", new Cdequote());
-    frame->def("&i", new Cdequote());
+    frame->def("&i", new Cdequoteenv());
 
     frame->def("view", new Cview());
     frame->def("trans", new Ctrans());
