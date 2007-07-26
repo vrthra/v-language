@@ -869,7 +869,7 @@ struct Cmodule : public Cmd {
         Term* f = new Term(TFrame, q);
 
         QuoteStream* fts = new QuoteStream();
-        fts->add(new Term(TFrame, f));
+        fts->add(f);
         q->parent()->def(special(module), new CmdQuote(fts));
 
         // bind all published tokens to parent namespace.
