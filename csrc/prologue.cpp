@@ -1254,12 +1254,24 @@ struct Cshield : public Cmd {
         }
     }
 };
+
 struct Cthrow : public Cmd {
     void eval(VFrame* q) {
         throw VException("err:throw", q->stack()->peek()->value());
     }
 };
 
+struct Csqrt : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* t = p->pop();
+        double num = t->numvalue().d();
+        if (num != fabs(num))
+            throw VException("err:sqrt:negetive",t->value());
+        p->push(new Term(TDouble, sqrt(num)));
+    }
+};
+ 
 void Prologue::init(VFrame* frame) {
     frame->def(".", new Cdef());
     frame->def("&.", new Cdefenv());
@@ -1350,6 +1362,10 @@ void Prologue::init(VFrame* frame) {
     frame->def("help", new Chelp);
     frame->def("throw", new Cthrow);
     frame->def("shield", new Cshield);
+
+    // math
+    frame->def("sqrt", new Csqrt);
+
     Quote* libs = CmdQuote::getdef("'std' use");
     libs->eval(frame);
 }
