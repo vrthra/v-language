@@ -1016,7 +1016,6 @@ public class Prologue {
 
             Term prog = p.pop();
             Term env = p.pop();
-            V.outln(prog.value());
             prog.qvalue().eval(env.fvalue()); // apply on parent
         }
     };
