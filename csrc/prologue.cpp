@@ -13,9 +13,9 @@
 #include "lexstream.h"
 #include "vexception.h"
 #include "v.h"
-char* buff =
+/*char* buff =
 #include "std.h"
-;
+;*/
 
 typedef std::map<char*, Token*, cmp_str> SymbolMap;
 typedef std::pair<char*, Quote*> SymPair;
@@ -1093,7 +1093,7 @@ struct Cfilter : public Cmd {
             action->qvalue()->eval(q);
             Token* res = p->pop();
             if (res->bvalue())
-                nts->add(res);
+                nts->add(t);
         }
         p->push(new Term(TQuote, new CmdQuote(nts)));
     }
@@ -1118,7 +1118,7 @@ struct Cfilter_i : public Cmd {
             Token* res = p->pop();
             p->now(n);
             if (res->bvalue())
-                nts->add(res);
+                nts->add(t);
         }
         p->push(new Term(TQuote, new CmdQuote(nts)));
     }
