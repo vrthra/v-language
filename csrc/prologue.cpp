@@ -1038,9 +1038,9 @@ struct Csplit : public Cmd {
             action->qvalue()->eval(q);
             Token* res = p->pop();
             if (res->bvalue())
-                nts1->add(res);
+                nts1->add(t);
             else
-                nts2->add(res);
+                nts2->add(t);
         }
         p->push(new Term(TQuote, new CmdQuote(nts1)));
         p->push(new Term(TQuote, new CmdQuote(nts2)));
@@ -1067,9 +1067,9 @@ struct Csplit_i : public Cmd {
             Token* res = p->pop();
             p->now(n);
             if (res->bvalue())
-                nts1->add(res);
+                nts1->add(t);
             else
-                nts2->add(res);
+                nts2->add(t);
         }
         p->push(new Term(TQuote, new CmdQuote(nts1)));
         p->push(new Term(TQuote, new CmdQuote(nts2)));
