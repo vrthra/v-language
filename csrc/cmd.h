@@ -2,11 +2,12 @@
 #define CMD_H
 #include <map>
 #include "quote.h"
+#include "vframe.h"
 class TokenStream;
 class Shield;
 class Cmd : public Quote {
     public:
-        typedef std::map<char*, Shield*> VMap;
+        typedef std::map<char*, Shield*, cmp_str> VMap;
         VMap& store() {
             return _store;
         }

@@ -1244,14 +1244,14 @@ struct Cshield : public Cmd {
         
         Cmd* shield = 0;
         Shield* s = new Shield(p, t->qvalue());
-        if(q->parent()->dict().find("$shield") == q->dict().end()) {
+        if(q->parent()->dict().find("$shield") == q->parent()->dict().end()) {
             shield = new CmdShield();
             shield->store()["$info"] = s;
             q->parent()->def("$shield",shield);
         } else {
-            shield = (Cmd*)q->dict()["$shield"];
+            shield = (Cmd*)q->parent()->dict()["$shield"];
             Shield* os = shield->store()["$info"];
-            s->next = os;  
+            s->next = os;
             shield->store()["$info"] = s;
         }
     }
