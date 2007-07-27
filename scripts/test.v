@@ -490,6 +490,8 @@
 ] module
 
 ['abc' =] [tst:open] 'module' test
+# this shield will even catch the java tests since they are in the
+# same scope.
 [put ' throw expected (success)' puts true] shield
 ['def' =] [tst:using] 'module' test
 ['!' =] [tst:hide] 'module' test
