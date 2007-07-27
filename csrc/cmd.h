@@ -1,8 +1,8 @@
 #ifndef CMD_H
 #define CMD_H
 #include <map>
+#include "common.h"
 #include "quote.h"
-#include "vframe.h"
 class TokenStream;
 class Shield;
 class Cmd : public Quote {

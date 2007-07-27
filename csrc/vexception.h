@@ -2,10 +2,12 @@
 #define VEXCEPTION_H
 #include <sstream>
 #include "vx.h"
+#include "token.h"
 class Quote;
 class VException : public Vx {
     public:
         VException(char* err, char* msgfmt, ...);
+        VException(char* err, Token* t, char* msgfmt, ...);
         virtual char* message();
         virtual void addLine(char* v, ...);
         std::stringstream* info;

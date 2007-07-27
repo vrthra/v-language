@@ -1,15 +1,8 @@
 #ifndef VFRAME_H
 #define VFRAME_H
 #include <string>
-#include <map>
+#include "common.h"
 class Quote;
-struct cmp_str {
-    bool operator()(char const *a, char const *b) {
-        return std::strcmp(a, b) < 0;
-    }
-};
-
-typedef std::map<char*, Quote*, cmp_str> QMap;
 class VStack;
 class VFrame {
     public:

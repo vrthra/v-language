@@ -3,6 +3,18 @@
 #include "cmdquote.h"
 #include <stdarg.h>
 
+VException::VException(char* err, Token* t, char* msgfmt, ...) {
+    info = new std::stringstream();
+    *info << err;
+    _err = err;
+    char buffer[MaxBuf];
+    va_list argp;
+    va_start(argp, msgfmt);
+    std::vsprintf(buffer, msgfmt, argp);
+    va_end(argp);
+    *info <<' '<< buffer;
+}
+
 VException::VException(char* err, char* msgfmt, ...) {
     info = new std::stringstream();
     *info << err;
