@@ -30,10 +30,10 @@ void CmdQuote::dofunction(VFrame* scope) {
     try {
         Token* sym = st->pop();
         if (sym->type()!= TSymbol)
-            throw VException("err:not_symbol", "%s %s", sym->value(), "Not a symbol");
+            throw VException("err:not_symbol", sym, "%s %s", sym->value(), "Not a symbol");
         Quote* q = scope->lookup(sym->svalue());
         if (!q)
-            throw VException("err:undef_symbol", "%s %s", sym->value(), "Undefined Symbol");
+            throw VException("err:undef_symbol", sym, "%s %s", sym->value(), "Undefined Symbol");
         try {
             q->eval(scope->child());
         } catch (VException& e) {

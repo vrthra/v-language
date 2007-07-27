@@ -86,7 +86,7 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
                                     if (!strcmp(tmplterm->value(),lastelem->value()))
                                         break;
                                     else
-                                        throw VException("err:view:eq", "%s != %s",tmplterm->value(), lastelem->value());
+                                        throw VException("err:view:eq", lastelem, "%s != %s",tmplterm->value(), lastelem->value());
                             }
 
                         } else {
@@ -105,7 +105,7 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
                 } catch (VException& e) {
                     throw e;
                 } catch (...) {
-                    throw VException("err:view:sym",t->value());
+                    throw VException("err:view:sym", t,t->value());
                 }
 
             case TQuote:
@@ -116,7 +116,7 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
                 } catch (VException& e) {
                     throw e;
                 } catch (...) {
-                    throw VException("err:view:quote",t->value());
+                    throw VException("err:view:quote", t, t->value());
                 }
                 break;
             default:
@@ -125,7 +125,7 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
                 if (!strcmp(t->value(),eterm->value()))
                     break;
                 else
-                    throw VException("err:view:eq.1", "%s != %s" ,t->value(), eterm->value());
+                    throw VException("err:view:eq", eterm, "%s != %s" ,t->value(), eterm->value());
         }
     }
 
@@ -181,7 +181,7 @@ bool isEq(Token* a, Token* b) {
             return fabs(b->numvalue().d() - a->numvalue().d()) < Precision;
         case TString:
             if (b->type() != TString)
-                throw VException("err:type:eq", "%s != %s (type)", a->value(), b->value());
+                throw VException("err:type:eq", a,"%s != %s (type)", a->value(), b->value());
             return !strcmp(a->svalue(), b->svalue());
         default:
             return !strcmp(a->value(), b->value());
@@ -386,7 +386,7 @@ struct Ctoint : public Cmd {
             case TString:
                 p->push(new Term(TInt, atol(a->svalue())));
             default:
-                throw VException("err:>int", "%s cant convert", a->value());
+                throw VException("err:>int", a,"%s cant convert", a->value());
         }
     }
 };
@@ -408,7 +408,7 @@ struct Ctodouble : public Cmd {
             case TString:
                 p->push(new Term(TDouble, atof(a->svalue())));
             default:
-                throw VException("err:>decimal", "%s cant convert", a->value());
+                throw VException("err:>decimal", a,"%s cant convert", a->value());
         }
     }
 };
@@ -434,7 +434,7 @@ struct Ctobool : public Cmd {
                 p->push(new Term(TBool, ((Term*)a)->size() != 0));
                 break;
             default:
-                throw VException("err:>bool", "%s cant convert", a->value());
+                throw VException("err:>bool", a,"%s cant convert", a->value());
         }
     }
 };
@@ -457,7 +457,7 @@ struct Ctochar : public Cmd {
                 p->push(new Term(TChar, a->value()[0]));
                 break;
             default:
-                throw VException("err:>char", "%s cant convert", a->value());
+                throw VException("err:>char", a,"%s cant convert", a->value());
         }
     }
 };
@@ -784,7 +784,7 @@ struct Cuse : public Cmd {
             e.addLine("use %s", file->value());
             throw e;
         } catch (...) {
-            throw VException("err:use", file->value());
+            throw VException("err:use", file,file->value());
         }
     }
 };
@@ -806,7 +806,7 @@ struct Cuseenv : public Cmd {
         } catch (VException& e) {
             e.addLine("*use %s", file->value());
         } catch (...) {
-            throw VException("err:*use", "%s %s",env->value(), file->value());
+            throw VException("err:*use", file, "%s %s",env->value(), file->value());
         }
     }
 };
@@ -824,7 +824,7 @@ struct Ceval : public Cmd {
         } catch (VException& e) {
             e.addLine("eval %s", str->value());
         } catch (...) {
-            throw VException("err:eval", str->value());
+            throw VException("err:eval", str, str->value());
         }
     }
 };
@@ -843,7 +843,7 @@ struct Cevalenv : public Cmd {
         } catch (VException& e) {
             e.addLine("*eval %s", str->value());
         } catch (...) {
-            throw VException("err:*eval", "%s %s", env->value(), str->value());
+            throw VException("err:*eval", str,"%s %s", env->value(), str->value());
         }
     }
 };
@@ -972,7 +972,7 @@ struct Cat : public Cmd {
             }
             ++count;
         }
-        throw VException("err:at:overflow", "[%s]:%d",list->value(), idx);
+        throw VException("err:at:overflow", i,"[%s]:%d",list->value(), idx);
     }
 };
 
@@ -1259,7 +1259,7 @@ struct Cshield : public Cmd {
 
 struct Cthrow : public Cmd {
     void eval(VFrame* q) {
-        throw VException("err:throw", q->stack()->peek()->value());
+        throw VException("err:throw", q->stack()->peek(), q->stack()->peek()->value());
     }
 };
 
@@ -1269,7 +1269,7 @@ struct Csqrt : public Cmd {
         Token* t = p->pop();
         double num = t->numvalue().d();
         if (num != fabs(num))
-            throw VException("err:sqrt:negetive",t->value());
+            throw VException("err:sqrt:negetive", t,t->value());
         p->push(new Term(TDouble, sqrt(num)));
     }
 };

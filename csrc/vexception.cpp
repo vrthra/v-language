@@ -5,8 +5,12 @@
 
 VException::VException(char* err, Token* t, char* msgfmt, ...) {
     info = new std::stringstream();
-    *info << err;
-    _err = err;
+    *info << err << ' ' << t->value();
+
+    _err = new char[info->str().length() + 1];
+    std::strcpy(_err, info->str().c_str());
+
+    info = new std::stringstream();
     char buffer[MaxBuf];
     va_list argp;
     va_start(argp, msgfmt);
