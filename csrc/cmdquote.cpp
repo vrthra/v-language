@@ -51,7 +51,8 @@ void CmdQuote::dofunction(VFrame* scope) {
             // apply shield
             scope->stack()->push(new Term(TQuote, e.quote()));
             current->quote->eval(scope);
-            if (st->pop()->bvalue()) {
+            Token *bv = st->pop();
+            if (bv->type() != TBool || bv->bvalue()) {
                 // restore the stack and continue.
                 st->now(current->stack);
                 return;
