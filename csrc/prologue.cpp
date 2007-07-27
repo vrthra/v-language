@@ -948,7 +948,7 @@ struct Cdequote : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
         Token* prog = p->pop();
-        prog->qvalue()->eval(q->parent());
+        prog->qvalue()->eval(q);
     }
     char* to_s() {return "i";}
 };
@@ -999,8 +999,8 @@ struct Csize : public Cmd {
 struct Cin : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* list = p->pop();
         Token* i = p->pop();
+        Token* list = p->pop();
         TokenIterator* ti = list->qvalue()->tokens()->iterator();
         while(ti->hasNext()) {
             Token* t = ti->next();
@@ -1374,6 +1374,14 @@ struct Cgetdef : public Cmd {
     char* to_s() {return ">def";}
 };
 
+struct Cenv : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        p->push(new Term(TQuote, CmdQuote::getdef("platform native")));
+    }
+    char* to_s() {return "env";}
+};
+
 struct Csqrt : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
@@ -1478,6 +1486,7 @@ void Prologue::init(VFrame* frame) {
     frame->def("throw", new Cthrow);
     frame->def("shield", new Cshield);
     frame->def(">def", new Cgetdef);
+    frame->def("env", new Cenv);
 
     // math
     frame->def("sqrt", new Csqrt);

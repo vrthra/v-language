@@ -931,8 +931,8 @@ public class Prologue {
     static Cmd _isin = new Cmd() {
         public void eval(VFrame q) {
             VStack p = q.stack();
-            Term list = p.pop();
             Term i = p.pop();
+            Term list = p.pop();
             for(Term t: list.qvalue().tokens()) {
                 if (t.type() == i.type() && t.value().equals(i.value())) {
                     p.push(new Term<Boolean>(Type.TBool, true));
@@ -1331,6 +1331,14 @@ public class Prologue {
         }
     };
 
+    static Cmd _env = new Cmd() {
+        public void eval(VFrame q) {
+            VStack p = q.stack();
+            Quote env = Util.getdef("[platform java]");
+            p.push(new Term<Quote>(Type.TQuote, env));
+        }
+    };
+
     public static void init(final VFrame iframe) {
         // accepts a quote as an argument.
         //meta
@@ -1435,6 +1443,7 @@ public class Prologue {
         iframe.def("&eval", _evalenv);
 
         iframe.def("help", _help);
+        iframe.def("env", _env);
 
         Quote libs = Util.getdef("'std' use");
         libs.eval(iframe);

@@ -490,11 +490,11 @@
 ] module
 
 ['abc' =] [tst:open] 'module' test
-# this shield will even catch the java tests since they are in the
-# same scope.
-[put ' throw expected (success)' puts true] shield
-['def' =] [tst:using] 'module' test
-['!' =] [tst:hide] 'module' test
+[
+    [put ' throw expected (success)' puts true] shield
+    ['def' =] [tst:using] 'module' test
+    ['!' =] [tst:hide] 'module' test
+] i
 #=============================================
 #shield
 [cmdthrows
@@ -505,59 +505,60 @@
         cmdthrows].
 mycmd
 
+[env [platform java] in?] [
 #=============================================
 #java
-[
-    9 =
-]
-[
-    ["I am here" length] java
-] 'java(primitive)' test
+    [
+        9 =
+    ]
+    [
+        ["I am here" length] java
+    ] 'java(primitive)' test
 
-[
-    100 =
-]
-[
-    [-100 java.lang.Math abs] java
-] 'java(static method)' test
+    [
+        100 =
+    ]
+    [
+        [-100 java.lang.Math abs] java
+    ] 'java(static method)' test
 
-[
-    integer?
-]
-[
-    [java.util.Date new] java unit [getDay] concat java
-] 'java(constructor)' test
+    [
+        integer?
+    ]
+    [
+        [java.util.Date new] java unit [getDay] concat java
+    ] 'java(constructor)' test
 
-[
-    'abc' =
-]
-[
-    [[~a ~b ~c] java.lang.String new] java
-] 'java(array)' test
+    [
+        'abc' =
+    ]
+    [
+        [[~a ~b ~c] java.lang.String new] java
+    ] 'java(array)' test
 
-[
-    '0.001' =
-]
-[
-    ['0.001' v.V version$] java
-] 'java(field write access)' test
+    [
+        '0.001' =
+    ]
+    [
+        ['0.001' v.V version$] java
+    ] 'java(field write access)' test
 
-[
-    '0.001' =
-]
-[
-    [v.V version$] java
-] 'java(field read access)' test
+    [
+        '0.001' =
+    ]
+    [
+        [v.V version$] java
+    ] 'java(field read access)' test
 
 #=============================================
 # math
-[
-    0.8762980611683406 =
-]
-[
-    0.64 acos
-] 'math acos' test
-
+    [
+        0.8762980611683406 =
+    ]
+    [
+        0.64 acos
+    ] 'math acos' test
+] if
 #=============================================
 
 ??
