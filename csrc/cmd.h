@@ -12,7 +12,7 @@ class Cmd : public Quote {
             return _store;
         }
         virtual TokenStream* tokens(){return 0;}
-        char* to_s(){return "<cmd>";}
+        virtual char* to_s(){ return "<cmd>"; }
     private:
         VMap _store;
 };

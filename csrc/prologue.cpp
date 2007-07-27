@@ -203,6 +203,7 @@ struct Ctrue : public Cmd {
         VStack* p = q->stack();
         p->push(new Term(TBool, true));
     }
+    char* to_s() {return "true";}
 };
 
 struct Cfalse : public Cmd {
@@ -210,6 +211,7 @@ struct Cfalse : public Cmd {
         VStack* p = q->stack();
         p->push(new Term(TBool, false));
     }
+    char* to_s() {return "false";}
 };
 
 struct Cadd : public Cmd {
@@ -224,6 +226,7 @@ struct Cadd : public Cmd {
         else
             p->push(new Term(TDouble, dres));
     }
+    char* to_s() {return "+";}
 };
 
 struct Csub : public Cmd {
@@ -238,6 +241,7 @@ struct Csub : public Cmd {
         else
             p->push(new Term(TDouble, dres));
     }
+    char* to_s() {return "-";}
 };
 
 struct Cmul : public Cmd {
@@ -252,6 +256,7 @@ struct Cmul : public Cmd {
         else
             p->push(new Term(TDouble, dres));
     }
+    char* to_s() {return "*";}
 };
 
 struct Cdiv : public Cmd {
@@ -266,6 +271,7 @@ struct Cdiv : public Cmd {
         else
             p->push(new Term(TDouble, dres));
     }
+    char* to_s() {return "/";}
 };
 
 struct Cand : public Cmd {
@@ -276,6 +282,7 @@ struct Cand : public Cmd {
         bool res = a->bvalue() && b->bvalue();
         p->push(new Term(TBool, res));
     }
+    char* to_s() {return "and";}
 };
 
 struct Cor : public Cmd {
@@ -286,6 +293,7 @@ struct Cor : public Cmd {
         bool res = a->bvalue() || b->bvalue();
         p->push(new Term(TBool, res));
     }
+    char* to_s() {return "or";}
 };
 
 struct Cnot : public Cmd {
@@ -295,6 +303,7 @@ struct Cnot : public Cmd {
         bool res = !a->bvalue();
         p->push(new Term(TBool, res));
     }
+    char* to_s() {return "not";}
 };
 
 struct Cisinteger : public Cmd {
@@ -303,6 +312,7 @@ struct Cisinteger : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, a->type() == TInt));
     }
+    char* to_s() {return "int?";}
 };
 
 struct Cisdouble : public Cmd {
@@ -311,6 +321,7 @@ struct Cisdouble : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, a->type() == TDouble));
     }
+    char* to_s() {return "decimal?";}
 };
 
 struct Cisbool : public Cmd {
@@ -319,6 +330,7 @@ struct Cisbool : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, a->type() == TBool));
     }
+    char* to_s() {return "bool?";}
 };
 
 struct Cissym : public Cmd {
@@ -327,6 +339,7 @@ struct Cissym : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, a->type() == TSymbol));
     }
+    char* to_s() {return "symbol?";}
 };
 
 struct Cisquote : public Cmd {
@@ -335,6 +348,7 @@ struct Cisquote : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, a->type() == TQuote));
     }
+    char* to_s() {return "quote?";}
 };
 
 struct Cisstr : public Cmd {
@@ -343,6 +357,7 @@ struct Cisstr : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, a->type() == TString));
     }
+    char* to_s() {return "string?";}
 };
 
 struct Cischar : public Cmd {
@@ -351,6 +366,7 @@ struct Cischar : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, a->type() == TChar));
     }
+    char* to_s() {return "char?";}
 };
 
 struct Cisnum : public Cmd {
@@ -359,6 +375,7 @@ struct Cisnum : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, a->type() == TInt || a->type() == TDouble));
     }
+    char* to_s() {return "number?";}
 };
 
 struct Ctostr : public Cmd {
@@ -367,6 +384,7 @@ struct Ctostr : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TString, a->value()));
     }
+    char* to_s() {return ">string";}
 };
 
 struct Ctoint : public Cmd {
@@ -389,6 +407,7 @@ struct Ctoint : public Cmd {
                 throw VException("err:>int", a,"%s cant convert", a->value());
         }
     }
+    char* to_s() {return ">int";}
 };
 
 struct Ctodouble : public Cmd {
@@ -411,6 +430,7 @@ struct Ctodouble : public Cmd {
                 throw VException("err:>decimal", a,"%s cant convert", a->value());
         }
     }
+    char* to_s() {return ">decimal";}
 };
 
 struct Ctobool : public Cmd {
@@ -437,6 +457,7 @@ struct Ctobool : public Cmd {
                 throw VException("err:>bool", a,"%s cant convert", a->value());
         }
     }
+    char* to_s() {return ">bool";}
 };
 
 struct Ctochar : public Cmd {
@@ -460,6 +481,7 @@ struct Ctochar : public Cmd {
                 throw VException("err:>char", a,"%s cant convert", a->value());
         }
     }
+    char* to_s() {return ">char";}
 };
 
 struct Cgt : public Cmd {
@@ -469,6 +491,7 @@ struct Cgt : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, isGt(a,b)));
     }
+    char* to_s() {return ">";}
 };
 
 struct Clt : public Cmd {
@@ -478,6 +501,7 @@ struct Clt : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, isLt(a,b)));
     }
+    char* to_s() {return "<";}
 };
 
 struct Clteq : public Cmd {
@@ -487,6 +511,7 @@ struct Clteq : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, !isGt(a,b)));
     }
+    char* to_s() {return "<=";}
 };
 
 struct Cgteq : public Cmd {
@@ -496,6 +521,7 @@ struct Cgteq : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, !isLt(a,b)));
     }
+    char* to_s() {return ">=";}
 };
 
 struct Ceq : public Cmd {
@@ -505,6 +531,7 @@ struct Ceq : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, isEq(a,b)));
     }
+    char* to_s() {return "=";}
 };
 
 struct Cneq : public Cmd {
@@ -514,6 +541,7 @@ struct Cneq : public Cmd {
         Token* a = p->pop();
         p->push(new Term(TBool, !isEq(a,b)));
     }
+    char* to_s() {return "!=";}
 };
 
 struct Cchoice : public Cmd {
@@ -528,6 +556,7 @@ struct Cchoice : public Cmd {
         else
             p->push(af);
     }
+    char* to_s() {return "choice";}
 };
 
 struct Cif : public Cmd {
@@ -545,6 +574,7 @@ struct Cif : public Cmd {
         if (cond->bvalue())     
             action->qvalue()->eval(q);
     }
+    char* to_s() {return "if";}
 };
 
 struct Cifte : public Cmd {
@@ -565,6 +595,7 @@ struct Cifte : public Cmd {
         else
             eaction->qvalue()->eval(q);
     }
+    char* to_s() {return "ifte";}
 };
 
 struct Cwhile : public Cmd {
@@ -585,6 +616,7 @@ struct Cwhile : public Cmd {
                 break;
         }
     }
+    char* to_s() {return "while";}
 };
 
 struct Cputs : public Cmd {
@@ -593,6 +625,7 @@ struct Cputs : public Cmd {
         Token* a = p->pop();
         V::outln(a->value());
     }
+    char* to_s() {return "puts";}
 };
 
 struct Cput : public Cmd {
@@ -601,6 +634,7 @@ struct Cput : public Cmd {
         Token* a = p->pop();
         V::out(a->value());
     }
+    char* to_s() {return "put";}
 };
 
 struct Cshow : public Cmd {
@@ -608,6 +642,7 @@ struct Cshow : public Cmd {
         VStack* p = q->stack();
         p->dump();
     }
+    char* to_s() {return "?stack";}
 };
 
 struct Cpeek : public Cmd {
@@ -620,12 +655,14 @@ struct Cpeek : public Cmd {
             V::outln(t->value());
         }
     }
+    char* to_s() {return "?";}
 };
 
 struct Chelp : public Cmd {
     void eval(VFrame* q) {
         V::outln(q->parent()->words()->to_s());
     }
+    char* to_s() {return "help";}
 };
 
 struct Cvdebug : public Cmd {
@@ -635,6 +672,7 @@ struct Cvdebug : public Cmd {
         p->dump();
         V::outln(q->parent()->words()->to_s());
     }
+    char* to_s() {return "?debug";}
 };
 
 struct Cdframe : public Cmd {
@@ -651,6 +689,7 @@ struct Cdframe : public Cmd {
         V::outln("Q:%d", q->id());
         V::outln(q->words()->to_s());
     }
+    char* to_s() {return "?frame";}
 };
 
 struct Cview : public Cmd {
@@ -693,6 +732,7 @@ struct Cview : public Cmd {
         while(i->hasNext())
             p->push(i->next());
     }
+    char* to_s() {return "view";}
 };
 
 struct Ctrans : public Cmd {
@@ -729,6 +769,7 @@ struct Ctrans : public Cmd {
         while(i->hasNext())
             p->push(i->next());
     }
+    char* to_s() {return "trans";}
 };
 
 struct Cdef : public Cmd {
@@ -739,6 +780,7 @@ struct Cdef : public Cmd {
         char* symbol = entry.first;
         q->parent()->def(symbol, entry.second);
     }
+    char* to_s() {return ".";}
 };
 
 struct Cdefenv : public Cmd {
@@ -750,6 +792,7 @@ struct Cdefenv : public Cmd {
         char* symbol = entry.first;
         b->fvalue()->def(symbol, entry.second);
     }
+    char* to_s() {return "&.";}
 };
 
 struct Cparent : public Cmd {
@@ -758,6 +801,7 @@ struct Cparent : public Cmd {
         VFrame* t = p->pop()->fvalue();
         p->push(new Term(TFrame, t->parent()));
     }
+    char* to_s() {return "&parent";}
 };
 
 struct Cme : public Cmd {
@@ -765,6 +809,7 @@ struct Cme : public Cmd {
         VStack* p = q->stack();
         p->push(new Term(TFrame, q->parent()));
     }
+    char* to_s() {return "$me";}
 };
 
 struct Cuse : public Cmd {
@@ -787,6 +832,7 @@ struct Cuse : public Cmd {
             throw VException("err:use", file,file->value());
         }
     }
+    char* to_s() {return "use";}
 };
 
 struct Cuseenv : public Cmd {
@@ -809,6 +855,7 @@ struct Cuseenv : public Cmd {
             throw VException("err:*use", file, "%s %s",env->value(), file->value());
         }
     }
+    char* to_s() {return "&use";}
 };
 
 struct Ceval : public Cmd {
@@ -827,6 +874,7 @@ struct Ceval : public Cmd {
             throw VException("err:eval", str, str->value());
         }
     }
+    char* to_s() {return "eval";}
 };
 
 struct Cevalenv : public Cmd {
@@ -846,6 +894,7 @@ struct Cevalenv : public Cmd {
             throw VException("err:*eval", str,"%s %s", env->value(), str->value());
         }
     }
+    char* to_s() {return "&eval";}
 };
 
 struct Cmodule : public Cmd {
@@ -883,6 +932,7 @@ struct Cmodule : public Cmd {
             q->parent()->def(def, libs);
         }
     }
+    char* to_s() {return "module";}
 };
 
 struct Cwords : public Cmd {
@@ -891,6 +941,7 @@ struct Cwords : public Cmd {
         VFrame* b = p->pop()->fvalue();
         p->push(new Term(TQuote, b->words())); 
     }
+    char* to_s() {return "&words";}
 };
 
 struct Cdequote : public Cmd {
@@ -899,6 +950,7 @@ struct Cdequote : public Cmd {
         Token* prog = p->pop();
         prog->qvalue()->eval(q->parent());
     }
+    char* to_s() {return "i";}
 };
 
 struct Cdequoteenv : public Cmd {
@@ -908,6 +960,7 @@ struct Cdequoteenv : public Cmd {
         Token* env = p->pop();
         prog->qvalue()->eval(env->fvalue());
     }
+    char* to_s() {return "&i";}
 };
 
 struct Cstack : public Cmd {
@@ -915,6 +968,7 @@ struct Cstack : public Cmd {
         VStack* p = q->stack();
         q->stack()->push(new Term(TQuote, p->quote()));
     }
+    char* to_s() {return "stack";}
 };
 
 struct Cunstack : public Cmd {
@@ -923,12 +977,14 @@ struct Cunstack : public Cmd {
         Token* t = p->pop();
         p->dequote(t->qvalue());
     }
+    char* to_s() {return "unstack";}
 };
 
 struct Cabort : public Cmd {
     void eval(VFrame* q) {
         q->stack()->clear();
     }
+    char* to_s() {return "abort";}
 };
 
 struct Csize : public Cmd {
@@ -937,6 +993,7 @@ struct Csize : public Cmd {
         Token* t = p->pop();
         q->stack()->push(new Term(TInt, (long)((Term*)t)->size()));
     }
+    char* to_s() {return "size";}
 };
 
 struct Cin : public Cmd {
@@ -954,6 +1011,7 @@ struct Cin : public Cmd {
         }
         p->push(new Term(TBool, false));
     }
+    char* to_s() {return "in?";}
 };
 
 struct Cat : public Cmd {
@@ -974,6 +1032,7 @@ struct Cat : public Cmd {
         }
         throw VException("err:at:overflow", i,"[%s]:%d",list->value(), idx);
     }
+    char* to_s() {return "at";}
 };
 
 struct Cmap : public Cmd {
@@ -996,6 +1055,7 @@ struct Cmap : public Cmd {
         }
         p->push(new Term(TQuote, new CmdQuote(nts)));
     }
+    char* to_s() {return "map!";}
 };
 
 struct Cmap_i : public Cmd {
@@ -1020,6 +1080,7 @@ struct Cmap_i : public Cmd {
         }
         p->push(new Term(TQuote, new CmdQuote(nts)));
     }
+    char* to_s() {return "map";}
 };
 
 struct Csplit : public Cmd {
@@ -1047,6 +1108,7 @@ struct Csplit : public Cmd {
         p->push(new Term(TQuote, new CmdQuote(nts1)));
         p->push(new Term(TQuote, new CmdQuote(nts2)));
     }
+    char* to_s() {return "split!";}
 };
 
 struct Csplit_i : public Cmd {
@@ -1076,6 +1138,7 @@ struct Csplit_i : public Cmd {
         p->push(new Term(TQuote, new CmdQuote(nts1)));
         p->push(new Term(TQuote, new CmdQuote(nts2)));
     }
+    char* to_s() {return "split";}
 };
 
 struct Cfilter : public Cmd {
@@ -1099,6 +1162,7 @@ struct Cfilter : public Cmd {
         }
         p->push(new Term(TQuote, new CmdQuote(nts)));
     }
+    char* to_s() {return "filter!";}
 };
 
 struct Cfilter_i : public Cmd {
@@ -1124,6 +1188,7 @@ struct Cfilter_i : public Cmd {
         }
         p->push(new Term(TQuote, new CmdQuote(nts)));
     }
+    char* to_s() {return "filter";}
 };
 
 struct Cfold : public Cmd {
@@ -1147,6 +1212,7 @@ struct Cfold : public Cmd {
         //Term* res = p->pop();
         //p->push(res);
     }
+    char* to_s() {return "fold!";}
 };
 
 struct Cfold_i : public Cmd {
@@ -1172,6 +1238,7 @@ struct Cfold_i : public Cmd {
         p->now(n);
         p->push(res);
     }
+    char* to_s() {return "fold";}
 };
 
 struct Cstep : public Cmd {
@@ -1189,6 +1256,25 @@ struct Cstep : public Cmd {
             action->qvalue()->eval(q);
         }
     }
+    char* to_s() {return "step!";}
+};
+
+struct Cstep_i : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+
+        Token* action = p->pop();
+        Token* list = p->pop();
+
+        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        while(fstream->hasNext()) {
+            Token* t = fstream->next();
+            p->push(t);
+
+            action->qvalue()->eval(q);
+        }
+    }
+    char* to_s() {return "step";}
 };
 
 struct Cdrop : public Cmd {
@@ -1208,6 +1294,7 @@ struct Cdrop : public Cmd {
         }
         p->push(new Term(TQuote, new CmdQuote(nts)));
     }
+    char* to_s() {return "drop";}
 };
 
 struct Ctake : public Cmd {
@@ -1229,12 +1316,14 @@ struct Ctake : public Cmd {
         }
         p->push(new Term(TQuote, new CmdQuote(nts)));
     }
+    char* to_s() {return "take";}
 };
 
 struct CmdShield : public Cmd {
     void eval(VFrame* q) {
         // dummy
     }
+    char* to_s() {return "<shield>";}
 };
 
 struct Cshield : public Cmd {
@@ -1255,12 +1344,34 @@ struct Cshield : public Cmd {
             shield->store()["$info"] = s;
         }
     }
+    char* to_s() {return "shield";}
 };
 
 struct Cthrow : public Cmd {
     void eval(VFrame* q) {
         throw VException("err:throw", q->stack()->peek(), q->stack()->peek()->value());
     }
+    char* to_s() {return "throw";}
+};
+
+struct Cgetdef : public Cmd {
+    void eval(VFrame* q) {
+        VStack* p = q->stack();
+        Token* sym = p->pop();
+        char* symbol = sym->qvalue()->tokens()->iterator()->next()->svalue();
+        
+        Quote* qv = q->lookup(symbol);
+        TokenIterator* it = qv->tokens()->iterator();
+
+        QuoteStream* nts = new QuoteStream();
+        nts->add(new Term(TSymbol, symbol));
+        while(it->hasNext())
+            nts->add(it->next());
+        CmdQuote* res = new CmdQuote(nts);
+
+        p->push(new Term(TQuote, res));
+    }
+    char* to_s() {return ">def";}
 };
 
 struct Csqrt : public Cmd {
@@ -1272,6 +1383,7 @@ struct Csqrt : public Cmd {
             throw VException("err:sqrt:negetive", t,t->value());
         p->push(new Term(TDouble, sqrt(num)));
     }
+    char* to_s() {return "sqrt";}
 };
  
 void Prologue::init(VFrame* frame) {
@@ -1348,7 +1460,8 @@ void Prologue::init(VFrame* frame) {
     frame->def("in?", new Cin());
     frame->def("at", new Cat());
 
-    frame->def("step", new Cstep);
+    frame->def("step!", new Cstep);
+    frame->def("step", new Cstep_i);
     frame->def("map!", new Cmap);
     frame->def("map", new Cmap_i);
     frame->def("filter!", new Cfilter);
@@ -1364,6 +1477,7 @@ void Prologue::init(VFrame* frame) {
     frame->def("help", new Chelp);
     frame->def("throw", new Cthrow);
     frame->def("shield", new Cshield);
+    frame->def(">def", new Cgetdef);
 
     // math
     frame->def("sqrt", new Csqrt);
