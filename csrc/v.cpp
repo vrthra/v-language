@@ -63,8 +63,8 @@ class PQuote : public CmdQuote {
 void V::main(int argc, char** argv) {
     bool i = argc > 1 ? false : true;
     VFrame* frame = new VFrame();
-    for(int i=0; i<argc; ++i)
-        frame->stack()->push(new Term(TString, argv[i]));
+    for(int j=0; j<argc; ++j)
+        frame->stack()->push(new Term(TString, argv[j]));
     // setup the world quote
 
     Prologue::init(frame);
