@@ -1,5 +1,8 @@
 #!/usr/local/bin/ruby
 has_gc = false;
+if ARGV[0] =~ /withgc/
+    has_gc = true
+end
 cpp_files = Dir['*.cpp']
 obj_files = cpp_files.collect{|x| x.sub(/\.cpp$/, '.o')}
 
