@@ -20,8 +20,6 @@
 typedef std::map<char*, Token*, cmp_str> SymbolMap;
 typedef std::pair<char*, Quote*> SymPair;
 
-Shield::Shield(VStack* s, Quote* q) :quote(q), stack(s->now()), next(0) {}
-
 SymPair splitdef(Quote* qval) {
     TokenIterator* it = qval->tokens()->iterator();
     Token* symbol = it->next();

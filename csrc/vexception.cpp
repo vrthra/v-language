@@ -2,25 +2,21 @@
 #include "charstream.h"
 #include "cmdquote.h"
 #include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-VException::VException(char* err, Token* t, char* msgfmt, ...):_token(t) {
-    info = new std::stringstream();
-    *info << err << ' ' << t->value();
-
-    _err = new char[info->str().length() + 1];
-    std::strcpy(_err, info->str().c_str());
-
-    info = new std::stringstream();
-    char buffer[MaxBuf];
+VException::VException(char* err, Token* t, char* msgfmt, ...):_token(t){
+    _err = err;
+    _i = 0;
     va_list argp;
     va_start(argp, msgfmt);
-    std::vsprintf(buffer, msgfmt, argp);
+    vsnprintf(_info + _i, MaxBuf * 16 - _i, msgfmt, argp);
     va_end(argp);
-    *info <<buffer;
+    _i = strchr(_info, '\0') - _info;
 }
 
 char* VException::message() {
-    return (char*)info->str().c_str();
+    return _info;
 }
 
 Token* VException::token() {
@@ -28,39 +24,36 @@ Token* VException::token() {
 }
 
 void VException::addLine(char* v, ...) {
-    char buffer[MaxBuf];
-
+    strncpy(_info + _i, "\n\t", MaxBuf * 16 - _i);
+    _i += 2;
     va_list argp;
     va_start(argp, v);
-    std::vsprintf(buffer, v, argp);
+    vsprintf(_info + _i, v, argp);
     va_end(argp);
 
-    *info <<"\n\t"<< buffer;
+    _i = strchr(_info, '\0') - _info;
 }
 
 VSynException::VSynException(char* err, char* msgfmt, ...) {
-    info = new std::stringstream();
-    *info << err;
-
-    char buffer[MaxBuf];
+    _i = 0;
     va_list argp;
     va_start(argp, msgfmt);
-    std::vsprintf(buffer, msgfmt, argp);
+    vsnprintf(_info + _i, MaxBuf * 16 - _i, msgfmt, argp);
     va_end(argp);
-    *info << buffer;
+    _i = strchr(_info, '\0') - _info;
 }
 
 char* VSynException::message() {
-    return (char*)info->str().c_str();
+    return _info;
 }
 
 void VSynException::addLine(char* v, ...) {
-    char buffer[MaxBuf];
-
+    strncpy(_info + _i, "\n\t", MaxBuf * 16 - _i);
+    _i += 2;
     va_list argp;
     va_start(argp, v);
-    std::vsprintf(buffer, v, argp);
+    vsnprintf(_info + _i, MaxBuf * 16 - _i, v, argp);
     va_end(argp);
 
-    *info <<"\n\t"<< buffer;
+    _i = strchr(_info, '\0') - _info;
 }

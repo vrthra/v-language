@@ -1,4 +1,3 @@
-#include <stack>
 #include "vstack.h"
 #include "tokeniterator.h"
 #include "quotestream.h"

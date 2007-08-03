@@ -1,6 +1,6 @@
 #ifndef VEXCEPTION_H
 #define VEXCEPTION_H
-#include <sstream>
+#include "common.h"
 #include "vx.h"
 #include "token.h"
 class Quote;
@@ -9,11 +9,12 @@ class VException : public Vx {
         VException(char* err, Token* t, char* msgfmt, ...);
         virtual char* message();
         virtual void addLine(char* v, ...);
-        std::stringstream* info;
         Token* token();
     private:
         char* _err;
         Token* _token;
+        char _info[MaxBuf*16];
+        int _i;
 };
 
 class VSynException : public Vx {
@@ -21,6 +22,8 @@ class VSynException : public Vx {
         VSynException(char* err, char* msgfmt, ...);
         virtual char* message();
         virtual void addLine(char* v, ...);
-        std::stringstream* info;
+    private:
+        char _info[MaxBuf*16];
+        int _i;
 };
 #endif

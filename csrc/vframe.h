@@ -1,9 +1,10 @@
 #ifndef VFRAME_H
 #define VFRAME_H
-#include <string>
+#include <map>
 #include "common.h"
 class Quote;
 class VStack;
+typedef std::map<char*, Quote*, cmp_str> QMap;
 class VFrame {
     public:
         QMap& dict();
