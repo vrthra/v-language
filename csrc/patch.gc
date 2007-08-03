@@ -1,24 +1,587 @@
-Index: buffcharstream.h
+Index: charstream.h
 ===================================================================
---- buffcharstream.h	(revision 212)
-+++ buffcharstream.h	(working copy)
-@@ -4,6 +4,7 @@
- class BuffCharStream : public CharStream {
+--- charstream.h	(revision 218)
++++ charstream.h	(working copy)
+@@ -2,7 +2,7 @@
+ #define CHARSTREAM_H
+ #include "common.h"
+ struct Lexer;
+-struct CharStream {
++struct CharStream : public gc {
+    virtual char read()=0;
+    virtual char current()=0;
+    virtual char peek()=0;
+Index: vstack.h
+===================================================================
+--- vstack.h	(revision 218)
++++ vstack.h	(working copy)
+@@ -2,15 +2,8 @@
+ #define VSTACK_H
+ #include "term.h"
+ 
+-struct Node {
+-    Token* data;
+-    Node* link;
+-    Node(Token* e) {
+-        data = e;
+-    }
+-};
+ struct Quote;
+-class VStack {
++class VStack : public gc {
      public:
-         BuffCharStream(char* buff);
-+        ~BuffCharStream();
-         virtual char read();
-         virtual char peek();
-         virtual char current();
-Index: buffcharstream.cpp
+         VStack();
+         Node* now();
+Index: tokenstream.h
 ===================================================================
---- buffcharstream.cpp	(revision 212)
-+++ buffcharstream.cpp	(working copy)
-@@ -24,3 +24,7 @@
-         std::strcpy(_buf, buff);
+--- tokenstream.h	(revision 218)
++++ tokenstream.h	(working copy)
+@@ -1,7 +1,8 @@
+ #ifndef TOKENSTREAM_H
+ #define TOKENSTREAM_H
++#include "common.h"
+ class TokenIterator;
+-struct TokenStream {
++struct TokenStream : public gc {
+     virtual TokenIterator* iterator()=0;
+ };
+ #endif
+Index: vx.h
+===================================================================
+--- vx.h	(revision 218)
++++ vx.h	(working copy)
+@@ -1,6 +1,6 @@
+ #ifndef VX_H
+ #define VX_H
+-struct Vx {
++struct Vx : public gc {
+     virtual char* message() = 0;
+     virtual void addLine(char* v, ...) = 0;
+ };
+Index: lexiterator.cpp
+===================================================================
+--- lexiterator.cpp	(revision 218)
++++ lexiterator.cpp	(working copy)
+@@ -5,8 +5,8 @@
+ #include "term.h"
+ #include "cmdquote.h"
+ #include "vexception.h"
+-LexIterator::LexIterator(QuoteStream* qs, CharStream* cs)
+-    :QuoteIterator(qs),_lex(new Lexer(cs)),_current(0) {}
++LexIterator::LexIterator(CharStream* cs)
++    :QuoteIterator(0),_lex(new Lexer(cs)),_current(0) {}
+ 
+ bool LexIterator::hasNext() {
+     if (!_current)
+@@ -19,6 +19,8 @@
+     Term* t = (Term*)lex_next();
+     if (t->type() == TOpen)
+         return compound(t);
++    if (t->type() == TClose)
++        throw VSynException("err:lex:close","Unexpected Quote close");
+     return t;
+ }
+ Token* LexIterator::lex_next() {
+@@ -35,9 +37,11 @@
+         Token* t = lex_next();
+         if (!t)
+             throw VSynException("err:lex:close","Compound not closed");
+-        if (t->type() == TClose)
++        if (t->type() == TClose) {
+             if (t->cvalue() == Lexer::closeCompound(open->cvalue()))
+                 break;
++            throw VSynException("err:lex:close","invalid compound close");
++        }
+         if (t->type() == TOpen)
+             local->add(compound(t));
+         else
+Index: quotestream.cpp
+===================================================================
+--- quotestream.cpp	(revision 218)
++++ quotestream.cpp	(working copy)
+@@ -1,19 +1,23 @@
++#include "common.h"
++#include "token.h"
+ #include "quotestream.h"
+ #include "quoteiterator.h"
++
+ QuoteStream::QuoteStream() {
++    _stream = new Node(0);
++    _size = 0;
++    _first = _stream;
+ }
+ void QuoteStream::add(Token* t) {
+-    _stream.push_back(t);
++    _stream->link = new Node(t);
++    _stream = _stream->link;
++    ++_size;
+ }
+ 
+ int QuoteStream::size() {
+-    return _stream.size();
++    return _size;
+ }
+ 
+-Token* QuoteStream::get(int i) {
+-    return _stream[i];
+-}
+-
+ TokenIterator* QuoteStream::iterator() {
+-    return (TokenIterator*)new QuoteIterator(this);
++    return new QuoteIterator(_first);
+ }
+Index: quoteiterator.h
+===================================================================
+--- quoteiterator.h	(revision 218)
++++ quoteiterator.h	(working copy)
+@@ -2,13 +2,13 @@
+ #define QUOTEITERATOR_H
+ #include "tokeniterator.h"
+ class QuoteStream;
++class Node;
+ class QuoteIterator : public TokenIterator {
+     public:
+         virtual bool hasNext();
+         virtual Token* next();
+-        QuoteIterator(QuoteStream* q);
++        QuoteIterator(Node* q);
+     private:
+-        QuoteStream* _qs;
+-        int _index;
++        Node* _qs;
+ };
+ #endif
+Index: tokeniterator.h
+===================================================================
+--- tokeniterator.h	(revision 218)
++++ tokeniterator.h	(working copy)
+@@ -1,7 +1,8 @@
+ #ifndef TOKENITERATOR_H
+ #define TOKENITERATOR_H
++#include "common.h"
+ class Token;
+-struct TokenIterator {
++struct TokenIterator : public gc {
+     virtual bool hasNext()=0;
+     virtual Token* next()=0;
+ };
+Index: quote.h
+===================================================================
+--- quote.h	(revision 218)
++++ quote.h	(working copy)
+@@ -1,9 +1,9 @@
+ #ifndef QUOTE_H
+ #define QUOTE_H
+-
++#include "common.h"
+ class TokenStream;
+ class VFrame;
+-struct Quote {
++struct Quote : public gc {
+     virtual void eval(VFrame* scope) = 0;
+     virtual TokenStream* tokens() = 0;
+     virtual char* to_s() = 0;
+Index: lexstream.cpp
+===================================================================
+--- lexstream.cpp	(revision 218)
++++ lexstream.cpp	(working copy)
+@@ -4,5 +4,5 @@
+ LexStream::LexStream(CharStream* c) : _stream(c) {
+ }
+ TokenIterator* LexStream::iterator() {
+-    return new LexIterator(this,_stream);
++    return new LexIterator(_stream);
+ }
+Index: patch.gc
+===================================================================
+--- patch.gc	(revision 218)
++++ patch.gc	(working copy)
+@@ -1,24 +1,194 @@
+-Index: buffcharstream.h
++Index: charstream.h
+ ===================================================================
+---- buffcharstream.h	(revision 212)
+-+++ buffcharstream.h	(working copy)
+-@@ -4,6 +4,7 @@
+- class BuffCharStream : public CharStream {
++--- charstream.h	(revision 218)
+++++ charstream.h	(working copy)
++@@ -2,7 +2,7 @@
++ #define CHARSTREAM_H
++ #include "common.h"
++ struct Lexer;
++-struct CharStream {
+++struct CharStream : public gc {
++    virtual char read()=0;
++    virtual char current()=0;
++    virtual char peek()=0;
++Index: vstack.h
++===================================================================
++--- vstack.h	(revision 218)
+++++ vstack.h	(working copy)
++@@ -2,15 +2,8 @@
++ #define VSTACK_H
++ #include "term.h"
++ 
++-struct Node {
++-    Token* data;
++-    Node* link;
++-    Node(Token* e) {
++-        data = e;
++-    }
++-};
++ struct Quote;
++-class VStack {
+++class VStack : public gc {
+      public:
+-         BuffCharStream(char* buff);
+-+        ~BuffCharStream();
+-         virtual char read();
+-         virtual char peek();
+-         virtual char current();
+-Index: buffcharstream.cpp
++         VStack();
++         Node* now();
++Index: tokenstream.h
+ ===================================================================
+---- buffcharstream.cpp	(revision 212)
+-+++ buffcharstream.cpp	(working copy)
+-@@ -24,3 +24,7 @@
+-         std::strcpy(_buf, buff);
+-     }
++--- tokenstream.h	(revision 218)
+++++ tokenstream.h	(working copy)
++@@ -1,7 +1,8 @@
++ #ifndef TOKENSTREAM_H
++ #define TOKENSTREAM_H
+++#include "common.h"
++ class TokenIterator;
++-struct TokenStream {
+++struct TokenStream : public gc {
++     virtual TokenIterator* iterator()=0;
++ };
++ #endif
++Index: vx.h
++===================================================================
++--- vx.h	(revision 218)
+++++ vx.h	(working copy)
++@@ -1,6 +1,6 @@
++ #ifndef VX_H
++ #define VX_H
++-struct Vx {
+++struct Vx : public gc {
++     virtual char* message() = 0;
++     virtual void addLine(char* v, ...) = 0;
++ };
++Index: lexiterator.cpp
++===================================================================
++--- lexiterator.cpp	(revision 218)
+++++ lexiterator.cpp	(working copy)
++@@ -5,8 +5,8 @@
++ #include "term.h"
++ #include "cmdquote.h"
++ #include "vexception.h"
++-LexIterator::LexIterator(QuoteStream* qs, CharStream* cs)
++-    :QuoteIterator(qs),_lex(new Lexer(cs)),_current(0) {}
+++LexIterator::LexIterator(CharStream* cs)
+++    :QuoteIterator(0),_lex(new Lexer(cs)),_current(0) {}
++ 
++ bool LexIterator::hasNext() {
++     if (!_current)
++@@ -19,6 +19,8 @@
++     Term* t = (Term*)lex_next();
++     if (t->type() == TOpen)
++         return compound(t);
+++    if (t->type() == TClose)
+++        throw VSynException("err:lex:close","Unexpected Quote close");
++     return t;
+  }
+-+BuffCharStream::~BuffCharStream() {
+-+    if (_buf)
+-+        delete[] _buf;
+-+}
++ Token* LexIterator::lex_next() {
++@@ -35,9 +37,11 @@
++         Token* t = lex_next();
++         if (!t)
++             throw VSynException("err:lex:close","Compound not closed");
++-        if (t->type() == TClose)
+++        if (t->type() == TClose) {
++             if (t->cvalue() == Lexer::closeCompound(open->cvalue()))
++                 break;
+++            throw VSynException("err:lex:close","invalid compound close");
+++        }
++         if (t->type() == TOpen)
++             local->add(compound(t));
++         else
++Index: quotestream.cpp
++===================================================================
++--- quotestream.cpp	(revision 218)
+++++ quotestream.cpp	(working copy)
++@@ -1,19 +1,23 @@
+++#include "common.h"
+++#include "token.h"
++ #include "quotestream.h"
++ #include "quoteiterator.h"
+++
++ QuoteStream::QuoteStream() {
+++    _stream = new Node(0);
+++    _size = 0;
+++    _first = _stream;
++ }
++ void QuoteStream::add(Token* t) {
++-    _stream.push_back(t);
+++    _stream->link = new Node(t);
+++    _stream = _stream->link;
+++    ++_size;
++ }
++ 
++ int QuoteStream::size() {
++-    return _stream.size();
+++    return _size;
++ }
++ 
++-Token* QuoteStream::get(int i) {
++-    return _stream[i];
++-}
++-
++ TokenIterator* QuoteStream::iterator() {
++-    return (TokenIterator*)new QuoteIterator(this);
+++    return new QuoteIterator(_first);
++ }
++Index: quoteiterator.h
++===================================================================
++--- quoteiterator.h	(revision 218)
+++++ quoteiterator.h	(working copy)
++@@ -2,13 +2,13 @@
++ #define QUOTEITERATOR_H
++ #include "tokeniterator.h"
++ class QuoteStream;
+++class Node;
++ class QuoteIterator : public TokenIterator {
++     public:
++         virtual bool hasNext();
++         virtual Token* next();
++-        QuoteIterator(QuoteStream* q);
+++        QuoteIterator(Node* q);
++     private:
++-        QuoteStream* _qs;
++-        int _index;
+++        Node* _qs;
++ };
++ #endif
++Index: tokeniterator.h
++===================================================================
++--- tokeniterator.h	(revision 218)
+++++ tokeniterator.h	(working copy)
++@@ -1,7 +1,8 @@
++ #ifndef TOKENITERATOR_H
++ #define TOKENITERATOR_H
+++#include "common.h"
++ class Token;
++-struct TokenIterator {
+++struct TokenIterator : public gc {
++     virtual bool hasNext()=0;
++     virtual Token* next()=0;
++ };
++Index: quote.h
++===================================================================
++--- quote.h	(revision 218)
+++++ quote.h	(working copy)
++@@ -1,9 +1,9 @@
++ #ifndef QUOTE_H
++ #define QUOTE_H
++-
+++#include "common.h"
++ class TokenStream;
++ class VFrame;
++-struct Quote {
+++struct Quote : public gc {
++     virtual void eval(VFrame* scope) = 0;
++     virtual TokenStream* tokens() = 0;
++     virtual char* to_s() = 0;
++Index: lexstream.cpp
++===================================================================
++--- lexstream.cpp	(revision 218)
+++++ lexstream.cpp	(working copy)
++@@ -4,5 +4,5 @@
++ LexStream::LexStream(CharStream* c) : _stream(c) {
++ }
++ TokenIterator* LexStream::iterator() {
++-    return new LexIterator(this,_stream);
+++    return new LexIterator(_stream);
++ }
+Index: term.cpp
+===================================================================
+--- term.cpp	(revision 218)
++++ term.cpp	(working copy)
+@@ -67,6 +67,10 @@
+             return qvalue()->to_s();
+         case TFrame:
+             return fvalue()->to_s();
++        case TOpen:
++            return "<?? open>";
++        case TClose:
++            return "<?? close>";
+         default:
+             return "<default>";
+     }
+@@ -83,6 +87,8 @@
+         case TBool: return "<bool>";
+         case TQuote: return "<quote>";
+         case TFrame: return "<frame>";
++        case TOpen : return "<? open>";
++        case TClose : return "<? close>";
+         default: return "<?>";
      }
  }
-+BuffCharStream::~BuffCharStream() {
-+    if (_buf)
-+        delete[] _buf;
-+}
+Index: quoteiterator.cpp
+===================================================================
+--- quoteiterator.cpp	(revision 218)
++++ quoteiterator.cpp	(working copy)
+@@ -1,14 +1,14 @@
++#include "token.h"
+ #include "quoteiterator.h"
+ #include "quotestream.h"
+ 
+-QuoteIterator::QuoteIterator(QuoteStream* q):_qs(q),_index(0) {}
++QuoteIterator::QuoteIterator(Node* q):_qs(q) {}
+ 
+ bool QuoteIterator::hasNext() {
+-    if (_qs->size() > _index)
+-        return true;
+-    return false;
++    return _qs->link != 0;
+ }
+ 
+ Token* QuoteIterator::next() {
+-    return _qs->get(_index++);
++    _qs = _qs->link;
++    return _qs->data;
+ }
+Index: lexiterator.h
+===================================================================
+--- lexiterator.h	(revision 218)
++++ lexiterator.h	(working copy)
+@@ -7,7 +7,7 @@
+ class CharStream;
+ class LexIterator : public QuoteIterator {
+     public:
+-        LexIterator(QuoteStream* qs, CharStream* cs);
++        LexIterator(CharStream* cs);
+         virtual bool hasNext();
+         virtual Token* next();
+     private:
+Index: quotestream.h
+===================================================================
+--- quotestream.h	(revision 218)
++++ quotestream.h	(working copy)
+@@ -3,15 +3,18 @@
+ #include <vector>
+ #include "tokenstream.h"
+ class Token;
++class Node;
+ class QuoteIterator;
++
+ class QuoteStream : public TokenStream {
+     public:
+         QuoteStream();
+         virtual void add(Token* t);
+         virtual int size();
+-        virtual Token* get(int i);
+         virtual TokenIterator* iterator();
+-    protected:
+-        std::vector<Token*> _stream;
++    private:
++        Node* _stream;
++        int _size;
++        Node* _first;
+ };
+ #endif
+Index: consolecharstream.h
+===================================================================
+--- consolecharstream.h	(revision 218)
++++ consolecharstream.h	(working copy)
+@@ -1,6 +1,5 @@
+ #ifndef CONSOLECHARSTREAM_H
+ #define CONSOLECHARSTREAM_H
+-#include <vector>
+ #include "charstream.h"
+ struct Lexer;
+ class ConsoleCharStream : public CharStream {
+Index: lexer.h
+===================================================================
+--- lexer.h	(revision 218)
++++ lexer.h	(working copy)
+@@ -3,9 +3,10 @@
+ #include <vector>
+ #include <stack>
+ #include <list>
++#include "common.h"
+ class CharStream;
+ class Term;
+-class Lexer {
++class Lexer : public gc {
+     public:
+         Lexer(CharStream* q);
+         void lex();
+Index: vframe.h
+===================================================================
+--- vframe.h	(revision 218)
++++ vframe.h	(working copy)
+@@ -5,7 +5,7 @@
+ class Quote;
+ class VStack;
+ typedef std::map<char*, Quote*, cmp_str> QMap;
+-class VFrame {
++class VFrame : public gc {
+     public:
+         int id();
+ 
+Index: token.h
+===================================================================
+--- token.h	(revision 218)
++++ token.h	(working copy)
+@@ -1,11 +1,12 @@
+ #ifndef TOKEN_H
+ #define TOKEN_H
++#include "common.h"
+ #include "type.h"
+ #include "num.h"
+ class Quote;
+ class VFrame;
+ class Num;
+-struct Token {
++struct Token : public gc {
+     virtual char* value()=0;
+     virtual Type type()=0;
+     virtual bool bvalue()=0;
+@@ -17,4 +18,13 @@
+     virtual VFrame* fvalue()=0;
+     virtual Num numvalue()=0;
+ };
++
++struct Node : public gc {
++    Token* data;
++    Node* link;
++    Node(Token* e) {
++        data = e;
++    }
++};
++
+ #endif
+Index: common.h
+===================================================================
+--- common.h	(revision 218)
++++ common.h	(working copy)
+@@ -9,5 +9,9 @@
+ 
+ static const double Precision = 0.0000000000000001;
+ static const int MaxBuf = 1024;
+-
++#ifdef HAS_GC
++#include <gc/gc_cpp.h>
++#else
++class gc {};
+ #endif
++#endif
