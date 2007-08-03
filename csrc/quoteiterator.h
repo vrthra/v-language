@@ -1,14 +1,13 @@
 #ifndef QUOTEITERATOR_H
 #define QUOTEITERATOR_H
+#include "token.h"
 #include "tokeniterator.h"
-class QuoteStream;
 class QuoteIterator : public TokenIterator {
     public:
         virtual bool hasNext();
         virtual Token* next();
-        QuoteIterator(QuoteStream* q);
+        QuoteIterator(Node* q);
     private:
-        QuoteStream* _qs;
-        int _index;
+        Node* _qs;
 };
 #endif

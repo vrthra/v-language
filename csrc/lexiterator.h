@@ -7,7 +7,7 @@ class QuoteStream;
 class CharStream;
 class LexIterator : public QuoteIterator {
     public:
-        LexIterator(QuoteStream* qs, CharStream* cs);
+        LexIterator(CharStream* cs);
         virtual bool hasNext();
         virtual Token* next();
     private:

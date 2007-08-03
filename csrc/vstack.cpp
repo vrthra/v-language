@@ -1,8 +1,9 @@
-#include "vstack.h"
+#include <stdio.h>
 #include "tokeniterator.h"
 #include "quotestream.h"
 #include "cmdquote.h"
 #include "vexception.h"
+#include "vstack.h"
 VStack::VStack() {
     _now = new Node(0);
     _first = _now;

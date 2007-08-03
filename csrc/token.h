@@ -17,4 +17,14 @@ struct Token {
     virtual VFrame* fvalue()=0;
     virtual Num numvalue()=0;
 };
+
+struct Node {
+    Token* data;
+    Node* link;
+    Node(Token* e) {
+        data = e;
+	link = 0;
+    }
+};
+
 #endif

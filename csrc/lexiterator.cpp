@@ -5,8 +5,8 @@
 #include "term.h"
 #include "cmdquote.h"
 #include "vexception.h"
-LexIterator::LexIterator(QuoteStream* qs, CharStream* cs)
-    :QuoteIterator(qs),_lex(new Lexer(cs)),_current(0) {}
+LexIterator::LexIterator(CharStream* cs)
+    :QuoteIterator(0),_lex(new Lexer(cs)),_current(0) {}
 
 bool LexIterator::hasNext() {
     if (!_current)

@@ -1,6 +1,6 @@
 #ifndef QUOTESTREAM_H
 #define QUOTESTREAM_H
-#include <vector>
+#include "token.h"
 #include "tokenstream.h"
 class Token;
 class QuoteIterator;
@@ -9,9 +9,10 @@ class QuoteStream : public TokenStream {
         QuoteStream();
         virtual void add(Token* t);
         virtual int size();
-        virtual Token* get(int i);
         virtual TokenIterator* iterator();
     protected:
-        std::vector<Token*> _stream;
+        Node* _stream;
+        Node* _first;
+        long _size;
 };
 #endif

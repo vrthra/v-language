@@ -1,14 +1,6 @@
 #ifndef VSTACK_H
 #define VSTACK_H
 #include "term.h"
-
-struct Node {
-    Token* data;
-    Node* link;
-    Node(Token* e) {
-        data = e;
-    }
-};
 struct Quote;
 class VStack {
     public:

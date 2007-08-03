@@ -1,14 +1,13 @@
 #include "quoteiterator.h"
 #include "quotestream.h"
 
-QuoteIterator::QuoteIterator(QuoteStream* q):_qs(q),_index(0) {}
+QuoteIterator::QuoteIterator(Node* q):_qs(q) {}
 
 bool QuoteIterator::hasNext() {
-    if (_qs->size() > _index)
-        return true;
-    return false;
+    return _qs->link != 0;
 }
 
 Token* QuoteIterator::next() {
-    return _qs->get(_index++);
+    _qs = _qs->link;
+    return _qs->data;
 }
