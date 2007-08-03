@@ -1,6 +1,5 @@
 #ifndef CONSOLECHARSTREAM_H
 #define CONSOLECHARSTREAM_H
-#include <vector>
 #include "charstream.h"
 struct Lexer;
 class ConsoleCharStream : public CharStream {
