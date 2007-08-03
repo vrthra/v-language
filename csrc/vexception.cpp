@@ -3,7 +3,7 @@
 #include "cmdquote.h"
 #include <stdarg.h>
 
-VException::VException(char* err, Token* t, char* msgfmt, ...) {
+VException::VException(char* err, Token* t, char* msgfmt, ...):_token(t) {
     info = new std::stringstream();
     *info << err << ' ' << t->value();
 
@@ -16,27 +16,15 @@ VException::VException(char* err, Token* t, char* msgfmt, ...) {
     va_start(argp, msgfmt);
     std::vsprintf(buffer, msgfmt, argp);
     va_end(argp);
-    *info <<' '<< buffer;
-}
-
-VException::VException(char* err, char* msgfmt, ...) {
-    info = new std::stringstream();
-    *info << err;
-    _err = err;
-    char buffer[MaxBuf];
-    va_list argp;
-    va_start(argp, msgfmt);
-    std::vsprintf(buffer, msgfmt, argp);
-    va_end(argp);
-    *info <<' '<< buffer;
+    *info <<buffer;
 }
 
 char* VException::message() {
     return (char*)info->str().c_str();
 }
 
-Quote* VException::quote() {
-    return CmdQuote::getdef(_err);
+Token* VException::token() {
+    return _token;
 }
 
 void VException::addLine(char* v, ...) {

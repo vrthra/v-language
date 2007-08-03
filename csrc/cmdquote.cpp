@@ -27,41 +27,18 @@ CmdQuote::CmdQuote(TokenStream* tokens) {
 }
 void CmdQuote::dofunction(VFrame* scope) {
     VStack* st = scope->stack();
+    Token* sym = st->pop();
+    Quote* q = scope->lookup(sym->svalue());
+    if (!q)
+        throw VException("err:undef_symbol", sym, sym->value());
     try {
-        Token* sym = st->pop();
-        if (sym->type()!= TSymbol)
-            throw VException("err:not_symbol", sym, "%s %s", sym->value(), "Not a symbol");
-        Quote* q = scope->lookup(sym->svalue());
-        if (!q)
-            throw VException("err:undef_symbol", sym, "%s %s", sym->value(), "Undefined Symbol");
-        try {
-            q->eval(scope->child());
-        } catch (VException& e) {
-            e.addLine(sym->value());
-            throw e;
-        }
+        q->eval(scope->child());
     } catch (VException& e) {
-        if(scope->dict().find("$shield") == scope->dict().end())
-            throw e;
-        Cmd* q = (Cmd*)scope->dict()["$shield"];
-        if (q->store().find("$info") == q->store().end())
-            throw e;
-        Shield* current = q->store()["$info"];
-        while(current) {
-            // apply shield
-            scope->stack()->push(new Term(TQuote, e.quote()));
-            current->quote->eval(scope);
-            Token *bv = st->pop();
-            if (bv->type() != TBool || bv->bvalue()) {
-                // restore the stack and continue.
-                st->now(current->stack);
-                return;
-            }
-            current = current->next;
-        }
+        e.addLine(sym->value());
         throw e;
     }
 }
+
 bool CmdQuote::cando(VStack* stack) {
     if (stack->empty())
         return false;

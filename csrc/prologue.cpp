@@ -1319,37 +1319,25 @@ struct Ctake : public Cmd {
     char* to_s() {return "take";}
 };
 
-struct CmdShield : public Cmd {
-    void eval(VFrame* q) {
-        // dummy
-    }
-    char* to_s() {return "<shield>";}
-};
-
-struct Cshield : public Cmd {
+struct Ccatch : public Cmd {
     void eval(VFrame* q) {
         VStack* p = q->stack();
-        Token* t = p->pop();
-        
-        Cmd* shield = 0;
-        Shield* s = new Shield(p, t->qvalue());
-        if(q->parent()->dict().find("$shield") == q->parent()->dict().end()) {
-            shield = new CmdShield();
-            shield->store()["$info"] = s;
-            q->parent()->def("$shield",shield);
-        } else {
-            shield = (Cmd*)q->parent()->dict()["$shield"];
-            Shield* os = shield->store()["$info"];
-            s->next = os;
-            shield->store()["$info"] = s;
+        Token* c = p->pop();
+        Token* expr = p->pop();
+        try {
+            expr->qvalue()->eval(q);
+        } catch (VException &ve) {
+            p->push(ve.token());
+            c->qvalue()->eval(q);
         }
     }
-    char* to_s() {return "shield";}
+    char* to_s() {return "catch";}
 };
 
 struct Cthrow : public Cmd {
     void eval(VFrame* q) {
-        throw VException("err:throw", q->stack()->peek(), q->stack()->peek()->value());
+        Token* t = q->stack()->pop();
+        throw VException("err:throw", t, t->value());
     }
     char* to_s() {return "throw";}
 };
@@ -1484,7 +1472,7 @@ void Prologue::init(VFrame* frame) {
     
     frame->def("help", new Chelp);
     frame->def("throw", new Cthrow);
-    frame->def("shield", new Cshield);
+    frame->def("catch", new Ccatch);
     frame->def(">def", new Cgetdef);
     frame->def("env", new Cenv);
 

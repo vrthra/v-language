@@ -33,7 +33,7 @@ public class Prologue {
                 return a.numvalue().doubleValue() ==  b.numvalue().doubleValue();
             case TString:
                 if (b.type != Type.TString)
-                    throw new VException("err:type:eq "+a.value() + " "+b.value(), "Type error(=)");
+                    throw new VException("err:type:eq",a, a.value() + " != "+b.value() + "(type)");
                 return a.svalue().equals(b.svalue());
             default:
                 return a.value().equals(b.value());
@@ -53,10 +53,6 @@ public class Prologue {
             HashMap<String, CmdQuote> map = new HashMap<String, CmdQuote>();
             Iterator<Term> it = (Iterator<Term>)qval.tokens().iterator();
             Term<String> symbol = it.next();
-
-            /*Quote check = q.lookup(symbol.svalue());
-              if (check != null)
-              throw new VException("Attempt to redefine (" + symbol.value() + ") -- we are pure.");*/
 
             // copy the rest of tokens to our own stream.
             QuoteStream nts = new QuoteStream();
@@ -149,8 +145,7 @@ public class Prologue {
                                         if (tmplterm.value().equals(lastelem.value()))
                                             break;
                                         else
-                                            throw new VException("err:evaltmpl:eq "+tmplterm.value() + " "+lastelem.value(), 
-                                                    "V(evaltmpl:eq)");
+                                            throw new VException("err:view:eq",lastelem,tmplterm.value() + " != "+lastelem.value());
                                 }
 
                             } else {
@@ -167,9 +162,10 @@ public class Prologue {
                         }
                         break;
                     } catch (VException e) {
-                        throw new VException(e, t.value());
+                        e.addLine(t.value());
+                        throw e;
                     } catch (Exception e) {
-                        throw new VException("err:evaltmpl:sym "+t.value(), "V(evaltemplate:sym) " + e.getMessage());
+                        throw new VException("err:view:sym",t,t.value() + " " + e.getMessage());
                     }
 
                 case TQuote:
@@ -178,9 +174,10 @@ public class Prologue {
                         Term et = estream.next();
                         evaltmpl(t.qvalue().tokens(), et.qvalue().tokens(), symbols);
                     } catch (VException e) {
-                        throw new VException(e, t.value());
+                        e.addLine(t.value());
+                        throw e;
                     } catch (Exception e) {
-                        throw new VException("err:evaltmpl:quote "+t.value(), "V(evaltemplate:quote) " + e.getMessage());
+                        throw new VException("err:view:quote",t,t.value() + " " + e.getMessage());
                     }
                     break;
                 default:
@@ -189,7 +186,7 @@ public class Prologue {
                     if (t.value().equals(eterm.value()))
                         break;
                     else
-                        throw new VException("err:evaltmpl:eq " +t.value() + " " +eterm.value(), "V(evaltemplate:eq) ");
+                        throw new VException("err:view:eq",eterm, t.value() + " != " +eterm.value());
             }
         }
     }
@@ -419,33 +416,26 @@ public class Prologue {
         }
     };
 
-    static Cmd _shield = new Cmd() {
+    static Cmd _catch = new Cmd() {
         @SuppressWarnings("unchecked")
             public void eval(VFrame q) {
                 // eval is passed in the quote representing the current scope.
                 VStack p = q.stack();
-                Term t = p.pop();
-                // save the stack.
-                // we can also have multiple shields
-                // Try and get the $shield if any
-                Cmd shield = (Cmd)q.parent().dict().get("$shield");
-                Shield s = new Shield(p,t.qvalue());
-                if (shield == null) {
-                    shield = new Cmd(){public void eval(VFrame q){}};
-                    shield.store().put("$info", new Stack<Shield>());
-                    // define it in parent as the frame we are passed in
-                    // expires as soon as we exit.
-                    q.parent().def("$shield", shield);
+                Term c = p.pop();
+                Term expr = p.pop();
+                try {
+                    expr.qvalue().eval(q);
+                } catch (VException ve) {
+                    p.push((Term)ve.token());
+                    c.qvalue().eval(q);
                 }
-                Stack<Shield> stack = (Stack<Shield>)shield.store().get("$info");
-                stack.push(s);
-                V.debug("Shield @ " + q.parent().id());
             }
     };
 
     static Cmd _throw = new Cmd() {
         public void eval(VFrame q) {
-            throw new VException("err:throw " + q.stack().peek().value(), "Throw(user)" );
+            Term t = q.stack().pop();
+            throw new VException("err:throw", t, t.value());
         }
     };
 
@@ -957,7 +947,7 @@ public class Prologue {
                 }
                 ++count;
             }
-            throw new VException("err:overflow " + list.value() + " " + idx,"Quote overflow");
+            throw new VException("err:at:overflow",i, "[" + list.value() + "]:" + idx);
         }
     };
 
@@ -1270,8 +1260,11 @@ public class Prologue {
                 CmdQuote module = new CmdQuote(new LexStream(cs));
                 module.eval(q.parent());
                 V.debug("use @ " + q.id());
+            } catch (VException e) {
+                e.addLine("use " + val);
+                throw e;
             } catch (Exception e) {
-                throw new VException("err:use " + file.value(), "use failed" );
+                throw new VException("err:use",file, file.value());
             }
         }
     };
@@ -1290,8 +1283,11 @@ public class Prologue {
                 CmdQuote module = new CmdQuote(new LexStream(cs));
                 module.eval(env.fvalue());
                 V.debug("use @ " + q.id());
+            } catch (VException e) {
+                e.addLine("*use " + val);
+                throw e;
             } catch (Exception e) {
-                throw new VException("err:*use " + file.value(), "*use failed" );
+                throw new VException("err:*use",file,file.value());
             }
         }
     };
@@ -1303,8 +1299,11 @@ public class Prologue {
             try {
                 Util.evaluate(buff.svalue(), q.parent());
                 V.debug("eval @ " + q.id());
+            } catch (VException e) {
+                e.addLine("eval " + buff.value());
+                throw e;
             } catch (Exception e) {
-                throw new VException("err:eval " + buff.value(), "eval failed" );
+                throw new VException("err:eval",buff, buff.value());
             }
         }
     };
@@ -1317,8 +1316,11 @@ public class Prologue {
             Term buff = p.pop();
             try {
                 Util.evaluate(buff.svalue(), env);
+            } catch (VException e) {
+                e.addLine("*eval " + buff.value());
+                throw e;
             } catch (Exception e) {
-                throw new VException("err:*eval " + buff.value(), "*eval failed" );
+                throw new VException("err:*eval",buff, buff.value());
             }
         }
     };
@@ -1358,7 +1360,7 @@ public class Prologue {
 
         iframe.def("true", _true);
         iframe.def("false", _false);
-        iframe.def("shield", _shield);
+        iframe.def("catch", _catch);
         iframe.def("throw", _throw);
         iframe.def("stack", _stack);
         iframe.def("unstack", _unstack);

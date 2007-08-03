@@ -10,6 +10,6 @@ public abstract class Cmd implements Quote {
     }
 
     public TokenStream tokens() {
-        throw new VException("err:internal:cmd:tokens","Commands can not have tokens.");
+        return null;
     }	
 }

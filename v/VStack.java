@@ -35,7 +35,7 @@ public class VStack {
 
     public Term pop() {
         if (now == null || now.data == null)
-            throw new VException("err:stack_empty","Empty Stack.");
+            throw new VException("err:stack_empty",new Term<Integer>(Type.TInt, 0),"Empty Stack.");
         Term t = now.data;
         now = now.link;
         return t;

@@ -491,18 +491,25 @@
 
 ['abc' =] [tst:open] 'module' test
 [
-    [put ' throw expected (success)' puts true] shield
     ['def' =] [tst:using] 'module' test
     ['!' =] [tst:hide] 'module' test
-] i
+    # should not come here.
+    'error' throw
+] ['>' put put '<' put ' throw expected (success)' puts] catch
+# pop off the sentry.
+pop
 #=============================================
 #shield
 [cmdthrows
-        [dup puts 'false shield' puts false] shield
-        'hi there throw' throw].
+    [
+        'hi there throw' throw
+    ] [puts 'exception continued' puts ' more' throw] catch
+].
 [mycmd
-        [dup puts 'true shield' puts true] shield
-        cmdthrows].
+    [
+        cmdthrows
+    ] [puts 'exception caught' puts] catch
+].
 mycmd
 
 [env [platform java] in?] [

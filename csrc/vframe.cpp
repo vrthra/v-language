@@ -47,7 +47,7 @@ Quote* VFrame::words() {
 }
 void VFrame::def(char* sym, Quote* q) {
     if (singleassign() && hasKey(sym))
-        throw VException("err:symbol_already_bound", sym);
+        throw VException("err:symbol_already_bound", new Term(TSymbol, sym), sym);
     _dict[sym] = q;
 }
 

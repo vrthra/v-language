@@ -40,7 +40,7 @@ public class VFrame {
     public void def(String sym, Quote q) {
         if (V.singleassign)
             if (_dict.containsKey(sym))
-                throw new VException("err:symbol_already_bound "+sym,"symbol was bound earlier");
+                throw new VException("err:symbol_already_bound", new Term<String>(Type.TString, sym),sym);
         _dict.put(sym,q);
     }
     public VFrame parent() {

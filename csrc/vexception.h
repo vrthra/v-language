@@ -6,14 +6,14 @@
 class Quote;
 class VException : public Vx {
     public:
-        VException(char* err, char* msgfmt, ...);
         VException(char* err, Token* t, char* msgfmt, ...);
         virtual char* message();
         virtual void addLine(char* v, ...);
         std::stringstream* info;
-        Quote* quote();
+        Token* token();
     private:
         char* _err;
+        Token* _token;
 };
 
 class VSynException : public Vx {

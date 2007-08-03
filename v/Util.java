@@ -8,7 +8,7 @@ public class Util {
         try {
             getdef(buff).eval(q);
         } catch (Exception e) {
-            throw new VException("err:eval " + buff, "eval failed " + e.getMessage());
+            throw new VException("err:eval", new Term<String>(Type.TString,buff), "eval failed " + e.getMessage());
         }
     }
 

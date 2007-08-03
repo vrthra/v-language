@@ -42,51 +42,18 @@ public class CmdQuote implements Quote {
         }
     }
 
-    @SuppressWarnings ("unchecked")
     public void dofunction(VFrame scope) {
         VStack st = scope.stack();
+        // pop the first token in the stack
+        Token sym = st.pop();
+        Quote q = scope.lookup(sym.value());
+        if (q == null)
+            throw new VException("err:undef_symbol",sym, sym.value());
+        // Invoke the quote on our quote by passing us as the parent.
         try {
-            // pop the first token in the stack
-            Token sym = st.pop();
-            if (sym.type() != Type.TSymbol)
-                throw new VException("err:not_symbol "+sym.value(),"Not a symbol");
-            Quote q = scope.lookup(sym.value());
-            if (q == null)
-                throw new VException("err:undef_symbol ("+sym.value() +")","Undefined symbol");
-            // Invoke the quote on our quote by passing us as the parent.
-            V.debug("Using " + scope.id() + " val " + sym.value() );
-            try {
-                q.eval(scope.child());
-            } catch (VException e) {
-                throw new VException(e, sym.value() );
-            }
+            q.eval(scope.child());
         } catch (VException e) {
-            // do we have a $shield defined?
-            // the scope we get is the child scope of executing environment.
-            // so we take the parent since we are accessing dict directly.
-            V.debug("Shield?" + scope.id() + "|" + e.getMessage());
-            Cmd q = (Cmd)scope.dict().get("$shield");
-            if (q == null)
-                throw e;
-            Stack<Shield> stack = (Stack<Shield>)q.store().get("$info");
-            if (stack.empty())
-                throw e;
-            Shield current = stack.pop();
-
-            while (current != null) {
-                // apply shield
-                scope.stack().push(new Term<Quote>(Type.TQuote, e.quote()));
-                current.quote.eval(scope);
-                if(st.pop().bvalue()) {
-                    //restore the stack and continue.
-                    st.now(current.stack);
-                    return;
-                }
-                if (!stack.empty())
-                    current = stack.pop();
-                else
-                    current = null;
-            }
+            e.addLine(sym.value());
             throw e;
         }
     }

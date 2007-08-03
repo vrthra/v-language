@@ -34,7 +34,7 @@ Token* LexIterator::compound(Token* open) {
     while(true) {
         Token* t = lex_next();
         if (!t)
-            throw new VSynException("err:lex:close","Compound not closed");
+            throw VSynException("err:lex:close","Compound not closed");
         if (t->type() == TClose)
             if (t->cvalue() == Lexer::closeCompound(open->cvalue()))
                 break;

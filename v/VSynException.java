@@ -1,10 +1,15 @@
 package v;
 public class VSynException extends Vx {
-    public VSynException(String s1, String s2) {
-        super(s1,s2);
+    StringBuffer _info = new StringBuffer();
+    String _err = null;
+    public VSynException(String err, String info) {
+        _err = err;
+        _info.append(info);
     }
-
-    public VSynException(Vx e, String s) {
-        super(e,s);
+    String message() {
+        return _err;
+    }
+    public void addLine(String s) {
+        _info.append("\n\t" + s);
     }
 }

@@ -164,7 +164,7 @@ void Lexer::cclose() {
         char c = _cstack.top();
         _cstack.pop();
         if (c != _stream->current())
-            throw new VSynException("err:internal:invalid_close","Invalid close  - Need close");
+            throw VSynException("err:internal:invalid_close","Invalid close  - Need close");
         add(new Term(TClose, _stream->current()));
 }
 void Lexer::lcomment() {
