@@ -7,7 +7,6 @@ class VStack;
 typedef std::map<char*, Quote*, cmp_str> QMap;
 class VFrame {
     public:
-        QMap& dict();
         int id();
 
         VFrame();

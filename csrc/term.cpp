@@ -1,4 +1,3 @@
-#include <string>
 #include "term.h"
 #include "quote.h"
 #include "quotestream.h"
@@ -44,24 +43,23 @@ Type Term::type() {
     return _type;
 }
 
-char buffer[MaxBuf];
 char* Term::value() {
     //TSymbol, TQuote, TFrame, TString, TInt, TDouble, TChar,TBool,
     switch(_type) {
         case TInt:
-            std::sprintf(buffer,"%d", ivalue());
+            std::sprintf(_buffer,"%d", ivalue());
             break;
         case TDouble:
-            std::sprintf(buffer,"%f", dvalue());
+            std::sprintf(_buffer,"%f", dvalue());
             break;
         case TSymbol:
             return svalue();
         case TString:
             return svalue();
         case TChar:
-            buffer[0] = '~';
-            buffer[1] = cvalue();
-            buffer[2] = 0;
+            _buffer[0] = '~';
+            _buffer[1] = cvalue();
+            _buffer[2] = 0;
             break;
         case TBool:
             return (char*) (bvalue() ? "true": "false");
@@ -72,7 +70,7 @@ char* Term::value() {
         default:
             return "<default>";
     }
-    return buffer;
+    return _buffer;
 }
 
 char* Term::stype(Type t) {

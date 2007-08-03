@@ -19,9 +19,6 @@ VFrame::VFrame(VFrame* parent) {
     _idcount++;
     _id = _idcount;
 }
-QMap& VFrame::dict() {
-    return _dict;
-}
 int VFrame::id() {
     return _id;
 }

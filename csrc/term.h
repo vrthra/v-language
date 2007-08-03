@@ -1,5 +1,6 @@
 #ifndef TERM_H
 #define TERM_H
+#include "common.h"
 #include "type.h"
 #include "token.h"
 class VFrame;
@@ -38,5 +39,6 @@ class Term : public Token {
         Num _num;
         char* stype(Type t);
         void checkType(Type t, Term* term);
+        char _buffer[MaxBuf];
 };
 #endif

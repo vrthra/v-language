@@ -1,5 +1,3 @@
-#include <fstream>
-#include <sstream>
 #include "buffcharstream.h"
 
 char BuffCharStream::read() {
