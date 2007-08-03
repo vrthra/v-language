@@ -1,0 +1,24 @@
+Index: buffcharstream.h
+===================================================================
+--- buffcharstream.h	(revision 212)
++++ buffcharstream.h	(working copy)
+@@ -4,6 +4,7 @@
+ class BuffCharStream : public CharStream {
+     public:
+         BuffCharStream(char* buff);
++        ~BuffCharStream();
+         virtual char read();
+         virtual char peek();
+         virtual char current();
+Index: buffcharstream.cpp
+===================================================================
+--- buffcharstream.cpp	(revision 212)
++++ buffcharstream.cpp	(working copy)
+@@ -24,3 +24,7 @@
+         std::strcpy(_buf, buff);
+     }
+ }
++BuffCharStream::~BuffCharStream() {
++    if (_buf)
++        delete[] _buf;
++}
