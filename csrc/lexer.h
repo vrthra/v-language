@@ -2,8 +2,8 @@
 #define LEXER_H
 #include "common.h"
 #include "token.h"
-#include <stack>
 class CharStream;
+class CNode;
 class Lexer {
     public:
         Lexer(CharStream* q);
@@ -32,7 +32,8 @@ class Lexer {
         char _word[MaxBuf];
         int _wi;
 
-        std::stack<char> _cstack;
+        CNode* _cstack;
+
         Node* _queue;
         Node* _first;
 

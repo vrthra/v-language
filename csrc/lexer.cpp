@@ -1,15 +1,25 @@
+#include <ctype.h>
+#include <stdlib.h>
 #include "lexer.h"
 #include "type.h"
 #include "term.h"
 #include "charstream.h"
 #include "vexception.h"
 #include "v.h"
+
+struct CNode {
+    CNode* link;
+    char c;
+    CNode(char ch):link(0), c(ch) {}
+};
+
 Lexer::Lexer(CharStream* q) {
     _stream = q;
     _stream->lexer(this);
     _wi = 0;
     _has = true;
     _first = _queue = new Node(0);
+    _cstack = new CNode(0);
 }
 
 void Lexer::lex() {
@@ -63,7 +73,7 @@ void Lexer::lex() {
 }
 
 bool Lexer::closed() {
-    return _cstack.empty();
+    return _cstack->link == 0;
 }
 void Lexer::dump() {
     Node* i = _first->link;
@@ -155,14 +165,19 @@ char Lexer::closeCompound(char c) {
 }
 void Lexer::copen() {
     char c = _stream->current();
-    _cstack.push(closeCompound(c));
+
+    CNode* t = new CNode(closeCompound(c));
+    t->link = _cstack;
+    _cstack = t;
+
     add(new Term(TOpen, c));
 }
 void Lexer::cclose() {
-        if (_cstack.empty())
+        if (!_cstack->link)
             throw VSynException("err:internal:invalid_close","Invalid close - No open statement.");
-        char c = _cstack.top();
-        _cstack.pop();
+        char c = _cstack->c;
+        _cstack = _cstack->link;
+
         if (c != _stream->current())
             throw VSynException("err:internal:invalid_close","Invalid close  - Need close");
         add(new Term(TClose, _stream->current()));
