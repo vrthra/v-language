@@ -7,7 +7,7 @@
 Lexer::Lexer(CharStream* q) {
     _stream = q;
     _stream->lexer(this);
-    _word = new std::vector<char>();
+    _wi = 0;
     _has = true;
 }
 
@@ -15,7 +15,6 @@ void Lexer::lex() {
     // Use the read to fetch the values.
     // loop on each char, and add the found
     // symbols to the end of queue.
-    // _word->clear();
     char c = _stream->read();
     switch (c) {
         case '#':
@@ -123,7 +122,6 @@ bool Lexer::isBoundary(char c) {
 }
 void Lexer::add(Term* term) {
     _queue.push_back(term);
-    //_word->clear();
 }
 char Lexer::charconv(char n) {
     switch(n) {
@@ -178,17 +176,17 @@ void Lexer::string() {
         c = _stream->read();
         if (c == '\\') { // escaped.
             // read next char and continue.
-            _word->push_back(charconv(_stream->read()));
+            _word[_wi++] = charconv(_stream->read());
             continue;
         } else if (c == 0)
             break;
         if (start == c)
             break;
-        _word->push_back(c);
+        _word[_wi++] = c;
     }
-    _word->push_back('\0');
-    add(new Term(TString, (char*)&(*_word)[0]));
-    _word = new std::vector<char>();
+    _word[_wi++] = '\0';
+    add(new Term(TString, dup_str(_word)));
+    _wi = 0;
 }
 void Lexer::space() {
     while(true) {
@@ -227,19 +225,18 @@ bool isfloat(char* v) {
     return res;
 }
 void Lexer::word() {
-    _word->push_back(_stream->current());
+    _word[_wi++] = _stream->current();
     while (!isBoundary(_stream->peek()))
-        _word->push_back(_stream->read());
+        _word[_wi++] = _stream->read();
 
     // does it look like a number?
-    _word->push_back('\0');
-    char* word = (char*)&(*_word)[0];
+    _word[_wi++] = '\0';
 
-    if (isint(word))
-        add(new Term(TInt, atol(word)));
-    else if (isfloat(word))
-        add(new Term(TDouble, atof(word)));
+    if (isint(_word))
+        add(new Term(TInt, atol(_word)));
+    else if (isfloat(_word))
+        add(new Term(TDouble, atof(_word)));
     else
-        add(new Term(TSymbol, word));
-    _word = new std::vector<char>();
+        add(new Term(TSymbol, dup_str(_word)));
+    _wi = 0;
 }

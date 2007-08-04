@@ -1,6 +1,6 @@
 #ifndef LEXER_H
 #define LEXER_H
-#include <vector>
+#include "common.h"
 #include <stack>
 #include <list>
 class CharStream;
@@ -31,7 +31,9 @@ class Lexer {
         void character();
         void word();
 
-        std::vector<char>* _word;
+        char _word[MaxBuf];
+        int _wi;
+
         std::stack<char> _cstack;
         std::list<Term*> _queue;
         CharStream* _stream;

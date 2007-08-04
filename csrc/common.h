@@ -7,6 +7,8 @@ struct cmp_str {
     }
 };
 
+char* dup_str(char* c);
+
 static const double Precision = 0.0000000000000001;
 static const int MaxBuf = 1024;
 
