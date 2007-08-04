@@ -1,19 +1,17 @@
 #ifndef LEXER_H
 #define LEXER_H
 #include "common.h"
+#include "token.h"
 #include <stack>
-#include <list>
 class CharStream;
-class Term;
 class Lexer {
     public:
         Lexer(CharStream* q);
         void lex();
-        void reset();
         bool closed();
         void dump();
         bool hasNext();
-        Term* next();
+        Token* next();
         static char closeCompound(char c);
     private:
         bool isStringBoundary(char c);
@@ -21,7 +19,7 @@ class Lexer {
         bool isPunctuation(char c);
         bool isWhitespace(char c);
         bool isBoundary(char c);
-        void add(Term* term);
+        void add(Token* term);
         char charconv(char n);
         void copen();
         void cclose();
@@ -35,7 +33,9 @@ class Lexer {
         int _wi;
 
         std::stack<char> _cstack;
-        std::list<Term*> _queue;
+        Node* _queue;
+        Node* _first;
+
         CharStream* _stream;
         bool _has;
 };

@@ -9,6 +9,7 @@ Lexer::Lexer(CharStream* q) {
     _stream->lexer(this);
     _wi = 0;
     _has = true;
+    _first = _queue = new Node(0);
 }
 
 void Lexer::lex() {
@@ -60,29 +61,29 @@ void Lexer::lex() {
                 word();
     }
 }
-void Lexer::reset() {
-    _queue.erase(_queue.begin(), _queue.end());
-}
+
 bool Lexer::closed() {
     return _cstack.empty();
 }
 void Lexer::dump() {
-    for (std::list<Term*>::iterator i = _queue.begin(); i != _queue.end(); i++) {
-        V::out("%s;", *i);
+    Node* i = _first->link;
+    while(i) {
+        V::out("%s;", i->data);
+        i = i->link;
     }
     V::outln("");
 }
 bool Lexer::hasNext() {
     return _has;
 }
-Term* Lexer::next() {
+Token* Lexer::next() {
     if (!hasNext()) return 0;
     // do we have any thing on the stack?
     // if we have return it from there.
     // else run lex and try again.
-    if (_queue.size() != 0) {
-        Term* t = _queue.front();
-        _queue.pop_front();
+    if (_first->link != 0) {
+        Token* t = _first->link->data;
+        _first = _first->link;
         return t;
     } else {
         lex();
@@ -120,8 +121,9 @@ bool Lexer::isBoundary(char c) {
         return true;
     return false;
 }
-void Lexer::add(Term* term) {
-    _queue.push_back(term);
+void Lexer::add(Token* term) {
+    _queue->link = new Node(term);
+    _queue = _queue->link;
 }
 char Lexer::charconv(char n) {
     switch(n) {
