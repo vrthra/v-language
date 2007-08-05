@@ -57,9 +57,7 @@ char* CmdQuote::to_s() {
             outs << ' ';
     }
     outs << ']';
-    char* out = new char[outs.str().length() + 1];
-    std::strcpy(out, outs.str().c_str());
-    return out;
+    return dup_str(outs.str().c_str());
 }
 
 Quote* CmdQuote::getdef(char* buf) {

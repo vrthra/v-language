@@ -18,7 +18,6 @@ bool BuffCharStream::eof() {
 BuffCharStream::BuffCharStream(char* buff):_current(-1) {
     if (buff) {
         _len = strlen(buff);
-        _buf = new char[_len+1];
-        std::strcpy(_buf, buff);
+        _buf = dup_str(buff);
     }
 }

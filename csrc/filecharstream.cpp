@@ -14,8 +14,6 @@ FileCharStream::FileCharStream(char* filename):BuffCharStream(0) {
         os << buffer << "\n";
     }
     _len = os.str().length();
-    _buf = new char[_len +1];
-    std::strcpy(_buf, os.str().c_str());
-    _buf[strlen(_buf)] = 0;
+    _buf = dup_str(os.str().c_str());
 }
 
