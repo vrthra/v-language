@@ -10,7 +10,6 @@ class VFrame {
         int id();
 
         VFrame();
-        VFrame(VFrame* parent);
         Quote* lookup(char* key);
         Quote* words();
         void def(char* sym, Quote* q);
@@ -21,6 +20,7 @@ class VFrame {
         void reinit();
         char* to_s();
     private:
+        VFrame(VFrame* parent);
         static int _idcount;
         int _id;
         bool hasKey(char* key);

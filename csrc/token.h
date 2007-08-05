@@ -23,7 +23,7 @@ struct Node {
     Node* link;
     Node(Token* e) {
         data = e;
-	link = 0;
+        link = 0;
     }
 };
 

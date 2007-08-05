@@ -3,9 +3,8 @@
 #include "common.h"
 #include "quote.h"
 class TokenStream;
-class Cmd : public Quote {
-    public:
-        virtual TokenStream* tokens(){return 0;}
-        virtual char* to_s(){ return "<cmd>"; }
+struct Cmd : public Quote {
+    virtual TokenStream* tokens(){return 0;}
+    virtual char* to_s(){ return "<cmd>"; }
 };
 #endif

@@ -15,7 +15,7 @@ class ConsoleCharStream : public CharStream {
         int _index;
         Lexer* _lexer;
         char _current;
-        char* read_nobuf();
+        void read_nobuf();
         virtual int index();
 };
 #endif

@@ -14,5 +14,6 @@ class CmdQuote : public Quote {
     private:
         bool cando(VStack* stack);
         TokenStream* _tokens;
+        char* _val;
 };
 #endif

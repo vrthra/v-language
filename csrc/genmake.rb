@@ -12,14 +12,14 @@ File.open('Makefile', 'w+') do |f|
 all: v
 
 v: #{obj_files.join(' ')}
-\tg++ -o v #{obj_files.join(' ')} -L /usr/local/lib #{'-lgc' if has_gc}
+\tg++ -o v #{obj_files.join(' ')}
 
 ALL
     cpp_files.each do |cpp|
         depends = `g++ -I /usr/local/include -M #{cpp}`
         cdep = depends.gsub(/\\*\n/, ' ').split(/ +/).delete_if {|x| x =~ /\//}
         f.puts cdep.join(' ')
-        f.puts "\tg++ #{ '-DHAS_GC' if has_gc} -c -g -I /usr/local/include #{cpp}"
+        f.puts "\tg++ #{ '-DGC' if has_gc} -c -g -I /usr/local/include #{cpp}"
         f.puts "\n"
     end
     

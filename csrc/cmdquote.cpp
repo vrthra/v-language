@@ -24,6 +24,7 @@ TokenStream* CmdQuote::tokens() {
 }
 CmdQuote::CmdQuote(TokenStream* tokens) {
     _tokens = tokens;
+    _val = 0;
 }
 void CmdQuote::dofunction(VFrame* scope) {
     VStack* st = scope->stack();
@@ -48,16 +49,19 @@ bool CmdQuote::cando(VStack* stack) {
 }
 
 char* CmdQuote::to_s() {
-    std::ostringstream outs;
-    outs << '[';
-    TokenIterator* i = _tokens->iterator();
-    while(i->hasNext()) {
-        outs << i->next()->value();
-        if (i->hasNext())
-            outs << ' ';
+    if (!_val) {
+        std::ostringstream outs;
+        outs << '[';
+        TokenIterator* i = _tokens->iterator();
+        while(i->hasNext()) {
+            outs << i->next()->value();
+            if (i->hasNext())
+                outs << ' ';
+        }
+        outs << ']';
+        _val = dup_str(outs.str().c_str());
     }
-    outs << ']';
-    return dup_str(outs.str().c_str());
+    return _val;
 }
 
 Quote* CmdQuote::getdef(char* buf) {
