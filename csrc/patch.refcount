@@ -1,0 +1,1119 @@
+Index: gc.h
+===================================================================
+--- gc.h	(revision 238)
++++ gc.h	(working copy)
+@@ -1,85 +1,43 @@
+ #ifndef GC_H
+ #define GC_H
+ 
++#define HAS_GC 1
+ // we need to take into account two kinds of pointers.
+ // 1. the member pointers in objects. This can be captured by providing
+ // a member wrapper for member objects that gets destroyed when object
+ // is destroyed.
+ // 2. pointers allocated in the stack. To catch them, we use the same mechanism.
+ 
+-struct Scope;
+-class Gc {
+-    private:
+-        static int __phase;
+-    public:
+-        static int phase();
+-        static int phase(int np); 
+-        static long collect();
+-        static void addptr(Scope* ptr, void* gcptr);
+-        static Scope* getptr(void* ptr);
+-        static void rmptr(void* ptr);
+-        static void* bottom();
++struct Gc {
++    static void addptr(void* ptr);
++    static bool rmptr(void* ptr);
+ };
+ 
+-// (Gc)Scope holds the pointer for its life time. When GcScope is destroyed, the
+-// pointer associated is also deleted.
+-class Scope {
+-    protected:
+-        int _mark;
+-    public:
+-        int mark() {
+-            return _mark;
+-        }
+-        int mark(int m) {
+-            return _mark = m;
+-        }
+-        virtual ~Scope(){};
+-        virtual void* mem(){};
+-};
+-
+-template <class T> class GcScope : public virtual Scope {
+-    private:
+-        T* _mem;
+-        bool _isarray;
+-    public:
+-        GcScope(T* m, bool a, int phase):_mem(m),_isarray(a) {
+-            mark(phase);
+-        }
+-        void* mem() {
+-            return (void*) _mem;
+-        }
+-        ~GcScope() {
+-            // other kinds not implemented yet.
+-            if (_mem > Gc::bottom()) {
+-                // if it is a true new alloc.
+-                if (_isarray) {
+-                    delete[] _mem;
+-                } else {
+-                    delete _mem;
+-                }
+-            }
+-        }
+-};
+-
+ // classes P and PA holds the current ownership
+ template <class T, bool A=false> class P {
+     protected:
+         T* _data;
+         
+         virtual void attach(T* p, bool a=A) {
+-            Scope* g = Gc::getptr(p);
+-            if (!g)
+-                g = new GcScope<T>(p, a, Gc::phase());
+-            Gc::addptr(g, this);
++#ifdef HAS_GC
++            Gc::addptr(p);
++#endif
+         }
+ 
+         virtual void detach(T* p) {
++#ifdef HAS_GC
+             // we take our reference out.
+-            Gc::rmptr(this);
++            if(Gc::rmptr(p))
++                delete p;
++#endif
+         }
+ 
+     public:
+-        P(T* p):_data(p) {
++        T* v() {
++            return _data;
++        }
++
++        P(T* p=0):_data(p) {
+             attach(p);
+         }
+ 
+@@ -121,7 +79,7 @@
+          * register and continue.
+          */
+         P<T> &operator = (T *p) {
+-            detach(p._data);
++            detach(_data);
+             attach(p);
+             _data = p;
+             return *this;
+@@ -129,12 +87,16 @@
+ 
+         /* assignment from pointer object. */
+         P<T> &operator = (const P<T> &p) {
+-            detach(p._data);
++            detach(_data);
+             attach(p._data);
+             _data = p._data;
+             return *this;
+         }
+ 
++        void detach() {
++            detach(_data);
++        }
++
+         ~P() {
+             detach(_data);
+         }
+Index: vstack.h
+===================================================================
+--- vstack.h	(revision 238)
++++ vstack.h	(working copy)
+@@ -16,8 +16,8 @@
+         void dequote(Quote* q);
+         void dump();
+     private:
+-        Node* _now;
+-        Node* _first;
++        P<Node> _now;
++        P<Node> _first;
+         Node* getList();
+ };
+ 
+Index: lexiterator.cpp
+===================================================================
+--- lexiterator.cpp	(revision 238)
++++ lexiterator.cpp	(working copy)
+@@ -1,12 +1,16 @@
+ #include "lexiterator.h"
+ #include "quotestream.h"
++#include "charstream.h"
+ #include "lexer.h"
+ #include "token.h"
+ #include "term.h"
+ #include "cmdquote.h"
+ #include "vexception.h"
+ LexIterator::LexIterator(CharStream* cs)
+-    :QuoteIterator(0),_lex(new Lexer(cs)),_current(0) {}
++    :QuoteIterator(0),_lex(0),_current(0) {
++    P<Lexer> l = new Lexer(cs);
++    _lex = l;
++}
+ 
+ bool LexIterator::hasNext() {
+     if (!_current)
+@@ -16,23 +20,23 @@
+     return true;
+ }
+ Token* LexIterator::next() {
+-    Term* t = (Term*)lex_next();
++    P<Token> t = lex_next();
+     if (t->type() == TOpen)
+         return compound(t);
+     return t;
+ }
+ Token* LexIterator::lex_next() {
+     if (_current) {
+-        Token* t = _current;
++        P<Token> t = _current;
+         _current = 0;
+         return t;
+     }
+     return _lex->next();
+ }
+ Token* LexIterator::compound(Token* open) {
+-    QuoteStream* local = new QuoteStream();
++    P<QuoteStream> local = new QuoteStream();
+     while(true) {
+-        Token* t = lex_next();
++        P<Token> t = lex_next();
+         if (!t)
+             throw VSynException("err:lex:close","Compound not closed");
+         if (t->type() == TClose)
+@@ -43,6 +47,6 @@
+         else
+             local->add(t);
+     }
+-    CmdQuote* cq = new CmdQuote(local);
++    P<CmdQuote> cq = new CmdQuote(local);
+     return new Term(TQuote, cq);
+ }
+Index: quotestream.cpp
+===================================================================
+--- quotestream.cpp	(revision 238)
++++ quotestream.cpp	(working copy)
+@@ -1,7 +1,6 @@
+ #include "quotestream.h"
+ #include "quoteiterator.h"
+-QuoteStream::QuoteStream() {
+-    _first = new Node(0);
++QuoteStream::QuoteStream():_first(new Node(0)),_stream(0),_size(0) {
+     _stream = _first;
+     _size = 0;
+ }
+@@ -16,5 +15,6 @@
+ }
+ 
+ TokenIterator* QuoteStream::iterator() {
+-    return new QuoteIterator(_first);
++    P<TokenIterator> t = new QuoteIterator(_first);
++    return t;
+ }
+Index: lexstream.h
+===================================================================
+--- lexstream.h	(revision 238)
++++ lexstream.h	(working copy)
+@@ -7,6 +7,6 @@
+         LexStream(CharStream* c);
+         virtual TokenIterator* iterator();
+     private:
+-        CharStream* _stream;
++        P<CharStream> _stream;
+ };
+ #endif
+Index: consolecharstream.cpp
+===================================================================
+--- consolecharstream.cpp	(revision 238)
++++ consolecharstream.cpp	(working copy)
+@@ -25,9 +25,7 @@
+ void ConsoleCharStream::lexer(Lexer* l) {
+     _lexer = l;
+ }
+-ConsoleCharStream::ConsoleCharStream() {
+-    _index = 0;
+-}
++ConsoleCharStream::ConsoleCharStream():_lexer(0),_index(0) {}
+ void ConsoleCharStream::read_nobuf() {
+     if (_lexer->closed())
+         printf("|");
+Index: term.h
+===================================================================
+--- term.h	(revision 238)
++++ term.h	(working copy)
+@@ -32,6 +32,7 @@
+             char _cval;
+             long _lval;
+             double _dval;
++        // TODO: GC
+             char* _sval;
+             Quote* _qval;
+             VFrame* _fval;
+Index: quoteiterator.h
+===================================================================
+--- quoteiterator.h	(revision 238)
++++ quoteiterator.h	(working copy)
+@@ -8,6 +8,6 @@
+         virtual Token* next();
+         QuoteIterator(Node* q);
+     private:
+-        Node* _qs;
++        P<Node> _qs;
+ };
+ #endif
+Index: lexer.cpp
+===================================================================
+--- lexer.cpp	(revision 238)
++++ lexer.cpp	(working copy)
+@@ -7,19 +7,12 @@
+ #include "vexception.h"
+ #include "v.h"
+ 
+-struct CNode {
+-    CNode* link;
+-    char c;
+-    CNode(char ch):link(0), c(ch) {}
+-};
+ 
+-Lexer::Lexer(CharStream* q) {
+-    _stream = q;
++Lexer::Lexer(CharStream* q):_stream(q),_queue(new Node(0)),_first(0),_cstack(new CNode(0)) {
+     _stream->lexer(this);
+     _wi = 0;
+     _has = true;
+-    _first = _queue = new Node(0);
+-    _cstack = new CNode(0);
++    _first = _queue;
+ }
+ 
+ void Lexer::lex() {
+@@ -76,9 +69,10 @@
+     return _cstack->link == 0;
+ }
+ void Lexer::dump() {
+-    Node* i = _first->link;
++    P<Node> i = _first->link;
+     while(i) {
+-        V::out("%s;", i->data);
++        P<Token> d = i->data;
++        V::out("%s;", d.v());
+         i = i->link;
+     }
+     V::outln("");
+@@ -92,7 +86,7 @@
+     // if we have return it from there.
+     // else run lex and try again.
+     if (_first->link != 0) {
+-        Token* t = _first->link->data;
++        P<Token> t = _first->link->data;
+         _first = _first->link;
+         return t;
+     } else {
+@@ -166,11 +160,12 @@
+ void Lexer::copen() {
+     char c = _stream->current();
+ 
+-    CNode* t = new CNode(closeCompound(c));
+-    t->link = _cstack;
+-    _cstack = t;
++    P<CNode> n = new CNode(closeCompound(c));
++    n->link = _cstack;
++    _cstack = n;
+ 
+-    add(new Term(TOpen, c));
++    P<Token> t = new Term(TOpen, c);
++    add(t);
+ }
+ void Lexer::cclose() {
+         if (!_cstack->link)
+@@ -180,7 +175,8 @@
+ 
+         if (c != _stream->current())
+             throw VSynException("err:internal:invalid_close","Invalid close  - Need close");
+-        add(new Term(TClose, _stream->current()));
++        P<Token> t = new Term(TClose, _stream->current());
++        add(t);
+ }
+ void Lexer::lcomment() {
+     while((_stream->read() != '\n') && (!_stream->eof()));
+@@ -202,7 +198,8 @@
+         _word[_wi++] = c;
+     }
+     _word[_wi++] = '\0';
+-    add(new Term(TString, dup_str(_word)));
++    P<Token> t = new Term(TString, dup_str(_word));
++    add(t);
+     _wi = 0;
+ }
+ void Lexer::space() {
+@@ -215,7 +212,8 @@
+     }
+ }
+ void Lexer::character() {
+-    add(new Term(TChar, _stream->read()));
++    P<Token> t = new Term(TChar, _stream->read());
++    add(t);
+ }
+ bool isint(char* v) {
+     if (*v == '-') ++v;
+@@ -249,11 +247,13 @@
+     // does it look like a number?
+     _word[_wi++] = '\0';
+ 
++    P<Token> t = 0;
+     if (isint(_word))
+-        add(new Term(TInt, atol(_word)));
++        t = new Term(TInt, atol(_word));
+     else if (isfloat(_word))
+-        add(new Term(TDouble, atof(_word)));
++        t = new Term(TDouble, atof(_word));
+     else
+-        add(new Term(TSymbol, dup_str(_word)));
++        t = new Term(TSymbol, dup_str(_word));
++    add(t);
+     _wi = 0;
+ }
+Index: vframe.cpp
+===================================================================
+--- vframe.cpp	(revision 238)
++++ vframe.cpp	(working copy)
+@@ -7,14 +7,11 @@
+ 
+ bool singleassign(); // defined in v.cpp
+ int VFrame::_idcount = 0;
+-VFrame::VFrame() {
+-    _parent = 0;
+-    _stack = new VStack();
++VFrame::VFrame():_parent(0), _stack(new VStack()) {
+     _idcount++;
+     _id = _idcount;
+ }
+-VFrame::VFrame(VFrame* parent) {
+-    _parent = parent;
++VFrame::VFrame(VFrame* parent) :_parent(parent), _stack(0) {
+     _stack = parent->stack();
+     _idcount++;
+     _id = _idcount;
+@@ -36,15 +33,18 @@
+     return 0;
+ }
+ Quote* VFrame::words() {
+-    QuoteStream* nts = new QuoteStream();
++    P<QuoteStream> nts = new QuoteStream();
+     for(QMap::iterator i = _dict.begin(); i!= _dict.end(); i++) {
+-        nts->add(new Term(TSymbol, i->first));
++        P<Token> t = new Term(TSymbol, i->first);
++        nts->add(t);
+     }
+     return new CmdQuote(nts); 
+ }
+ void VFrame::def(char* sym, Quote* q) {
+-    if (singleassign() && hasKey(sym))
+-        throw VException("err:symbol_already_bound", new Term(TSymbol, sym), sym);
++    if (singleassign() && hasKey(sym)) {
++        P<Token> t =  new Term(TSymbol, sym);
++        throw VException("err:symbol_already_bound",t, sym);
++    }
+     _dict[sym] = q;
+ }
+ 
+@@ -52,7 +52,8 @@
+     return _parent;
+ }
+ VFrame* VFrame::child() {
+-    return new VFrame(this);
++    P<VFrame> f = new VFrame(this);
++    return f;
+ }
+ VStack* VFrame::stack() {
+     return _stack;
+Index: cmdquote.cpp
+===================================================================
+--- cmdquote.cpp	(revision 238)
++++ cmdquote.cpp	(working copy)
+@@ -11,8 +11,8 @@
+ #include "prologue.h"
+ 
+ void CmdQuote::eval(VFrame* scope) {
+-    VStack* stack = scope->stack();
+-    TokenIterator* stream = _tokens->iterator();
++    P<VStack> stack = scope->stack();
++    P<TokenIterator> stream = _tokens->iterator();
+     while(stream->hasNext()) {
+         stack->push(stream->next());
+         if (cando(stack))
+@@ -22,14 +22,11 @@
+ TokenStream* CmdQuote::tokens() {
+     return _tokens;
+ }
+-CmdQuote::CmdQuote(TokenStream* tokens) {
+-    _tokens = tokens;
+-    _val = 0;
+-}
++CmdQuote::CmdQuote(TokenStream* tokens):_tokens(tokens),_val(0) {}
+ void CmdQuote::dofunction(VFrame* scope) {
+-    VStack* st = scope->stack();
+-    Token* sym = st->pop();
+-    Quote* q = scope->lookup(sym->svalue());
++    P<VStack> st = scope->stack();
++    P<Token> sym = st->pop();
++    P<Quote> q = scope->lookup(sym->svalue());
+     if (!q)
+         throw VException("err:undef_symbol", sym, sym->value());
+     try {
+@@ -52,7 +49,7 @@
+     if (!_val) {
+         std::ostringstream outs;
+         outs << '[';
+-        TokenIterator* i = _tokens->iterator();
++        P<TokenIterator> i = _tokens->iterator();
+         while(i->hasNext()) {
+             outs << i->next()->value();
+             if (i->hasNext())
+@@ -65,5 +62,8 @@
+ }
+ 
+ Quote* CmdQuote::getdef(char* buf) {
+-    return new CmdQuote(new LexStream(new BuffCharStream(buf)));
++    P<BuffCharStream> b = new BuffCharStream(buf);
++    P<LexStream> l = new LexStream(b);
++    P<CmdQuote> q = new CmdQuote(l);
++    return q;
+ }
+Index: common.cpp
+===================================================================
+--- common.cpp	(revision 238)
++++ common.cpp	(working copy)
+@@ -3,7 +3,7 @@
+ 
+ char* dup_str(const char* c) {
+     int i = strlen(c);
+-    char* out = new char[i + 1];
++    P<char,true> out = new char[i + 1];
+     strcpy(out, c);
+     return out;
+ }
+Index: gc.cpp
+===================================================================
+--- gc.cpp	(revision 238)
++++ gc.cpp	(working copy)
+@@ -5,89 +5,26 @@
+ using std::cout;
+ using std::endl;
+ 
+-struct Scope;
+-typedef std::map<void*, Scope*> GcMap;
+-typedef std::map<void*, Scope*>::iterator GcIter;
+-typedef std::list<void*> GcList;
+-typedef std::list<void*>::iterator GcListIter;
++typedef std::map<void*, int> RefMap;
+ 
+-// The record of all mem.
+-GcMap __all;
++RefMap __ref;
+ 
+-GcMap __current;
+-
+-// to keep the constants away.
+-char* __bottom = new char[0];
+-
+-int Gc::__phase = 0;
+-int Gc::phase() {
+-    return __phase;
+-}
+-int Gc::phase(int np) {
+-    return __phase = np;
+-}
+-
+-void* Gc::bottom() {
+-    return __bottom;
+-}
+-
+-long Gc::collect() {
+-    cout<<"Collect begin ..." << endl;
+-    // remove and delete gcinfo ptr.
+-    int garbage = phase();
+-    int marking = garbage? 0 : 1;
+-
+-    cout<<"Garbage: "<< garbage<< " Marking: "<< marking << endl;
+-    cout<<"All Size: "<< __all.size()<< " Current: "<< __current.size()<< endl;
+-
+-    // mark all the pointers contained in __current,
+-    // then iterate __all and sweep off all pointers that are not marked
+-    // finally update __phase to marking.
+-    for(GcIter i = __current.begin(); i != __current.end(); i++) {
+-        Scope* g = i->second;
+-        g->mark(marking);
++void Gc::addptr(void* g) {
++    if (__ref.find(g) == __ref.end()) {
++        __ref[g] = 1;
++    } else {
++        int i = __ref[g];
++        __ref[g] = i + 1;
+     }
+-    GcList dead;
+-    for(GcIter i = __all.begin(); i != __all.end(); i++) {
+-        Scope* g = i->second;
+-        if (g->mark() == garbage)
+-            dead.push_back(i->first);
+-    }
+-    cout<<"Dead Size: "<< dead.size()<< endl;
+-
+-    for (GcListIter i = dead.begin(); i != dead.end(); i++) {
+-        Scope* g = __all[*i];
+-        __all.erase(*i);
+-        cout<<"\t delete : "<< (long) g << endl;
+-        delete g;
+-    }
+-    
+-    cout<<"After Gc All Size: "<< __all.size()<< endl;
+-
+-    // switch back.
+-    phase(marking);
+ }
+ 
+-void Gc::addptr(Scope* g, void* gcptr) {
+-    cout << "\tadd:"<<(int) gcptr << endl;
+-    // is it already registered?
+-    __all[g->mem()] = g;
+-
+-    // who owns the scope?
+-    __current[gcptr] = g;
+-}
+-
+-Scope* Gc::getptr(void* mem) {
+-    Scope* g = 0;
+-    // is it already registered?
+-    if (__all.find(mem) == __all.end()) {
+-        return 0;
+-    } else {
+-        return __all[mem];
++bool Gc::rmptr(void* g) {
++    int i = __ref[g];
++    if (i < 1) {
++        __ref.erase(g);
++        return true;
+     }
++    __ref[g] = i-1;
++    return false;
+ }
+ 
+-void Gc::rmptr(void* gcptr) {
+-    cout << "\tremove:"<<(int) gcptr << endl;
+-    __current.erase(gcptr);
+-}
+Index: vexception.h
+===================================================================
+--- vexception.h	(revision 238)
++++ vexception.h	(working copy)
+@@ -11,8 +11,8 @@
+         virtual void addLine(char* v, ...);
+         Token* token();
+     private:
+-        char* _err;
+-        Token* _token;
++        P<char> _err;
++        P<Token> _token;
+         char _info[MaxBuf*16];
+         int _i;
+ };
+Index: vstack.cpp
+===================================================================
+--- vstack.cpp	(revision 238)
++++ vstack.cpp	(working copy)
+@@ -4,8 +4,7 @@
+ #include "cmdquote.h"
+ #include "vexception.h"
+ #include "vstack.h"
+-VStack::VStack() {
+-    _now = new Node(0);
++VStack::VStack():_now(new Node(0)),_first(0) {
+     _first = _now;
+ }
+ 
+@@ -18,16 +17,18 @@
+ }
+ 
+ Token* VStack::push(Token* t) {
+-    Node* n = new Node(t);
++    P<Node> n = new Node(t);
+     n->link = _now;
+     _now = n;
+     return _now->data;
+ }
+ 
+ Token* VStack::pop() {
+-    if (!_now || !_now->data)
+-        throw VException("err:stack_empty", new Term(TInt, (long)0), "Empty Stack.");
+-    Token* t = _now->data;
++    if (!_now || !_now->data) {
++        P<Token> t = new Term(TInt, (long)0);
++        throw VException("err:stack_empty", t, "Empty Stack.");
++    }
++    P<Token> t = _now->data;
+     _now = _now->link;
+     return t;
+ }
+@@ -45,9 +46,9 @@
+ }
+ 
+ Node* VStack::getList() {
+-    Node* current = _now;
+-    Node* result = 0;
+-    Node* t = 0;
++    P<Node> current = _now;
++    P<Node> result = 0;
++    P<Node> t = 0;
+     while (current && current->data) {
+         t = new Node(current->data);
+         t->link = result;
+@@ -58,18 +59,19 @@
+ }
+ 
+ Quote* VStack::quote() {
+-    Node* s = getList();
+-    QuoteStream* qs = new QuoteStream();
++    P<Node> s = getList();
++    P<QuoteStream> qs = new QuoteStream();
+     while(s) {
+         qs->add(s->data);
+         s = s->link;
+     }
+-    return new CmdQuote(qs);
++    P<Quote> q = new CmdQuote(qs);
++    return q;
+ }
+ 
+ void VStack::dequote(Quote* q) {
+-    Node* current = _now;
+-    TokenIterator* it = q->tokens()->iterator();
++    P<Node> current = _now;
++    P<TokenIterator> it = q->tokens()->iterator();
+ 
+     _now = new Node(0);
+     _first = _now;
+@@ -79,7 +81,7 @@
+ }
+ 
+ void VStack::dump() {
+-    Node* s = getList();
++    P<Node> s = getList();
+     printf("(");
+     bool first = true;
+     while(s) {
+Index: buffcharstream.h
+===================================================================
+--- buffcharstream.h	(revision 238)
++++ buffcharstream.h	(working copy)
+@@ -10,7 +10,7 @@
+         virtual void lexer(Lexer* l);
+         virtual bool eof();
+     protected:
+-        char* _buf;
++        P<char> _buf;
+         int _current;
+         int _len;
+ };
+Index: quote.h
+===================================================================
+--- quote.h	(revision 238)
++++ quote.h	(working copy)
+@@ -1,6 +1,6 @@
+ #ifndef QUOTE_H
+ #define QUOTE_H
+-
++#include "common.h"
+ class TokenStream;
+ class VFrame;
+ struct Quote {
+Index: lexstream.cpp
+===================================================================
+--- lexstream.cpp	(revision 238)
++++ lexstream.cpp	(working copy)
+@@ -1,3 +1,5 @@
++#include "lexer.h"
++#include "charstream.h"
+ #include "lexstream.h"
+ #include "lexiterator.h"
+ 
+@@ -4,5 +6,6 @@
+ LexStream::LexStream(CharStream* c) : _stream(c) {
+ }
+ TokenIterator* LexStream::iterator() {
+-    return new LexIterator(_stream);
++    P<LexIterator> i = new LexIterator(_stream);
++    return i;
+ }
+Index: v.cpp
+===================================================================
+--- v.cpp	(revision 238)
++++ v.cpp	(working copy)
+@@ -62,21 +62,24 @@
+ 
+ void V::main(int argc, char** argv) {
+     bool i = argc > 1 ? false : true;
+-    VFrame* frame = new VFrame();
+-    for(int j=0; j<argc; ++j)
+-        frame->stack()->push(new Term(TString, argv[j]));
++    P<VFrame> frame = new VFrame();
++    for(int j=0; j<argc; ++j) {
++        P<Term> t = new Term(TString, argv[j]);
++        frame->stack()->push(t);
++    }
+     // setup the world quote
+ 
+     Prologue::init(frame);
+     // do we have any args?
+-    CharStream* cs = 0;
++    P<CharStream> cs = 0;
+     if (argc > 1) {
+         cs = new FileCharStream(argv[1]);
+     } else {
+         banner();
+         cs = new ConsoleCharStream();
+     }
+-    PQuote* program = new PQuote(new LexStream(cs), i);
++    P<LexStream> l = new LexStream(cs);
++    P<PQuote> program = new PQuote(l,i);
+     program->eval(frame->child());
+ }
+ 
+Index: lexiterator.h
+===================================================================
+--- lexiterator.h	(revision 238)
++++ lexiterator.h	(working copy)
+@@ -13,7 +13,7 @@
+     private:
+         Token* lex_next();
+         Token* compound(Token* open);
+-        Lexer* _lex;
+-        Token* _current;
++        P<Lexer> _lex;
++        P<Token> _current;
+ };
+ #endif
+Index: quotestream.h
+===================================================================
+--- quotestream.h	(revision 238)
++++ quotestream.h	(working copy)
+@@ -11,8 +11,8 @@
+         virtual int size();
+         virtual TokenIterator* iterator();
+     protected:
+-        Node* _stream;
+-        Node* _first;
++        P<Node> _stream;
++        P<Node> _first;
+         long _size;
+ };
+ #endif
+Index: consolecharstream.h
+===================================================================
+--- consolecharstream.h	(revision 238)
++++ consolecharstream.h	(working copy)
+@@ -13,7 +13,7 @@
+     private:
+         char _buf[MaxBuf];
+         int _index;
+-        Lexer* _lexer;
++        P<Lexer> _lexer;
+         char _current;
+         void read_nobuf();
+         virtual int index();
+Index: lexer.h
+===================================================================
+--- lexer.h	(revision 238)
++++ lexer.h	(working copy)
+@@ -3,7 +3,13 @@
+ #include "common.h"
+ #include "token.h"
+ class CharStream;
+-class CNode;
++
++struct CNode {
++    P<CNode> link;
++    char c;
++    CNode(char ch):link(0), c(ch) {}
++};
++
+ class Lexer {
+     public:
+         Lexer(CharStream* q);
+@@ -32,12 +38,12 @@
+         char _word[MaxBuf];
+         int _wi;
+ 
+-        CNode* _cstack;
++        P<CNode> _cstack;
+ 
+-        Node* _queue;
+-        Node* _first;
++        P<Node> _queue;
++        P<Node> _first;
+ 
+-        CharStream* _stream;
++        P<CharStream> _stream;
+         bool _has;
+ };
+ #endif
+Index: vexception.cpp
+===================================================================
+--- vexception.cpp	(revision 238)
++++ vexception.cpp	(working copy)
+@@ -5,8 +5,7 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ 
+-VException::VException(char* err, Token* t, char* msgfmt, ...):_token(t){
+-    _err = err;
++VException::VException(char* err, Token* t, char* msgfmt, ...):_token(t),_err(err) {
+     _i = 0;
+     va_list argp;
+     va_start(argp, msgfmt);
+Index: vframe.h
+===================================================================
+--- vframe.h	(revision 238)
++++ vframe.h	(working copy)
+@@ -25,7 +25,7 @@
+         int _id;
+         bool hasKey(char* key);
+         QMap _dict;
+-        VStack* _stack;
+-        VFrame* _parent;
++        P<VStack> _stack;
++        P<VFrame> _parent;
+ };
+ #endif
+Index: token.h
+===================================================================
+--- token.h	(revision 238)
++++ token.h	(working copy)
+@@ -1,5 +1,6 @@
+ #ifndef TOKEN_H
+ #define TOKEN_H
++#include "common.h"
+ #include "type.h"
+ #include "num.h"
+ class Quote;
+@@ -19,12 +20,9 @@
+ };
+ 
+ struct Node {
+-    Token* data;
+-    Node* link;
+-    Node(Token* e) {
+-        data = e;
+-        link = 0;
+-    }
++    P<Token> data;
++    P<Node> link;
++    Node(Token* e):data(e), link(0){}
+ };
+ 
+ #endif
+Index: cmdquote.h
+===================================================================
+--- cmdquote.h	(revision 238)
++++ cmdquote.h	(working copy)
+@@ -14,6 +14,6 @@
+     private:
+         bool cando(VStack* stack);
+         TokenStream* _tokens;
+-        char* _val;
++        P<char> _val;
+ };
+ #endif
+Index: prologue.cpp
+===================================================================
+--- prologue.cpp	(revision 238)
++++ prologue.cpp	(working copy)
+@@ -17,23 +17,23 @@
+ #include "std.h"
+ ;*/
+ 
+-typedef std::map<char*, Token*, cmp_str> SymbolMap;
++typedef std::map<P<char>, P<Token>, cmp_str> SymbolMap;
+ typedef std::pair<char*, Quote*> SymPair;
+ 
+ SymPair splitdef(Quote* qval) {
+-    TokenIterator* it = qval->tokens()->iterator();
+-    Token* symbol = it->next();
++    P<TokenIterator> it = qval->tokens()->iterator();
++    P<Token> symbol = it->next();
+ 
+-    QuoteStream* nts = new QuoteStream();
++    P<QuoteStream> nts = new QuoteStream();
+     while(it->hasNext())
+         nts->add(it->next());
+-
+-    return std::make_pair<char*, Quote*>(symbol->svalue(), new CmdQuote(nts));
++    P<Quote> q = new CmdQuote(nts);
++    return std::make_pair<char*, Quote*>(symbol->svalue(),q);
+ }
+ 
+ char* special(char* name) {
+     int len = strlen(name);
+-    char* buf = new char[len + 2];
++    P<char,true> buf = new char[len + 2];
+     buf[0] = '$';
+     std::strcpy(buf+1, name);
+     return buf;
+@@ -41,10 +41,10 @@
+ 
+ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
+     //Take each point in tmpl, and proess elements accordingly.
+-    TokenIterator* tstream = tmpl->iterator();
+-    TokenIterator* estream = elem->iterator();
++    P<TokenIterator> tstream = tmpl->iterator();
++    P<TokenIterator> estream = elem->iterator();
+     while(tstream->hasNext()) {
+-        Token* t = tstream->next();
++        P<Token> t = tstream->next();
+         switch (t->type()) {
+             case TSymbol:
+                 try {
+@@ -57,13 +57,13 @@
+                         estream->next();
+                         break;
+                     } else if (value[0] == '*') {
+-                        QuoteStream* nlist = new QuoteStream();
++                        P<QuoteStream> nlist = new QuoteStream();
+                         // * is all. but before we slurp, check the next element
+                         // in the template. If there is not any, then slurp. If there
+                         // is one, then slurp until last but one, and leave it.
+                         if (tstream->hasNext()) {
+-                            Token* tmplterm = tstream->next();
+-                            Token* lastelem = 0;
++                            P<Token> tmplterm = tstream->next();
++                            P<Token> lastelem = 0;
+ 
+                             // slurp till last but one.
+                             while(estream->hasNext()) {
+@@ -93,7 +93,8 @@
+                                 nlist->add(estream->next());
+                         }
+                         if (strlen(value) > 1) { // do we have a named list?
+-                            symbols[value] = new Term(TQuote, new CmdQuote(nlist));
++                            P<Quote> q = new CmdQuote(nlist);
++                            symbols[value] = new Term(TQuote, q);
+                         }
+                     } else {
+                         Token* e = estream->next();
+@@ -137,32 +138,38 @@
+ }
+ 
+ TokenStream* evalres(TokenStream* res, SymbolMap& symbols) {
+-        QuoteStream* r = new QuoteStream();
+-        TokenIterator* rstream = res->iterator();
++        P<QuoteStream> r = new QuoteStream();
++        P<TokenIterator> rstream = res->iterator();
+         while(rstream->hasNext()) {
+-            Token* t = rstream->next();
++            P<Token> t = rstream->next();
+             switch(t->type()) {
+ 
+                 case TQuote:
+-                    QuoteStream* nq = (QuoteStream*)evalres(t->qvalue()->tokens(), symbols);
+-                    r->add(new Term(TQuote, new CmdQuote(nq)));
+-                    break;
+-                case TSymbol:
+-                    // do we have it in our symbol table? if yes, replace, else just push it in.
+-                    char* sym = t->svalue();
+-                    if (containsKey(symbols, sym)) {
+-                        // does it look like *xxx ?? 
+-                        if (sym[0] == '*') {
+-                            // expand it.
+-                            Token* star = symbols[sym];
+-                            QuoteIterator *tx = (QuoteIterator*)star->qvalue()->tokens()->iterator();
+-                            while(tx->hasNext()) {
+-                                r->add(tx->next());
+-                            }
+-                        } else
+-                            r->add(symbols[sym]);
++                    {
++                        P<QuoteStream> nq = (QuoteStream*)evalres(t->qvalue()->tokens(), symbols);
++                        P<Quote> q = new CmdQuote(nq);
++                        P<Token> t = new Term(TQuote, q);
++                        r->add(t);
+                         break;
+                     }
++                case TSymbol:
++                    {
++                        // do we have it in our symbol table? if yes, replace, else just push it in.
++                        P<char> sym = t->svalue();
++                        if (containsKey(symbols, sym)) {
++                            // does it look like *xxx ?? 
++                            if (sym[0] == '*') {
++                                // expand it.
++                                P<Token> star = symbols[sym];
++                                P<QuoteIterator> tx = (QuoteIterator*)star->qvalue()->tokens()->iterator();
++                                while(tx->hasNext()) {
++                                    r->add(tx->next());
++                                }
++                            } else
++                                r->add(symbols[sym]);
++                            break;
++                        }
++                    }
+                 default:
+                     // just push it in.
+                     r->add(t);
+@@ -199,7 +206,8 @@
+ struct Ctrue : public Cmd {
+     void eval(VFrame* q) {
+         VStack* p = q->stack();
+-        p->push(new Term(TBool, true));
++        P<Token> t = new Term(TBool, true);
++        p->push(t);
+     }
+     char* to_s() {return "true";}
+ };
+@@ -207,7 +215,8 @@
+ struct Cfalse : public Cmd {
+     void eval(VFrame* q) {
+         VStack* p = q->stack();
+-        p->push(new Term(TBool, false));
++        P<Token> t = new Term(TBool, false);
++        p->push(t);
+     }
+     char* to_s() {return "false";}
+ };
+Index: buffcharstream.cpp
+===================================================================
+--- buffcharstream.cpp	(revision 238)
++++ buffcharstream.cpp	(working copy)
+@@ -15,7 +15,7 @@
+ bool BuffCharStream::eof() {
+     return (_current+1) >= _len;
+ }
+-BuffCharStream::BuffCharStream(char* buff):_current(-1) {
++BuffCharStream::BuffCharStream(char* buff):_current(-1), _buf(0) {
+     if (buff) {
+         _len = strlen(buff);
+         _buf = dup_str(buff);
+Index: common.h
+===================================================================
+--- common.h	(revision 238)
++++ common.h	(working copy)
+@@ -12,4 +12,6 @@
+ static const double Precision = 0.0000000000000001;
+ static const int MaxBuf = 1024;
+ 
++#include "gc.h"
++
+ #endif
