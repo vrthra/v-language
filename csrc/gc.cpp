@@ -16,12 +16,19 @@ GcMap __all;
 
 GcMap __current;
 
+// to keep the constants away.
+char* __bottom = new char[0];
+
 int Gc::__phase = 0;
 int Gc::phase() {
     return __phase;
 }
 int Gc::phase(int np) {
     return __phase = np;
+}
+
+void* Gc::bottom() {
+    return __bottom;
 }
 
 long Gc::collect() {

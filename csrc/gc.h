@@ -18,6 +18,7 @@ class Gc {
         static void addptr(Scope* ptr, void* gcptr);
         static Scope* getptr(void* ptr);
         static void rmptr(void* ptr);
+        static void* bottom();
 };
 
 // (Gc)Scope holds the pointer for its life time. When GcScope is destroyed, the
@@ -49,10 +50,13 @@ template <class T> class GcScope : public virtual Scope {
         }
         ~GcScope() {
             // other kinds not implemented yet.
-            if (_isarray) {
-                delete[] _mem;
-            } else {
-                delete _mem;
+            if (_mem > Gc::bottom()) {
+                // if it is a true new alloc.
+                if (_isarray) {
+                    delete[] _mem;
+                } else {
+                    delete _mem;
+                }
             }
         }
 };
