@@ -1,6 +1,9 @@
+#include <iostream>
 #include <map>
 #include <list>
 #include "gc.h"
+using std::cout;
+using std::endl;
 
 struct Scope;
 typedef std::map<void*, Scope*> GcMap;
@@ -22,9 +25,14 @@ int Gc::phase(int np) {
 }
 
 long Gc::collect() {
+    cout<<"Collect begin ..." << endl;
     // remove and delete gcinfo ptr.
     int garbage = phase();
-    int marking = garbage? 1 : 0;
+    int marking = garbage? 0 : 1;
+
+    cout<<"Garbage: "<< garbage<< " Marking: "<< marking << endl;
+    cout<<"All Size: "<< __all.size()<< " Current: "<< __current.size()<< endl;
+
     // mark all the pointers contained in __current,
     // then iterate __all and sweep off all pointers that are not marked
     // finally update __phase to marking.
@@ -38,18 +46,23 @@ long Gc::collect() {
         if (g->mark() == garbage)
             dead.push_back(i->first);
     }
+    cout<<"Dead Size: "<< dead.size()<< endl;
 
     for (GcListIter i = dead.begin(); i != dead.end(); i++) {
         Scope* g = __all[*i];
         __all.erase(*i);
+        cout<<"\t delete : "<< (long) g << endl;
         delete g;
     }
+    
+    cout<<"After Gc All Size: "<< __all.size()<< endl;
 
     // switch back.
     phase(marking);
 }
 
 void Gc::addptr(Scope* g, void* gcptr) {
+    cout << "\tadd:"<<(int) gcptr << endl;
     // is it already registered?
     __all[g->mem()] = g;
 
@@ -68,5 +81,6 @@ Scope* Gc::getptr(void* mem) {
 }
 
 void Gc::rmptr(void* gcptr) {
+    cout << "\tremove:"<<(int) gcptr << endl;
     __current.erase(gcptr);
 }

@@ -41,16 +41,14 @@ template <class T> class GcScope : public virtual Scope {
         T* _mem;
         bool _isarray;
     public:
-        GcScope(T* m, int phase):_mem(m),_isarray(false) {
-            mark(phase);
-        }
-        GcScope(T* m, bool arr, int phase):_mem(m),_isarray(arr) {
+        GcScope(T* m, bool a, int phase):_mem(m),_isarray(a) {
             mark(phase);
         }
         void* mem() {
             return (void*) _mem;
         }
         ~GcScope() {
+            // other kinds not implemented yet.
             if (_isarray) {
                 delete[] _mem;
             } else {
@@ -60,19 +58,14 @@ template <class T> class GcScope : public virtual Scope {
 };
 
 // classes P and PA holds the current ownership
-template <class T> class P {
-    private:
-        T* _data;
-
+template <class T, bool A=false> class P {
     protected:
-        virtual void attach(T* p) {
-            attach(p, false);
-        }
-
-        virtual void attach(T* p, bool arr) {
+        T* _data;
+        
+        virtual void attach(T* p, bool a=A) {
             Scope* g = Gc::getptr(p);
             if (!g)
-                g = new GcScope<T>(p, arr, Gc::phase());
+                g = new GcScope<T>(p, a, Gc::phase());
             Gc::addptr(g, this);
         }
 
@@ -82,7 +75,7 @@ template <class T> class P {
         }
 
     public:
-        P(T *p = 0):_data(p) {
+        P(T* p):_data(p) {
             attach(p);
         }
 
@@ -141,12 +134,6 @@ template <class T> class P {
         ~P() {
             detach(_data);
         }
-};
-
-template <class T> class PA : public P<T> {
-    virtual void attach(T* p) {
-        attach(p, true);
-    }
 };
 
 #endif
