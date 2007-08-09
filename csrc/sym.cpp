@@ -13,9 +13,11 @@ SymbolTable __symbols;
 
 char* Sym::lookup(char* key) {
     SymbolTable::iterator i = __symbols.find(key);
-    if (i == __symbols.end()) {
+    if (i != __symbols.end()) {
+        return i->second;
+    } else {
         char* w = dup_str(key);
         __symbols[w] = w;
+        return w;
     }
-    return i->second;
 }

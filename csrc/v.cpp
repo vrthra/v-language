@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
 #include "type.h"
 #include "term.h"
 #include "vstack.h"
@@ -14,6 +15,7 @@
 
 const char* V::version = "0.004";
 bool V::singleassign = true;
+bool V::showtime = true;
 
 bool singleassign() {
     return V::singleassign;
@@ -82,10 +84,16 @@ void V::main(int argc, char** argv) {
 
 
 int main(int argc, char** argv) {
+    time_t seconds = time(0);
     try {
         V::main(argc, argv);
     } catch (Vx& e) {
         V::outln(e.message());
     }
+    if (V::showtime) {
+        printf("time: %ld\n", time(0) - seconds);
+        printf("clock: %ld\n", clock());
+    }
+
     return 0;
 }
