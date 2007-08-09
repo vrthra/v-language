@@ -1,3 +1,4 @@
+#include <map>
 #include <ctype.h>
 #include <stdlib.h>
 #include "lexer.h"
@@ -6,6 +7,10 @@
 #include "charstream.h"
 #include "vexception.h"
 #include "v.h"
+#include "sym.h"
+
+// we need the cmp_str here since the pointers in the buffer
+// is different from the const string.
 
 struct CNode {
     CNode* link;
@@ -254,6 +259,8 @@ void Lexer::word() {
     else if (isfloat(_word))
         add(new Term(TDouble, atof(_word)));
     else
-        add(new Term(TSymbol, dup_str(_word)));
+        add(new Term(TSymbol, Sym::lookup(_word)));
     _wi = 0;
 }
+
+

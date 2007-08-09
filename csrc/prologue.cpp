@@ -13,11 +13,12 @@
 #include "lexstream.h"
 #include "vexception.h"
 #include "v.h"
+#include "sym.h"
 /*char* buff =
 #include "std.h"
 ;*/
-
-typedef std::map<char*, Token*, cmp_str> SymbolMap;
+// no cmp_str since constant strings.
+typedef std::map<char*, Token*> SymbolMap;
 typedef std::pair<char*, Quote*> SymPair;
 
 SymPair splitdef(Quote* qval) {
@@ -97,7 +98,7 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
                         }
                     } else {
                         Token* e = estream->next();
-                        symbols[t->value()] = e;
+                        symbols[value] = e;
                     }
                     break;
                 } catch (VException& e) {
@@ -178,9 +179,9 @@ bool isEq(Token* a, Token* b) {
         case TDouble:
             return fabs(b->numvalue().d() - a->numvalue().d()) < Precision;
         case TString:
-            if (b->type() != TString)
-                throw VException("err:type:eq", a,"%s != %s (type)", a->value(), b->value());
             return !strcmp(a->svalue(), b->svalue());
+        case TSymbol:
+            return a->svalue() == b->svalue(); // constant strings.
         default:
             return !strcmp(a->value(), b->value());
     }
@@ -446,7 +447,7 @@ struct Ctobool : public Cmd {
                 p->push(new Term(TBool, a->cvalue() != 'f'));
                 break;
             case TString:
-                p->push(new Term(TBool, (bool)strcmp(a->svalue(), "false")));
+                p->push(new Term(TBool, a->svalue() != Sym::lookup("false")));
                 break;
             case TQuote:
                 p->push(new Term(TBool, ((Term*)a)->size() != 0));
@@ -698,7 +699,7 @@ struct Cview : public Cmd {
         QuoteStream* tmpl = new QuoteStream();
         while(fstream->hasNext()) {
             Token* t = fstream->next();
-            if (t->type() == TSymbol && (!strcmp(t->svalue(),":")))
+            if (t->type() == TSymbol && (t->svalue() == Sym::lookup(":")))
                 break;
             tmpl->add(t);
         }
@@ -775,8 +776,7 @@ struct Cdef : public Cmd {
         VStack* p = q->stack();
         Token* t = p->pop();
         SymPair entry = splitdef(t->qvalue());
-        char* symbol = entry.first;
-        q->parent()->def(symbol, entry.second);
+        q->parent()->def(entry.first, entry.second);
     }
     char* to_s() {return ".";}
 };
@@ -787,8 +787,7 @@ struct Cdefenv : public Cmd {
         Token* b = p->pop();
         Token* t = p->pop();
         SymPair entry = splitdef(t->qvalue());
-        char* symbol = entry.first;
-        b->fvalue()->def(symbol, entry.second);
+        b->fvalue()->def(entry.first, entry.second);
     }
     char* to_s() {return "&.";}
 };
@@ -819,9 +818,7 @@ struct Cuse : public Cmd {
             int len = strlen(v);
             char* val = new char[len + 3];
             std::sprintf(val,"%s%s",v,".v");
-
-            FileCharStream* cs = new FileCharStream(val);
-            CmdQuote* module = new CmdQuote(new LexStream(cs));
+            CmdQuote* module = new CmdQuote(new LexStream(new FileCharStream(val)));
             module->eval(q->parent());
         } catch (VException& e) {
             e.addLine("use %s", file->value());
@@ -843,9 +840,7 @@ struct Cuseenv : public Cmd {
             int len = strlen(v);
             char* val = new char[len + 3];
             std::sprintf(val,"%s%s",v,".v");
-
-            FileCharStream* cs = new FileCharStream(val);
-            CmdQuote* module = new CmdQuote(new LexStream(cs));
+            CmdQuote* module = new CmdQuote(new LexStream(new FileCharStream(val)));
             module->eval(env->fvalue());
         } catch (VException& e) {
             e.addLine("*use %s", file->value());
@@ -862,9 +857,7 @@ struct Ceval : public Cmd {
         Token* str = p->pop();
         try {
             char* v = str->svalue();
-
-            BuffCharStream* cs = new BuffCharStream(v);
-            CmdQuote* module = new CmdQuote(new LexStream(cs));
+            CmdQuote* module = new CmdQuote(new LexStream(new BuffCharStream(v)));
             module->eval(q->parent());
         } catch (VException& e) {
             e.addLine("eval %s", str->value());
@@ -882,9 +875,7 @@ struct Cevalenv : public Cmd {
         Token* str = p->pop();
         try {
             char* v = str->svalue();
-
-            BuffCharStream* cs = new BuffCharStream(v);
-            CmdQuote* module = new CmdQuote(new LexStream(cs));
+            CmdQuote* module = new CmdQuote(new LexStream(new BuffCharStream(v)));
             module->eval(env->fvalue());
         } catch (VException& e) {
             e.addLine("*eval %s", str->value());
@@ -1002,7 +993,7 @@ struct Cin : public Cmd {
         TokenIterator* ti = list->qvalue()->tokens()->iterator();
         while(ti->hasNext()) {
             Token* t = ti->next();
-            if (t->type() == i->type() && !strcmp(t->value(), i->value())) {
+            if (t->type() == i->type() && isEq(t, i)) {
                 p->push(new Term(TBool, true));
                 return;
             }
@@ -1207,8 +1198,6 @@ struct Cfold : public Cmd {
             action->qvalue()->eval(q);
         }
         // The result will be on the stack at the end of the cycle.
-        //Term* res = p->pop();
-        //p->push(res);
     }
     char* to_s() {return "fold!";}
 };
@@ -1381,6 +1370,7 @@ struct Csqrt : public Cmd {
 };
  
 void Prologue::init(VFrame* frame) {
+
     frame->def(".", new Cdef());
     frame->def("&.", new Cdefenv());
     frame->def("&parent", new Cparent());

@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 VException::VException(char* err, Token* t, char* msgfmt, ...):_token(t){
     _err = err;

@@ -1,4 +1,5 @@
 #include "vframe.h"
+#include "sym.h"
 #include "vstack.h"
 #include "vexception.h"
 #include "quotestream.h"
@@ -43,9 +44,10 @@ Quote* VFrame::words() {
     return new CmdQuote(nts); 
 }
 void VFrame::def(char* sym, Quote* q) {
-    if (singleassign() && hasKey(sym))
-        throw VException("err:symbol_already_bound", new Term(TSymbol, sym), sym);
-    _dict[sym] = q;
+    char* s = Sym::lookup(sym);
+    if (singleassign() && hasKey(s))
+        throw VException("err:symbol_already_bound", new Term(TSymbol, s), s);
+    _dict[s] = q;
 }
 
 VFrame* VFrame::parent() {

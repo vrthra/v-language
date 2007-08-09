@@ -53,7 +53,6 @@ char* Term::value() {
             std::sprintf(_buffer,"%f", dvalue());
             break;
         case TSymbol:
-            return svalue();
         case TString:
             return svalue();
         case TChar:

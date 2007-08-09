@@ -4,7 +4,8 @@
 #include "common.h"
 class Quote;
 class VStack;
-typedef std::map<char*, Quote*, cmp_str> QMap;
+// constant strings, does not need cmp_str.
+typedef std::map<char*, Quote*> QMap;
 class VFrame {
     public:
         int id();

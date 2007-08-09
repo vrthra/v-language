@@ -1,4 +1,5 @@
 #include "buffcharstream.h"
+#include <string.h>
 
 char BuffCharStream::read() {
     ++_current;
