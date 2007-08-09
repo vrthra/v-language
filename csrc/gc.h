@@ -67,6 +67,7 @@ template <class T, bool A=false> class P {
         T* _data;
         
         virtual void attach(T* p, bool a=A) {
+            if (!p) return;
             Scope* g = Gc::getptr(p);
             if (!g)
                 g = new GcScope<T>(p, a, Gc::phase());
@@ -121,7 +122,7 @@ template <class T, bool A=false> class P {
          * register and continue.
          */
         P<T> &operator = (T *p) {
-            detach(p._data);
+            detach(_data);
             attach(p);
             _data = p;
             return *this;
@@ -129,7 +130,7 @@ template <class T, bool A=false> class P {
 
         /* assignment from pointer object. */
         P<T> &operator = (const P<T> &p) {
-            detach(p._data);
+            detach(_data);
             attach(p._data);
             _data = p._data;
             return *this;
