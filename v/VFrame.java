@@ -38,10 +38,11 @@ public class VFrame {
         return null;
     }
     public void def(String sym, Quote q) {
+        String s = Sym.lookup(sym);
         if (V.singleassign)
-            if (_dict.containsKey(sym))
-                throw new VException("err:symbol_already_bound", new Term<String>(Type.TString, sym),sym);
-        _dict.put(sym,q);
+            if (_dict.containsKey(s))
+                throw new VException("err:symbol_already_bound", new Term<String>(Type.TString, s),s);
+        _dict.put(s,q);
     }
     public VFrame parent() {
         return _parent;

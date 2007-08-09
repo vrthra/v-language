@@ -32,9 +32,9 @@ public class Prologue {
             case TDouble:
                 return a.numvalue().doubleValue() ==  b.numvalue().doubleValue();
             case TString:
-                if (b.type != Type.TString)
-                    throw new VException("err:type:eq",a, a.value() + " != "+b.value() + "(type)");
                 return a.svalue().equals(b.svalue());
+            case TSymbol:
+                return a.svalue() == b.svalue(); // constant strings
             default:
                 return a.value().equals(b.value());
         }
@@ -321,7 +321,7 @@ public class Prologue {
             QuoteStream tmpl = new QuoteStream();
             while (fstream.hasNext()) {
                 Term t = fstream.next();
-                if (t.type == Type.TSymbol && t.value().equals(":"))
+                if (t.type == Type.TSymbol && t.value() == Sym.lookup(":"))
                     break;
                 tmpl.add(t);
             }
@@ -924,7 +924,7 @@ public class Prologue {
             Term i = p.pop();
             Term list = p.pop();
             for(Term t: list.qvalue().tokens()) {
-                if (t.type() == i.type() && t.value().equals(i.value())) {
+                if (t.type() == i.type() && t.value() == i.value()) {
                     p.push(new Term<Boolean>(Type.TBool, true));
                     return;
                 }
