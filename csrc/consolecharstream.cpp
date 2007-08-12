@@ -28,16 +28,18 @@ void ConsoleCharStream::lexer(Lexer* l) {
 }
 ConsoleCharStream::ConsoleCharStream() {
     _index = 0;
+    _eof = false;
 }
 void ConsoleCharStream::read_nobuf() {
     if (_lexer->closed())
         printf("|");
-    if(!fgets(_buf, MaxBuf, stdin))
-        exit(0); //^D
+    if(!fgets(_buf, MaxBuf, stdin)) {
+        _eof = true;
+    }
 }
 int ConsoleCharStream::index() {
     return _index;
 }
 bool ConsoleCharStream::eof() {
-    return false;
+    return _eof;
 }
