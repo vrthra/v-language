@@ -69,7 +69,7 @@ char* Term::value() {
         default:
             return "<default>";
     }
-    return _buffer;
+    return dup_str(_buffer);
 }
 
 char* Term::stype(Type t) {
