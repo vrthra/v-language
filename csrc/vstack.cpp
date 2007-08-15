@@ -4,7 +4,7 @@
 #include "cmdquote.h"
 #include "vexception.h"
 #include "vstack.h"
-VStack::VStack():_now(new Node(0)),_first(_now) {
+VStack::VStack():_now(new (collect) Node(0)),_first(_now) {
 }
 
 Node* VStack::now() {
@@ -16,7 +16,7 @@ Node* VStack::now(Node* n) {
 }
 
 Token* VStack::push(Token* t) {
-    Node* n = new Node(t);
+    P<Node> n = new (collect) Node(t);
     n->link = _now;
     _now = n;
     return _now->data;
@@ -24,7 +24,7 @@ Token* VStack::push(Token* t) {
 
 Token* VStack::pop() {
     if (!_now || !_now->data)
-        throw VException("err:stack_empty", new Term(TInt, (long)0), "Empty Stack.");
+        throw VException("err:stack_empty", new (collect) Term(TInt, (long)0), "Empty Stack.");
     Token* t = _now->data;
     _now = _now->link;
     return t;
@@ -43,11 +43,11 @@ Token* VStack::peek() {
 }
 
 Node* VStack::getList() {
-    Node* current = _now;
-    Node* result = 0;
-    Node* t = 0;
+    P<Node> current = _now;
+    P<Node> result = 0;
+    P<Node> t = 0;
     while (current && current->data) {
-        t = new Node(current->data);
+        t = new (collect) Node(current->data);
         t->link = result;
         result = t;
         current = current->link;
@@ -56,20 +56,20 @@ Node* VStack::getList() {
 }
 
 Quote* VStack::quote() {
-    Node* s = getList();
-    QuoteStream* qs = new QuoteStream();
+    P<Node> s = getList();
+    P<QuoteStream> qs = new (collect) QuoteStream();
     while(s) {
         qs->add(s->data);
         s = s->link;
     }
-    return new CmdQuote(qs);
+    return new (collect) CmdQuote(qs);
 }
 
 void VStack::dequote(Quote* q) {
-    Node* current = _now;
-    TokenIterator* it = q->tokens()->iterator();
+    P<Node> current = _now;
+    P<TokenIterator> it = q->tokens()->iterator();
 
-    _now = new Node(0);
+    _now = new (collect) Node(0);
     _first = _now;
 
     while(it->hasNext())

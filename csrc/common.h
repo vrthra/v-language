@@ -6,5 +6,6 @@ static const int MaxBuf = 1024;
 
 char* dup_str(const char* c);
 
+#include "allocator.h"
 #include "ptr.h"
 #endif

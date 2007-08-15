@@ -13,7 +13,7 @@
 // is different from the const string.
 
 struct CNode {
-    CNode* link;
+    P<CNode> link;
     char c;
     CNode(char ch):link(0), c(ch) {}
 };
@@ -21,8 +21,8 @@ struct CNode {
 Lexer::Lexer(CharStream* q):_stream(q),_wi(0),_has(true),
                             _first(0),_queue(0),_cstack(0) {
     _stream->lexer(this);
-    _first = _queue = new Node(0);
-    _cstack = new CNode(0);
+    _first = _queue = new (collect) Node(0);
+    _cstack = new (collect) CNode(0);
 }
 
 void Lexer::lex() {
@@ -79,7 +79,7 @@ bool Lexer::closed() {
     return _cstack->link == 0;
 }
 void Lexer::dump() {
-    Node* i = _first->link;
+    P<Node> i = _first->link;
     while(i) {
         V::out("%s;", i->data.val);
         i = i->link;
@@ -95,7 +95,7 @@ Token* Lexer::next() {
     // if we have return it from there.
     // else run lex and try again.
     if (_first->link != 0) {
-        Token* t = _first->link->data;
+        P<Token> t = _first->link->data;
         _first = _first->link;
         return t;
     } else {
@@ -135,7 +135,7 @@ bool Lexer::isBoundary(char c) {
     return false;
 }
 void Lexer::add(Token* term) {
-    _queue->link = new Node(term);
+    _queue->link = new (collect) Node(term);
     _queue = _queue->link;
 }
 char Lexer::charconv(char n) {
@@ -169,11 +169,11 @@ char Lexer::closeCompound(char c) {
 void Lexer::copen() {
     char c = _stream->current();
 
-    CNode* t = new CNode(closeCompound(c));
+    P<CNode> t = new (collect) CNode(closeCompound(c));
     t->link = _cstack;
     _cstack = t;
 
-    add(new Term(TOpen, c));
+    add(new (collect) Term(TOpen, c));
 }
 void Lexer::cclose() {
         if (!_cstack->link)
@@ -183,7 +183,7 @@ void Lexer::cclose() {
 
         if (c != _stream->current())
             throw VSynException("err:internal:invalid_close","Invalid close  - Need close");
-        add(new Term(TClose, _stream->current()));
+        add(new (collect) Term(TClose, _stream->current()));
 }
 void Lexer::lcomment() {
     while((_stream->read() != '\n') && (!_stream->eof()));
@@ -205,7 +205,7 @@ void Lexer::string() {
         _word[_wi++] = c;
     }
     _word[_wi++] = '\0';
-    add(new Term(TString, dup_str(_word)));
+    add(new (collect) Term(TString, dup_str(_word)));
     _wi = 0;
 }
 void Lexer::space() {
@@ -218,7 +218,7 @@ void Lexer::space() {
     }
 }
 void Lexer::character() {
-    add(new Term(TChar, _stream->read()));
+    add(new (collect) Term(TChar, _stream->read()));
 }
 bool isint(char* v) {
     if (*v == '-') ++v;
@@ -253,11 +253,11 @@ void Lexer::word() {
     _word[_wi++] = '\0';
 
     if (isint(_word))
-        add(new Term(TInt, atol(_word)));
+        add(new (collect) Term(TInt, atol(_word)));
     else if (isfloat(_word))
-        add(new Term(TDouble, atof(_word)));
+        add(new (collect) Term(TDouble, atof(_word)));
     else
-        add(new Term(TSymbol, Sym::lookup(_word)));
+        add(new (collect) Term(TSymbol, Sym::lookup(_word)));
     _wi = 0;
 }
 

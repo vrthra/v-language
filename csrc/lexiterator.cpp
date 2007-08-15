@@ -6,7 +6,7 @@
 #include "cmdquote.h"
 #include "vexception.h"
 LexIterator::LexIterator(CharStream* cs)
-    :QuoteIterator(0),_lex(new Lexer(cs)),_current(0) {}
+    :QuoteIterator(0),_lex(new (collect) Lexer(cs)),_current(0) {}
 
 bool LexIterator::hasNext() {
     if (!_current)
@@ -16,23 +16,23 @@ bool LexIterator::hasNext() {
     return true;
 }
 Token* LexIterator::next() {
-    Term* t = (Term*)lex_next();
+    P<Token> t = lex_next();
     if (t->type() == TOpen)
         return compound(t);
     return t;
 }
 Token* LexIterator::lex_next() {
     if (_current) {
-        Token* t = _current;
+        P<Token> t = _current;
         _current = 0;
         return t;
     }
     return _lex->next();
 }
 Token* LexIterator::compound(Token* open) {
-    QuoteStream* local = new QuoteStream();
+    P<QuoteStream> local = new (collect) QuoteStream();
     while(true) {
-        Token* t = lex_next();
+        P<Token> t = lex_next();
         if (!t)
             throw VSynException("err:lex:close","Compound not closed");
         if (t->type() == TClose)
@@ -43,6 +43,6 @@ Token* LexIterator::compound(Token* open) {
         else
             local->add(t);
     }
-    CmdQuote* cq = new CmdQuote(local);
-    return new Term(TQuote, cq);
+    P<CmdQuote> cq = new (collect) CmdQuote(local);
+    return new (collect) Term(TQuote, cq);
 }

@@ -8,7 +8,7 @@
 
 bool singleassign(); // defined in v.cpp
 int VFrame::_idcount = 0;
-VFrame::VFrame():_parent(0),_stack(new VStack()),_id(0) {
+VFrame::VFrame():_parent(0),_stack(new (collect) VStack()),_id(0) {
     _idcount++;
     _id = _idcount;
 }
@@ -33,16 +33,16 @@ Quote* VFrame::lookup(char* key) {
     return 0;
 }
 Quote* VFrame::words() {
-    QuoteStream* nts = new QuoteStream();
+    P<QuoteStream> nts = new (collect) QuoteStream();
     for(QMap::iterator i = _dict.begin(); i!= _dict.end(); i++) {
-        nts->add(new Term(TSymbol, i->first));
+        nts->add(new (collect) Term(TSymbol, i->first));
     }
-    return new CmdQuote(nts); 
+    return new (collect) CmdQuote(nts); 
 }
 void VFrame::def(char* sym, Quote* q) {
     char* s = Sym::lookup(sym);
     if (singleassign() && hasKey(s))
-        throw VException("err:symbol_already_bound", new Term(TSymbol, s), s);
+        throw VException("err:symbol_already_bound", new (collect) Term(TSymbol, s), s);
     _dict[s] = q;
 }
 
@@ -50,7 +50,7 @@ VFrame* VFrame::parent() {
     return _parent;
 }
 VFrame* VFrame::child() {
-    return new VFrame(this);
+    return new (collect) VFrame(this);
 }
 VStack* VFrame::stack() {
     return _stack;

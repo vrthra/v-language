@@ -4,5 +4,5 @@
 LexStream::LexStream(CharStream* c) : _stream(c) {
 }
 TokenIterator* LexStream::iterator() {
-    return new LexIterator(_stream);
+    return new (collect) LexIterator(_stream);
 }

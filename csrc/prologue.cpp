@@ -18,23 +18,24 @@
 #include "std.h"
 ;*/
 // no cmp_str since constant strings.
-typedef std::map<char*, Token*> SymbolMap;
-typedef std::pair<char*, Quote*> SymPair;
+typedef std::map<char*, P<Token> > SymbolMap;
+typedef std::pair<char*, P<Quote> > SymPair;
 
 SymPair splitdef(Quote* qval) {
-    TokenIterator* it = qval->tokens()->iterator();
-    Token* symbol = it->next();
+    P<TokenIterator> it = qval->tokens()->iterator();
+    P<Token> symbol = it->next();
 
-    QuoteStream* nts = new QuoteStream();
+    P<QuoteStream> nts = new (collect) QuoteStream();
     while(it->hasNext())
         nts->add(it->next());
 
-    return std::make_pair<char*, Quote*>(symbol->svalue(), new CmdQuote(nts));
+    return std::make_pair<char*, P<Quote> >(symbol->svalue(),
+            new (collect) CmdQuote(nts));
 }
 
 char* special(char* name) {
     int len = strlen(name);
-    char* buf = new char[len + 2];
+    P<char,true> buf = new (collect) char[len + 2];
     buf[0] = '$';
     std::strcpy(buf+1, name);
     return buf;
@@ -42,29 +43,29 @@ char* special(char* name) {
 
 void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
     //Take each point in tmpl, and proess elements accordingly.
-    TokenIterator* tstream = tmpl->iterator();
-    TokenIterator* estream = elem->iterator();
+    P<TokenIterator> tstream = tmpl->iterator();
+    P<TokenIterator> estream = elem->iterator();
     while(tstream->hasNext()) {
-        Token* t = tstream->next();
+        P<Token> t = tstream->next();
         switch (t->type()) {
             case TSymbol:
                 try {
                     // _ means any one
                     // * means any including nil unnamed.
                     // *a means any including nil but named with symbol '*a'
-                    char* value = t->svalue();
+                    P<char,true> value = t->svalue();
                     if (value[0] == '_') {
                         // eat one from estream and continue.
                         estream->next();
                         break;
                     } else if (value[0] == '*') {
-                        QuoteStream* nlist = new QuoteStream();
+                        P<QuoteStream> nlist = new (collect) QuoteStream();
                         // * is all. but before we slurp, check the next element
                         // in the template. If there is not any, then slurp. If there
                         // is one, then slurp until last but one, and leave it.
                         if (tstream->hasNext()) {
-                            Token* tmplterm = tstream->next();
-                            Token* lastelem = 0;
+                            P<Token> tmplterm = tstream->next();
+                            P<Token> lastelem = 0;
 
                             // slurp till last but one.
                             while(estream->hasNext()) {
@@ -94,10 +95,10 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
                                 nlist->add(estream->next());
                         }
                         if (strlen(value) > 1) { // do we have a named list?
-                            symbols[value] = new Term(TQuote, new CmdQuote(nlist));
+                            symbols[value] = new (collect)  Term(TQuote, new (collect)  CmdQuote(nlist));
                         }
                     } else {
-                        Token* e = estream->next();
+                        P<Token> e = estream->next();
                         symbols[value] = e;
                     }
                     break;
@@ -110,7 +111,7 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
             case TQuote:
                 // evaluate this portion again in evaltmpl.
                 try {
-                    Token* et = estream->next();
+                    P<Token> et = estream->next();
                     evaltmpl(t->qvalue()->tokens(), et->qvalue()->tokens(), symbols);
                 } catch (VException& e) {
                     throw e;
@@ -120,7 +121,7 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
                 break;
             default:
                 //make sure both matches.
-                Token* eterm = estream->next();
+                P<Token> eterm = estream->next();
                 if (!strcmp(t->value(),eterm->value()))
                     break;
                 else
@@ -138,31 +139,39 @@ bool containsKey(SymbolMap& symbols, char* key) {
 }
 
 TokenStream* evalres(TokenStream* res, SymbolMap& symbols) {
-        QuoteStream* r = new QuoteStream();
-        TokenIterator* rstream = res->iterator();
+        P<QuoteStream> r = new (collect) QuoteStream();
+        P<TokenIterator> rstream = res->iterator();
         while(rstream->hasNext()) {
-            Token* t = rstream->next();
+            P<Token> t = rstream->next();
             switch(t->type()) {
 
                 case TQuote:
-                    QuoteStream* nq = (QuoteStream*)evalres(t->qvalue()->tokens(), symbols);
-                    r->add(new Term(TQuote, new CmdQuote(nq)));
-                    break;
-                case TSymbol:
-                    // do we have it in our symbol table? if yes, replace, else just push it in.
-                    char* sym = t->svalue();
-                    if (containsKey(symbols, sym)) {
-                        // does it look like *xxx ?? 
-                        if (sym[0] == '*') {
-                            // expand it.
-                            Token* star = symbols[sym];
-                            QuoteIterator *tx = (QuoteIterator*)star->qvalue()->tokens()->iterator();
-                            while(tx->hasNext()) {
-                                r->add(tx->next());
-                            }
-                        } else
-                            r->add(symbols[sym]);
+                    {
+                        P<QuoteStream> nq = 
+                            (QuoteStream*)evalres(t->qvalue()->tokens(),
+                                    symbols);
+                        r->add(new (collect)  Term(TQuote, new (collect)  CmdQuote(nq)));
                         break;
+                    }
+                case TSymbol:
+                    {
+                        // do we have it in our symbol table? if yes, replace,
+                        // else just push it in.
+                        P<char,true> sym = t->svalue();
+                        if (containsKey(symbols, sym)) {
+                            // does it look like *xxx ?? 
+                            if (sym[0] == '*') {
+                                // expand it.
+                                P<Token> star = symbols[sym];
+                                P<QuoteIterator> tx = (QuoteIterator*)
+                                    star->qvalue()->tokens()->iterator();
+                                while(tx->hasNext()) {
+                                    r->add(tx->next());
+                                }
+                            } else
+                                r->add(symbols[sym]);
+                            break;
+                        }
                     }
                 default:
                     // just push it in.
@@ -199,209 +208,207 @@ bool isLt(Token* a, Token* b) {
 
 struct Ctrue : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        p->push(new Term(TBool, true));
+        q->stack()->push(new (collect) Term(TBool, true));
     }
     char* to_s() {return "true";}
 };
 
 struct Cfalse : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        p->push(new Term(TBool, false));
+        q->stack()->push(new (collect) Term(TBool, false));
     }
     char* to_s() {return "false";}
 };
 
 struct Cadd : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
         double dres = a->numvalue().d() + b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
-            p->push(new Term(TInt, ires));
+            p->push(new (collect)  Term(TInt, ires));
         else
-            p->push(new Term(TDouble, dres));
+            p->push(new (collect)  Term(TDouble, dres));
     }
     char* to_s() {return "+";}
 };
 
 struct Csub : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
         double dres = a->numvalue().d() - b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
-            p->push(new Term(TInt, ires));
+            p->push(new (collect)  Term(TInt, ires));
         else
-            p->push(new Term(TDouble, dres));
+            p->push(new (collect)  Term(TDouble, dres));
     }
     char* to_s() {return "-";}
 };
 
 struct Cmul : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
         double dres = a->numvalue().d() * b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
-            p->push(new Term(TInt, ires));
+            p->push(new (collect)  Term(TInt, ires));
         else
-            p->push(new Term(TDouble, dres));
+            p->push(new (collect)  Term(TDouble, dres));
     }
     char* to_s() {return "*";}
 };
 
 struct Cdiv : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
         double dres = a->numvalue().d() / b->numvalue().d();
         long ires = (long)dres;
         if (dres == ires)
-            p->push(new Term(TInt, ires));
+            p->push(new (collect)  Term(TInt, ires));
         else
-            p->push(new Term(TDouble, dres));
+            p->push(new (collect)  Term(TDouble, dres));
     }
     char* to_s() {return "/";}
 };
 
 struct Cand : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
         bool res = a->bvalue() && b->bvalue();
-        p->push(new Term(TBool, res));
+        p->push(new (collect)  Term(TBool, res));
     }
     char* to_s() {return "and";}
 };
 
 struct Cor : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
         bool res = a->bvalue() || b->bvalue();
-        p->push(new Term(TBool, res));
+        p->push(new (collect)  Term(TBool, res));
     }
     char* to_s() {return "or";}
 };
 
 struct Cnot : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
         bool res = !a->bvalue();
-        p->push(new Term(TBool, res));
+        p->push(new (collect)  Term(TBool, res));
     }
     char* to_s() {return "not";}
 };
 
 struct Cisinteger : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TBool, a->type() == TInt));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, a->type() == TInt));
     }
     char* to_s() {return "int?";}
 };
 
 struct Cisdouble : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TBool, a->type() == TDouble));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, a->type() == TDouble));
     }
     char* to_s() {return "decimal?";}
 };
 
 struct Cisbool : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TBool, a->type() == TBool));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, a->type() == TBool));
     }
     char* to_s() {return "bool?";}
 };
 
 struct Cissym : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TBool, a->type() == TSymbol));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, a->type() == TSymbol));
     }
     char* to_s() {return "symbol?";}
 };
 
 struct Cisquote : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TBool, a->type() == TQuote));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, a->type() == TQuote));
     }
     char* to_s() {return "quote?";}
 };
 
 struct Cisstr : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TBool, a->type() == TString));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, a->type() == TString));
     }
     char* to_s() {return "string?";}
 };
 
 struct Cischar : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TBool, a->type() == TChar));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, a->type() == TChar));
     }
     char* to_s() {return "char?";}
 };
 
 struct Cisnum : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TBool, a->type() == TInt || a->type() == TDouble));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, a->type() == TInt || a->type() == TDouble));
     }
     char* to_s() {return "number?";}
 };
 
 struct Ctostr : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
-        p->push(new Term(TString, a->value()));
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TString, a->value()));
     }
     char* to_s() {return ">string";}
 };
 
 struct Ctoint : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
         switch (a->type()) {
             case TInt:
                 p->push(a);
                 break;
             case TDouble:
-                p->push(new Term(TInt, a->numvalue().i()));
+                p->push(new (collect)  Term(TInt, a->numvalue().i()));
                 break;
             case TChar:
-                p->push(new Term(TInt, a->cvalue()));
+                p->push(new (collect)  Term(TInt, a->cvalue()));
                 break;
             case TString:
-                p->push(new Term(TInt, atol(a->svalue())));
+                p->push(new (collect)  Term(TInt, atol(a->svalue())));
             default:
                 throw VException("err:>int", a,"%s cant convert", a->value());
         }
@@ -411,20 +418,20 @@ struct Ctoint : public Cmd {
 
 struct Ctodouble : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
         switch (a->type()) {
             case TDouble:
                 p->push(a);
                 break;
             case TInt:
-                p->push(new Term(TDouble, a->numvalue().d()));
+                p->push(new (collect)  Term(TDouble, a->numvalue().d()));
                 break;
             case TChar:
-                p->push(new Term(TDouble, (double)a->cvalue()));
+                p->push(new (collect)  Term(TDouble, (double)a->cvalue()));
                 break;
             case TString:
-                p->push(new Term(TDouble, atof(a->svalue())));
+                p->push(new (collect)  Term(TDouble, atof(a->svalue())));
             default:
                 throw VException("err:>decimal", a,"%s cant convert", a->value());
         }
@@ -434,23 +441,23 @@ struct Ctodouble : public Cmd {
 
 struct Ctobool : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
         switch (a->type()) {
             case TInt:
-                p->push(new Term(TBool, a->ivalue() != 0));
+                p->push(new (collect)  Term(TBool, a->ivalue() != 0));
                 break;
             case TDouble:
-                p->push(new Term(TBool, a->dvalue() != 0.0));
+                p->push(new (collect)  Term(TBool, a->dvalue() != 0.0));
                 break;
             case TChar:
-                p->push(new Term(TBool, a->cvalue() != 'f'));
+                p->push(new (collect)  Term(TBool, a->cvalue() != 'f'));
                 break;
             case TString:
-                p->push(new Term(TBool, a->svalue() != Sym::lookup("false")));
+                p->push(new (collect)  Term(TBool, a->svalue() != Sym::lookup("false")));
                 break;
             case TQuote:
-                p->push(new Term(TBool, ((Term*)a)->size() != 0));
+                p->push(new (collect)  Term(TBool, ((Term*)a.val)->size() != 0));
                 break;
             default:
                 throw VException("err:>bool", a,"%s cant convert", a->value());
@@ -461,20 +468,20 @@ struct Ctobool : public Cmd {
 
 struct Ctochar : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
         switch (a->type()) {
             case TInt:
                 p->push(a);
                 break;
             case TDouble:
-                p->push(new Term(TInt, a->numvalue().i()));
+                p->push(new (collect)  Term(TInt, a->numvalue().i()));
                 break;
             case TChar:
                 p->push(a);
                 break;
             case TString:
-                p->push(new Term(TChar, a->value()[0]));
+                p->push(new (collect)  Term(TChar, a->value()[0]));
                 break;
             default:
                 throw VException("err:>char", a,"%s cant convert", a->value());
@@ -485,70 +492,70 @@ struct Ctochar : public Cmd {
 
 struct Cgt : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
-        p->push(new Term(TBool, isGt(a,b)));
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, isGt(a,b)));
     }
     char* to_s() {return ">";}
 };
 
 struct Clt : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
-        p->push(new Term(TBool, isLt(a,b)));
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, isLt(a,b)));
     }
     char* to_s() {return "<";}
 };
 
 struct Clteq : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
-        p->push(new Term(TBool, !isGt(a,b)));
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, !isGt(a,b)));
     }
     char* to_s() {return "<=";}
 };
 
 struct Cgteq : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
-        p->push(new Term(TBool, !isLt(a,b)));
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, !isLt(a,b)));
     }
     char* to_s() {return ">=";}
 };
 
 struct Ceq : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
-        p->push(new Term(TBool, isEq(a,b)));
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, isEq(a,b)));
     }
     char* to_s() {return "=";}
 };
 
 struct Cneq : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* a = p->pop();
-        p->push(new Term(TBool, !isEq(a,b)));
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> a = p->pop();
+        p->push(new (collect)  Term(TBool, !isEq(a,b)));
     }
     char* to_s() {return "!=";}
 };
 
 struct Cchoice : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* af = p->pop();
-        Token* at = p->pop();
-        Token* cond = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> af = p->pop();
+        P<Token> at = p->pop();
+        P<Token> cond = p->pop();
 
         if (cond->bvalue())
             p->push(at);
@@ -560,12 +567,12 @@ struct Cchoice : public Cmd {
 
 struct Cif : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* action = p->pop();
-        Token* cond = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> action = p->pop();
+        P<Token> cond = p->pop();
 
         if (cond->type() == TQuote) {
-            Node* n = p->now();
+            P<Node> n = p->now();
             cond->qvalue()->eval(q);
             cond = p->pop();
             p->now(n);
@@ -578,13 +585,13 @@ struct Cif : public Cmd {
 
 struct Cifte : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* eaction = p->pop();
-        Token* action = p->pop();
-        Token* cond = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> eaction = p->pop();
+        P<Token> action = p->pop();
+        P<Token> cond = p->pop();
 
         if (cond->type() == TQuote) {
-            Node* n = p->now();
+            P<Node> n = p->now();
             cond->qvalue()->eval(q);
             cond = p->pop();
             p->now(n);
@@ -599,12 +606,12 @@ struct Cifte : public Cmd {
 
 struct Cwhile : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* action = p->pop();
-        Token* cond = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> action = p->pop();
+        P<Token> cond = p->pop();
         while(true) {
             if (cond->type() == TQuote) {
-                Node* n = p->now();
+                P<Node> n = p->now();
                 cond->qvalue()->eval(q);
                 cond = p->pop();
                 p->now(n);
@@ -620,8 +627,8 @@ struct Cwhile : public Cmd {
 
 struct Cputs : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
         V::outln(a->value());
     }
     char* to_s() {return "puts";}
@@ -629,8 +636,8 @@ struct Cputs : public Cmd {
 
 struct Cput : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* a = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> a = p->pop();
         V::out(a->value());
     }
     char* to_s() {return "put";}
@@ -638,7 +645,7 @@ struct Cput : public Cmd {
 
 struct Cshow : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
         p->dump();
     }
     char* to_s() {return "?stack";}
@@ -646,11 +653,11 @@ struct Cshow : public Cmd {
 
 struct Cpeek : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
         if (p->empty())
             V::outln("");
         else {
-            Token* t = p->peek();
+            P<Token> t = p->peek();
             V::outln(t->value());
         }
     }
@@ -667,7 +674,7 @@ struct Chelp : public Cmd {
 struct Cvdebug : public Cmd {
     void eval(VFrame* q) {
         V::outln("Q:%d",q->parent()->id());
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
         p->dump();
         V::outln(q->parent()->words()->to_s());
     }
@@ -676,7 +683,7 @@ struct Cvdebug : public Cmd {
 
 struct Cdframe : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
         p->dump();
         q = q->parent();
         while(q) {
@@ -693,29 +700,29 @@ struct Cdframe : public Cmd {
 
 struct Cview : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* v = p->pop();
-        TokenIterator* fstream =v->qvalue()->tokens()->iterator();
-        QuoteStream* tmpl = new QuoteStream();
+        P<VStack> p = q->stack();
+        P<Token> v = p->pop();
+        P<TokenIterator> fstream =v->qvalue()->tokens()->iterator();
+        P<QuoteStream> tmpl = new (collect)  QuoteStream();
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             if (t->type() == TSymbol && (t->svalue() == Sym::lookup(":")))
                 break;
             tmpl->add(t);
         }
 
-        QuoteStream* res = new QuoteStream();
+        P<QuoteStream> res = new (collect)  QuoteStream();
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             res->add(t);
         }
 
-        QuoteStream* elem = new QuoteStream();
+        P<QuoteStream> elem = new (collect)  QuoteStream();
         fstream = tmpl->iterator();
-        std::stack<Token*> st;
+        std::stack<P<Token> > st;
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
-            Token* e = p->pop();
+            P<Token> t = fstream->next();
+            P<Token> e = p->pop();
             st.push(e);
         }
         while(st.size()) {
@@ -725,9 +732,9 @@ struct Cview : public Cmd {
         SymbolMap symbols;
         evaltmpl(tmpl, elem, symbols);
 
-        TokenStream* resstream = evalres(res, symbols);
-        CmdQuote* qs = new CmdQuote(resstream);
-        TokenIterator* i = qs->tokens()->iterator();
+        P<TokenStream> resstream = evalres(res, symbols);
+        P<CmdQuote> qs = new (collect)  CmdQuote(resstream);
+        P<TokenIterator> i = qs->tokens()->iterator();
         while(i->hasNext())
             p->push(i->next());
     }
@@ -736,23 +743,23 @@ struct Cview : public Cmd {
 
 struct Ctrans : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* v = p->pop();
-        TokenIterator* fstream =v->qvalue()->tokens()->iterator();
-        TokenStream* tmpl = fstream->next()->qvalue()->tokens();
+        P<VStack> p = q->stack();
+        P<Token> v = p->pop();
+        P<TokenIterator> fstream =v->qvalue()->tokens()->iterator();
+        P<TokenStream> tmpl = fstream->next()->qvalue()->tokens();
         
-        QuoteStream* res = new QuoteStream();
+        P<QuoteStream> res = new (collect)  QuoteStream();
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             res->add(t);
         }
 
-        QuoteStream* elem = new QuoteStream();
+        P<QuoteStream> elem = new (collect)  QuoteStream();
         fstream = tmpl->iterator();
-        std::stack<Token*> st;
+        std::stack<P<Token> > st;
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
-            Token* e = p->pop();
+            P<Token> t = fstream->next();
+            P<Token> e = p->pop();
             st.push(e);
         }
         while(st.size()) {
@@ -762,9 +769,9 @@ struct Ctrans : public Cmd {
         SymbolMap symbols;
         evaltmpl(tmpl, elem, symbols);
 
-        TokenStream* resstream = evalres(res, symbols);
-        CmdQuote* qs = new CmdQuote(resstream);
-        TokenIterator* i = qs->tokens()->iterator();
+        P<TokenStream> resstream = evalres(res, symbols);
+        P<CmdQuote> qs = new (collect)  CmdQuote(resstream);
+        P<TokenIterator> i = qs->tokens()->iterator();
         while(i->hasNext())
             p->push(i->next());
     }
@@ -773,8 +780,8 @@ struct Ctrans : public Cmd {
 
 struct Cdef : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* t = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> t = p->pop();
         SymPair entry = splitdef(t->qvalue());
         q->parent()->def(entry.first, entry.second);
     }
@@ -783,9 +790,9 @@ struct Cdef : public Cmd {
 
 struct Cdefenv : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* b = p->pop();
-        Token* t = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> b = p->pop();
+        P<Token> t = p->pop();
         SymPair entry = splitdef(t->qvalue());
         b->fvalue()->def(entry.first, entry.second);
     }
@@ -794,31 +801,31 @@ struct Cdefenv : public Cmd {
 
 struct Cparent : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        VFrame* t = p->pop()->fvalue();
-        p->push(new Term(TFrame, t->parent()));
+        P<VStack> p = q->stack();
+        P<VFrame> t = p->pop()->fvalue();
+        p->push(new (collect)  Term(TFrame, t->parent()));
     }
     char* to_s() {return "&parent";}
 };
 
 struct Cme : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        p->push(new Term(TFrame, q->parent()));
+        P<VStack> p = q->stack();
+        p->push(new (collect)  Term(TFrame, q->parent()));
     }
     char* to_s() {return "$me";}
 };
 
 struct Cuse : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* file = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> file = p->pop();
         try {
-            char* v = file->svalue();
+            P<char,true> v = file->svalue();
             int len = strlen(v);
-            char* val = new char[len + 3];
-            std::sprintf(val,"%s%s",v,".v");
-            CmdQuote* module = new CmdQuote(new LexStream(new FileCharStream(val)));
+            P<char,true> val = new (collect)  char[len + 3];
+            std::sprintf(val,"%s%s",v.val,".v");
+            P<CmdQuote> module = new (collect)  CmdQuote(new (collect)  LexStream(new (collect)  FileCharStream(val)));
             module->eval(q->parent());
         } catch (VException& e) {
             e.addLine("use %s", file->value());
@@ -832,15 +839,15 @@ struct Cuse : public Cmd {
 
 struct Cuseenv : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* env = p->pop();
-        Token* file = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> env = p->pop();
+        P<Token> file = p->pop();
         try {
-            char* v = file->svalue();
+            P<char,true> v = file->svalue();
             int len = strlen(v);
-            char* val = new char[len + 3];
-            std::sprintf(val,"%s%s",v,".v");
-            CmdQuote* module = new CmdQuote(new LexStream(new FileCharStream(val)));
+            P<char,true> val = new (collect)  char[len + 3];
+            std::sprintf(val,"%s%s",v.val,".v");
+            P<CmdQuote> module = new (collect)  CmdQuote(new (collect)  LexStream(new (collect)  FileCharStream(val)));
             module->eval(env->fvalue());
         } catch (VException& e) {
             e.addLine("*use %s", file->value());
@@ -853,11 +860,11 @@ struct Cuseenv : public Cmd {
 
 struct Ceval : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* str = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> str = p->pop();
         try {
-            char* v = str->svalue();
-            CmdQuote* module = new CmdQuote(new LexStream(new BuffCharStream(v)));
+            P<char,true> v = str->svalue();
+            P<CmdQuote> module = new (collect)  CmdQuote(new (collect)  LexStream(new (collect)  BuffCharStream(v)));
             module->eval(q->parent());
         } catch (VException& e) {
             e.addLine("eval %s", str->value());
@@ -870,12 +877,12 @@ struct Ceval : public Cmd {
 
 struct Cevalenv : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* env = p->pop();
-        Token* str = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> env = p->pop();
+        P<Token> str = p->pop();
         try {
-            char* v = str->svalue();
-            CmdQuote* module = new CmdQuote(new LexStream(new BuffCharStream(v)));
+            P<char,true> v = str->svalue();
+            P<CmdQuote> module = new (collect)  CmdQuote(new (collect)  LexStream(new (collect)  BuffCharStream(v)));
             module->eval(env->fvalue());
         } catch (VException& e) {
             e.addLine("*eval %s", str->value());
@@ -888,36 +895,36 @@ struct Cevalenv : public Cmd {
 
 struct Cmodule : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* t = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> t = p->pop();
         SymPair entry = splitdef(t->qvalue());
-        char* module = entry.first;
-        Quote* qfull = entry.second;
+        P<char,true> module = entry.first;
+        P<Quote> qfull = entry.second;
 
-        TokenIterator* it = qfull->tokens()->iterator();
-        Quote* pub = it->next()->qvalue();
+        P<TokenIterator> it = qfull->tokens()->iterator();
+        P<Quote> pub = it->next()->qvalue();
 
-        QuoteStream* nts = new QuoteStream();
+        P<QuoteStream> nts = new (collect)  QuoteStream();
         while(it->hasNext())
             nts->add(it->next());
 
-        CmdQuote* qval = new CmdQuote(nts);
+        P<CmdQuote> qval = new (collect)  CmdQuote(nts);
         qval->eval(q);
 
-        Term* f = new Term(TFrame, q);
+        P<Term> f = new (collect)  Term(TFrame, q);
 
-        QuoteStream* fts = new QuoteStream();
+        P<QuoteStream> fts = new (collect)  QuoteStream();
         fts->add(f);
-        q->parent()->def(special(module), new CmdQuote(fts));
+        q->parent()->def(special(module), new (collect)  CmdQuote(fts));
 
         // bind all published tokens to parent namespace.
-        TokenIterator* i = pub->tokens()->iterator();
+        P<TokenIterator> i = pub->tokens()->iterator();
         while(i->hasNext()) {
-            char* s = i->next()->svalue();
-            char* def = new char[strlen(s) + strlen(module) + 9]; // sizeof("$ [ ] &i");
-            sprintf(def, "$%s[%s] &i", module, s);
-            Quote* libs = CmdQuote::getdef(def);
-            sprintf(def, "%s:%s", module, s);
+            P<char,true> s = i->next()->svalue();
+            P<char,true> def = new (collect)  char[strlen(s) + strlen(module) + 9]; // sizeof("$ [ ] &i");
+            sprintf(def, "$%s[%s] &i", module.val, s.val);
+            P<Quote> libs = CmdQuote::getdef(def);
+            sprintf(def, "%s:%s", module.val, s.val);
             q->parent()->def(def, libs);
         }
     }
@@ -926,17 +933,17 @@ struct Cmodule : public Cmd {
 
 struct Cwords : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        VFrame* b = p->pop()->fvalue();
-        p->push(new Term(TQuote, b->words())); 
+        P<VStack> p = q->stack();
+        P<VFrame> b = p->pop()->fvalue();
+        p->push(new (collect)  Term(TQuote, b->words())); 
     }
     char* to_s() {return "&words";}
 };
 
 struct Cdequote : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* prog = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> prog = p->pop();
         prog->qvalue()->eval(q);
     }
     char* to_s() {return "i";}
@@ -944,9 +951,9 @@ struct Cdequote : public Cmd {
 
 struct Cdequoteenv : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* prog = p->pop();
-        Token* env = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> prog = p->pop();
+        P<Token> env = p->pop();
         prog->qvalue()->eval(env->fvalue());
     }
     char* to_s() {return "&i";}
@@ -954,16 +961,16 @@ struct Cdequoteenv : public Cmd {
 
 struct Cstack : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        q->stack()->push(new Term(TQuote, p->quote()));
+        P<VStack> p = q->stack();
+        q->stack()->push(new (collect)  Term(TQuote, p->quote()));
     }
     char* to_s() {return "stack";}
 };
 
 struct Cunstack : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* t = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> t = p->pop();
         p->dequote(t->qvalue());
     }
     char* to_s() {return "unstack";}
@@ -978,41 +985,41 @@ struct Cabort : public Cmd {
 
 struct Csize : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* t = p->pop();
-        q->stack()->push(new Term(TInt, (long)((Term*)t)->size()));
+        P<VStack> p = q->stack();
+        P<Token> t = p->pop();
+        q->stack()->push(new (collect)  Term(TInt, (long)((Term*)t.val)->size()));
     }
     char* to_s() {return "size";}
 };
 
 struct Cin : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* i = p->pop();
-        Token* list = p->pop();
-        TokenIterator* ti = list->qvalue()->tokens()->iterator();
+        P<VStack> p = q->stack();
+        P<Token> i = p->pop();
+        P<Token> list = p->pop();
+        P<TokenIterator> ti = list->qvalue()->tokens()->iterator();
         while(ti->hasNext()) {
-            Token* t = ti->next();
+            P<Token> t = ti->next();
             if (t->type() == i->type() && isEq(t, i)) {
-                p->push(new Term(TBool, true));
+                p->push(new (collect)  Term(TBool, true));
                 return;
             }
         }
-        p->push(new Term(TBool, false));
+        p->push(new (collect)  Term(TBool, false));
     }
     char* to_s() {return "in?";}
 };
 
 struct Cat : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* i = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> i = p->pop();
         int idx = i->ivalue();
-        Token* list = p->pop();
-        TokenIterator* ti = list->qvalue()->tokens()->iterator();
+        P<Token> list = p->pop();
+        P<TokenIterator> ti = list->qvalue()->tokens()->iterator();
         int count = 0;
         while(ti->hasNext()) {
-            Token* t = ti->next();
+            P<Token> t = ti->next();
             if (count == idx) {
                 p->push(t);
                 return;
@@ -1026,173 +1033,173 @@ struct Cat : public Cmd {
 
 struct Cmap : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
 
-        QuoteStream* nts = new QuoteStream(); 
+        P<QuoteStream> nts = new (collect)  QuoteStream(); 
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             p->push(t);
 
             action->qvalue()->eval(q);
-            Token* res = p->pop();
+            P<Token> res = p->pop();
             nts->add(res);
         }
-        p->push(new Term(TQuote, new CmdQuote(nts)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts)));
     }
     char* to_s() {return "map!";}
 };
 
 struct Cmap_i : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
 
-        QuoteStream* nts = new QuoteStream(); 
+        P<QuoteStream> nts = new (collect)  QuoteStream(); 
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
-            Node* n = p->now();
+            P<Token> t = fstream->next();
+            P<Node> n = p->now();
             p->push(t);
 
             action->qvalue()->eval(q);
-            Token* res = p->pop();
+            P<Token> res = p->pop();
             p->now(n);
             nts->add(res);
         }
-        p->push(new Term(TQuote, new CmdQuote(nts)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts)));
     }
     char* to_s() {return "map";}
 };
 
 struct Csplit : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
 
-        QuoteStream* nts1 = new QuoteStream(); 
-        QuoteStream* nts2 = new QuoteStream(); 
+        P<QuoteStream> nts1 = new (collect)  QuoteStream(); 
+        P<QuoteStream> nts2 = new (collect)  QuoteStream(); 
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             p->push(t);
 
             action->qvalue()->eval(q);
-            Token* res = p->pop();
+            P<Token> res = p->pop();
             if (res->bvalue())
                 nts1->add(t);
             else
                 nts2->add(t);
         }
-        p->push(new Term(TQuote, new CmdQuote(nts1)));
-        p->push(new Term(TQuote, new CmdQuote(nts2)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts1)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts2)));
     }
     char* to_s() {return "split!";}
 };
 
 struct Csplit_i : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
 
-        QuoteStream* nts1 = new QuoteStream(); 
-        QuoteStream* nts2 = new QuoteStream(); 
+        P<QuoteStream> nts1 = new (collect)  QuoteStream(); 
+        P<QuoteStream> nts2 = new (collect)  QuoteStream(); 
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
-            Node* n = p->now();
+            P<Token> t = fstream->next();
+            P<Node> n = p->now();
             p->push(t);
 
             action->qvalue()->eval(q);
-            Token* res = p->pop();
+            P<Token> res = p->pop();
             p->now(n);
             if (res->bvalue())
                 nts1->add(t);
             else
                 nts2->add(t);
         }
-        p->push(new Term(TQuote, new CmdQuote(nts1)));
-        p->push(new Term(TQuote, new CmdQuote(nts2)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts1)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts2)));
     }
     char* to_s() {return "split";}
 };
 
 struct Cfilter : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
 
-        QuoteStream* nts = new QuoteStream(); 
+        P<QuoteStream> nts = new (collect)  QuoteStream(); 
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             p->push(t);
 
             action->qvalue()->eval(q);
-            Token* res = p->pop();
+            P<Token> res = p->pop();
             if (res->bvalue())
                 nts->add(t);
         }
-        p->push(new Term(TQuote, new CmdQuote(nts)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts)));
     }
     char* to_s() {return "filter!";}
 };
 
 struct Cfilter_i : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
 
-        QuoteStream* nts = new QuoteStream(); 
+        P<QuoteStream> nts = new (collect)  QuoteStream(); 
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
-            Node* n = p->now();
+            P<Token> t = fstream->next();
+            P<Node> n = p->now();
             p->push(t);
 
             action->qvalue()->eval(q);
-            Token* res = p->pop();
+            P<Token> res = p->pop();
             p->now(n);
             if (res->bvalue())
                 nts->add(t);
         }
-        p->push(new Term(TQuote, new CmdQuote(nts)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts)));
     }
     char* to_s() {return "filter";}
 };
 
 struct Cfold : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* init = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> init = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
         p->push(init);
-        QuoteStream* nts = new QuoteStream(); 
+        P<QuoteStream> nts = new (collect)  QuoteStream(); 
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             p->push(t);
 
             action->qvalue()->eval(q);
@@ -1204,24 +1211,24 @@ struct Cfold : public Cmd {
 
 struct Cfold_i : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* init = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> init = p->pop();
+        P<Token> list = p->pop();
 
-        Node* n = p->now();
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<Node> n = p->now();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
         p->push(init);
-        QuoteStream* nts = new QuoteStream(); 
+        P<QuoteStream> nts = new (collect)  QuoteStream(); 
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             p->push(t);
 
             action->qvalue()->eval(q);
         }
         // The result will be on the stack at the end of the cycle.
-        Token* res = p->pop();
+        P<Token> res = p->pop();
         p->now(n);
         p->push(res);
     }
@@ -1230,14 +1237,14 @@ struct Cfold_i : public Cmd {
 
 struct Cstep : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             p->push(t);
 
             action->qvalue()->eval(q);
@@ -1248,14 +1255,14 @@ struct Cstep : public Cmd {
 
 struct Cstep_i : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
-        Token* action = p->pop();
-        Token* list = p->pop();
+        P<Token> action = p->pop();
+        P<Token> list = p->pop();
 
-        TokenIterator* fstream = list->qvalue()->tokens()->iterator();
+        P<TokenIterator> fstream = list->qvalue()->tokens()->iterator();
         while(fstream->hasNext()) {
-            Token* t = fstream->next();
+            P<Token> t = fstream->next();
             p->push(t);
 
             action->qvalue()->eval(q);
@@ -1266,51 +1273,51 @@ struct Cstep_i : public Cmd {
 
 struct Cdrop : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
         int num = p->pop()->ivalue();
-        Token* list = p->pop();
+        P<Token> list = p->pop();
 
-        QuoteStream* nts = new QuoteStream();
-        TokenIterator* i = list->qvalue()->tokens()->iterator();
+        P<QuoteStream> nts = new (collect)  QuoteStream();
+        P<TokenIterator> i = list->qvalue()->tokens()->iterator();
         while(i->hasNext()) {
-            Token* t = i->next();
+            P<Token> t = i->next();
             if (num <= 0)
                 nts->add(t);
             --num;
         }
-        p->push(new Term(TQuote, new CmdQuote(nts)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts)));
     }
     char* to_s() {return "drop";}
 };
 
 struct Ctake : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
+        P<VStack> p = q->stack();
 
         int num = p->pop()->ivalue();
-        Token* list = p->pop();
+        P<Token> list = p->pop();
         int count = 0;
 
-        QuoteStream* nts = new QuoteStream();
-        TokenIterator* i = list->qvalue()->tokens()->iterator();
+        P<QuoteStream> nts = new (collect)  QuoteStream();
+        P<TokenIterator> i = list->qvalue()->tokens()->iterator();
         while(i->hasNext()) {
-            Token* t = i->next();
+            P<Token> t = i->next();
             if (count >= num)
                 break;
             ++count;
             nts->add(t);
         }
-        p->push(new Term(TQuote, new CmdQuote(nts)));
+        p->push(new (collect)  Term(TQuote, new (collect)  CmdQuote(nts)));
     }
     char* to_s() {return "take";}
 };
 
 struct Ccatch : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* c = p->pop();
-        Token* expr = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> c = p->pop();
+        P<Token> expr = p->pop();
         try {
             expr->qvalue()->eval(q);
         } catch (VException &ve) {
@@ -1323,7 +1330,7 @@ struct Ccatch : public Cmd {
 
 struct Cthrow : public Cmd {
     void eval(VFrame* q) {
-        Token* t = q->stack()->pop();
+        P<Token> t = q->stack()->pop();
         throw VException("err:throw", t, t->value());
     }
     char* to_s() {return "throw";}
@@ -1331,40 +1338,40 @@ struct Cthrow : public Cmd {
 
 struct Cgetdef : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* sym = p->pop();
-        char* symbol = sym->qvalue()->tokens()->iterator()->next()->svalue();
+        P<VStack> p = q->stack();
+        P<Token> sym = p->pop();
+        P<char,true> symbol = sym->qvalue()->tokens()->iterator()->next()->svalue();
         
-        Quote* qv = q->lookup(symbol);
-        TokenIterator* it = qv->tokens()->iterator();
+        P<Quote> qv = q->lookup(symbol);
+        P<TokenIterator> it = qv->tokens()->iterator();
 
-        QuoteStream* nts = new QuoteStream();
-        nts->add(new Term(TSymbol, symbol));
+        P<QuoteStream> nts = new (collect)  QuoteStream();
+        nts->add(new (collect)  Term(TSymbol, symbol));
         while(it->hasNext())
             nts->add(it->next());
-        CmdQuote* res = new CmdQuote(nts);
+        P<CmdQuote> res = new (collect)  CmdQuote(nts);
 
-        p->push(new Term(TQuote, res));
+        p->push(new (collect)  Term(TQuote, res));
     }
     char* to_s() {return ">def";}
 };
 
 struct Cenv : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        p->push(new Term(TQuote, CmdQuote::getdef("platform native")));
+        P<VStack> p = q->stack();
+        p->push(new (collect)  Term(TQuote, CmdQuote::getdef("platform native")));
     }
     char* to_s() {return "env";}
 };
 
 struct Csqrt : public Cmd {
     void eval(VFrame* q) {
-        VStack* p = q->stack();
-        Token* t = p->pop();
+        P<VStack> p = q->stack();
+        P<Token> t = p->pop();
         double num = t->numvalue().d();
         if (num != fabs(num))
             throw VException("err:sqrt:negetive", t,t->value());
-        p->push(new Term(TDouble, sqrt(num)));
+        p->push(new (collect)  Term(TDouble, sqrt(num)));
     }
     char* to_s() {return "sqrt";}
 };

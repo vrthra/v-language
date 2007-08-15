@@ -4,7 +4,7 @@
 template <class T, bool A=false> class P {
     public:
         T* val;
-        P(T* p):val(p) {
+        P(T* p=0):val(p) {
             //attach(p);
         }
 

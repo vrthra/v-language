@@ -14,8 +14,8 @@ CmdQuote::CmdQuote(TokenStream* tokens):_tokens(tokens),_val(0) {
 }
 
 void CmdQuote::eval(VFrame* scope) {
-    VStack* stack = scope->stack();
-    TokenIterator* stream = _tokens->iterator();
+    P<VStack> stack = scope->stack();
+    P<TokenIterator> stream = _tokens->iterator();
     while(stream->hasNext()) {
         stack->push(stream->next());
         if (cando(stack))
@@ -28,9 +28,8 @@ TokenStream* CmdQuote::tokens() {
 }
 
 void CmdQuote::dofunction(VFrame* scope) {
-    VStack* st = scope->stack();
-    Token* sym = st->pop();
-    Quote* q = scope->lookup(sym->svalue());
+    P<Token> sym = scope->stack()->pop();
+    P<Quote> q = scope->lookup(sym->svalue());
     if (!q)
         throw VException("err:undef_symbol", sym, sym->value());
     try {
@@ -53,7 +52,7 @@ char* CmdQuote::to_s() {
     if (!_val) {
         std::ostringstream outs;
         outs << '[';
-        TokenIterator* i = _tokens->iterator();
+        P<TokenIterator> i = _tokens->iterator();
         while(i->hasNext()) {
             outs << i->next()->value();
             if (i->hasNext())
@@ -66,5 +65,6 @@ char* CmdQuote::to_s() {
 }
 
 Quote* CmdQuote::getdef(char* buf) {
-    return new CmdQuote(new LexStream(new BuffCharStream(buf)));
+    return new (collect) CmdQuote(
+            new (collect) LexStream(new (collect) BuffCharStream(buf)));
 }
