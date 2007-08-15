@@ -13,6 +13,7 @@ class ConsoleCharStream : public CharStream {
     private:
         char _buf[MaxBuf];
         int _index;
+        bool _eof;
         Lexer* _lexer;
         char _current;
         void read_nobuf();
