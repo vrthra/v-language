@@ -7,6 +7,6 @@ class LexStream : public QuoteStream {
         LexStream(CharStream* c);
         virtual TokenIterator* iterator();
     private:
-        CharStream* _stream;
+        P<CharStream> _stream;
 };
 #endif

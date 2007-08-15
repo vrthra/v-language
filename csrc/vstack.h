@@ -16,8 +16,8 @@ class VStack {
         void dequote(Quote* q);
         void dump();
     private:
-        Node* _now;
-        Node* _first;
+        P<Node> _now;
+        P<Node> _first;
         Node* getList();
 };
 

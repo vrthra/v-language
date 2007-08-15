@@ -26,7 +26,7 @@ class VFrame {
         int _id;
         bool hasKey(char* key);
         QMap _dict;
-        VStack* _stack;
-        VFrame* _parent;
+        P<VStack> _stack;
+        P<VFrame> _parent;
 };
 #endif

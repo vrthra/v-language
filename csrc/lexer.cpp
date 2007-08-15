@@ -18,11 +18,9 @@ struct CNode {
     CNode(char ch):link(0), c(ch) {}
 };
 
-Lexer::Lexer(CharStream* q) {
-    _stream = q;
+Lexer::Lexer(CharStream* q):_stream(q),_wi(0),_has(true),
+                            _first(0),_queue(0),_cstack(0) {
     _stream->lexer(this);
-    _wi = 0;
-    _has = true;
     _first = _queue = new Node(0);
     _cstack = new CNode(0);
 }
@@ -83,7 +81,7 @@ bool Lexer::closed() {
 void Lexer::dump() {
     Node* i = _first->link;
     while(i) {
-        V::out("%s;", i->data);
+        V::out("%s;", i->data.val);
         i = i->link;
     }
     V::outln("");

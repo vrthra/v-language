@@ -13,7 +13,7 @@ class CmdQuote : public Quote {
         static Quote* getdef(char* def);
     private:
         bool cando(VStack* stack);
-        TokenStream* _tokens;
-        char* _val;
+        P<TokenStream> _tokens;
+        P<char,true> _val;
 };
 #endif

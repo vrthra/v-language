@@ -1,6 +1,12 @@
 #include "buffcharstream.h"
 #include <string.h>
 
+BuffCharStream::BuffCharStream(char* buff):_current(-1), _len(0),_buf(0) {
+    if (buff) {
+        _len = strlen(buff);
+        _buf = dup_str(buff);
+    }
+}
 char BuffCharStream::read() {
     ++_current;
     return _buf[_current];
@@ -16,9 +22,4 @@ void BuffCharStream::lexer(Lexer* l) {
 bool BuffCharStream::eof() {
     return (_current+1) >= _len;
 }
-BuffCharStream::BuffCharStream(char* buff):_current(-1) {
-    if (buff) {
-        _len = strlen(buff);
-        _buf = dup_str(buff);
-    }
-}
+

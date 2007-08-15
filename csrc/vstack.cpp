@@ -4,9 +4,7 @@
 #include "cmdquote.h"
 #include "vexception.h"
 #include "vstack.h"
-VStack::VStack() {
-    _now = new Node(0);
-    _first = _now;
+VStack::VStack():_now(new Node(0)),_first(_now) {
 }
 
 Node* VStack::now() {

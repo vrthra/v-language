@@ -1,5 +1,6 @@
 #ifndef TOKEN_H
 #define TOKEN_H
+#include "common.h"
 #include "type.h"
 #include "num.h"
 class Quote;
@@ -19,11 +20,9 @@ struct Token {
 };
 
 struct Node {
-    Token* data;
-    Node* link;
-    Node(Token* e) {
-        data = e;
-        link = 0;
+    P<Token> data;
+    P<Node> link;
+    Node(Token* e):data(e),link(0) {
     }
 };
 

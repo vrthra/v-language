@@ -11,8 +11,8 @@ class QuoteStream : public TokenStream {
         virtual int size();
         virtual TokenIterator* iterator();
     protected:
-        Node* _stream;
-        Node* _first;
+        P<Node> _stream;
+        P<Node> _first;
         long _size;
 };
 #endif

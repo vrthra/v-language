@@ -8,6 +8,6 @@ class QuoteIterator : public TokenIterator {
         virtual Token* next();
         QuoteIterator(Node* q);
     private:
-        Node* _qs;
+        P<Node> _qs;
 };
 #endif

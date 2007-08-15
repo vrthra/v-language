@@ -10,6 +10,9 @@
 #include "vexception.h"
 #include "prologue.h"
 
+CmdQuote::CmdQuote(TokenStream* tokens):_tokens(tokens),_val(0) {
+}
+
 void CmdQuote::eval(VFrame* scope) {
     VStack* stack = scope->stack();
     TokenIterator* stream = _tokens->iterator();
@@ -19,13 +22,11 @@ void CmdQuote::eval(VFrame* scope) {
             dofunction(scope);
     }
 }
+
 TokenStream* CmdQuote::tokens() {
     return _tokens;
 }
-CmdQuote::CmdQuote(TokenStream* tokens) {
-    _tokens = tokens;
-    _val = 0;
-}
+
 void CmdQuote::dofunction(VFrame* scope) {
     VStack* st = scope->stack();
     Token* sym = st->pop();

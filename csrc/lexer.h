@@ -32,12 +32,12 @@ class Lexer {
         char _word[MaxBuf];
         int _wi;
 
-        CNode* _cstack;
+        P<CNode> _cstack;
 
-        Node* _queue;
-        Node* _first;
+        P<Node> _queue;
+        P<Node> _first;
 
-        CharStream* _stream;
+        P<CharStream> _stream;
         bool _has;
 };
 #endif

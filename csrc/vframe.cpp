@@ -8,15 +8,11 @@
 
 bool singleassign(); // defined in v.cpp
 int VFrame::_idcount = 0;
-VFrame::VFrame() {
-    _parent = 0;
-    _stack = new VStack();
+VFrame::VFrame():_parent(0),_stack(new VStack()),_id(0) {
     _idcount++;
     _id = _idcount;
 }
-VFrame::VFrame(VFrame* parent) {
-    _parent = parent;
-    _stack = parent->stack();
+VFrame::VFrame(VFrame* parent):_parent(parent),_stack(parent->stack()),_id(0) {
     _idcount++;
     _id = _idcount;
 }

@@ -1,6 +1,6 @@
 #ifndef QUOTE_H
 #define QUOTE_H
-
+#include "common.h"
 class TokenStream;
 class VFrame;
 struct Quote {

@@ -11,8 +11,8 @@ class VException : public Vx {
         virtual void addLine(char* v, ...);
         Token* token();
     private:
-        char* _err;
-        Token* _token;
+        P<char,true> _err;
+        P<Token> _token;
         char _info[MaxBuf*16];
         int _i;
 };

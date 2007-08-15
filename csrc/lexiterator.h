@@ -13,7 +13,7 @@ class LexIterator : public QuoteIterator {
     private:
         Token* lex_next();
         Token* compound(Token* open);
-        Lexer* _lex;
-        Token* _current;
+        P<Lexer> _lex;
+        P<Token> _current;
 };
 #endif

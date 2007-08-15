@@ -14,7 +14,7 @@ class ConsoleCharStream : public CharStream {
         char _buf[MaxBuf];
         int _index;
         bool _eof;
-        Lexer* _lexer;
+        P<Lexer> _lexer;
         char _current;
         void read_nobuf();
         virtual int index();
