@@ -5,32 +5,35 @@
 #include "charstream.h"
 #include "vexception.h"
 
-Term::Term(Type t,bool val):_type(t) {
+Term::Term(Type t,bool val):_type(t),_hold(0) {
     _bval = val;
 }
 
-Term::Term(Type t,char val):_type(t) {
+Term::Term(Type t,char val):_type(t),_hold(0) {
     _cval = val;
 }
 
-Term::Term(Type t,char* val):_type(t) {
+Term::Term(Type t,char* val):_type(t),_hold(0) {
     _sval = val;
+    _hold = _sval;
 }
 
-Term::Term(Type t,long val):_num(val),_type(t) {
+Term::Term(Type t,long val):_num(val),_type(t),_hold(0) {
     _lval = val;
 }
 
-Term::Term(Type t,double val):_num(val),_type(t) {
+Term::Term(Type t,double val):_num(val),_type(t),_hold(0) {
     _dval = val;
 }
 
-Term::Term(Type t,Quote* val):_type(t) {
+Term::Term(Type t,Quote* val):_type(t),_hold(0) {
     _qval = val;
+    _hold = _qval;
 }
 
-Term::Term(Type t,VFrame* val):_type(t) {
+Term::Term(Type t,VFrame* val):_type(t),_hold(0) {
     _fval = val;
+    _hold = _fval;
 }
 
 int Term::size() {
