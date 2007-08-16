@@ -94,6 +94,6 @@ int main(int argc, char** argv) {
         printf("time: %ld\n", time(0) - seconds);
         printf("clock: %ld\n", clock());
     }
-
+    show();
     return 0;
 }

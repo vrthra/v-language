@@ -4,5 +4,5 @@
 enum Collect {collect};
 void * operator new (size_t t, Collect);
 void * operator new[] (size_t t, Collect);
-
+void show();
 #endif
