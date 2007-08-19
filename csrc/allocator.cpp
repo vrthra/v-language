@@ -16,9 +16,12 @@ class Vxcrit : public Vx {
     }
 };
 
+int GcInterval = 1024*1024;
 typedef std::list<void*> Mobj;
 Mobj __objects;
 Mobj __prim;
+
+int __objdiff= 0;
 
 int L_SIZE = sizeof(long);
 
@@ -29,6 +32,7 @@ void* operator new(size_t t, Collect) {
     long* i = (long*)p;
     *i = 0;
     __prim.push_back(p);
+    __objdiff++;
     //cout <<setbase(16) << (long)p + L_SIZE <<setbase(10) << endl;
     return (char*)p+L_SIZE;
 }
@@ -40,6 +44,7 @@ void* operator new[](size_t t, Collect) {
     long* i = (long*)p;
     *i = 0;
     __prim.push_back(p);
+    __objdiff++;
     //cout <<setbase(16) << (long)p + L_SIZE <<setbase(10) << endl;
     return (char*)p+L_SIZE;
 }
@@ -52,6 +57,7 @@ void* Obj::operator new(size_t t, Collect) {
     long* i = (long*)p;
     *i = 0;
     __objects.push_back(p);
+    __objdiff++;
     //cout <<setbase(16) << (long)p + L_SIZE <<setbase(10) << endl;
     return (char*)p+L_SIZE;
 }
@@ -63,6 +69,7 @@ void* Obj::operator new[](size_t t, Collect) {
     long* i = (long*)p;
     *i = 0;
     __objects.push_back(p);
+    __objdiff++;
     //cout <<setbase(16) << (long)p + L_SIZE <<setbase(10) << endl;
     return (char*)p+L_SIZE;
 }
@@ -92,26 +99,36 @@ void show() {
 }
 
 // problems:
-// Distructors of objects are not called which means members are not destroyed,
-// which is needed for us to get their references down.
-//
 // Dont know how to handle objects in stack.
-
 void gc() {
-    int j = 0;
+    if (__objdiff < GcInterval)
+        return;
+    __objdiff = 0;
     for (Mobj::iterator i = __objects.begin(); i != __objects.end(); i++) {
         void* v = *i;
         long* p = (long*) v;
-        //cout << (long)p << endl;
         if (!*p) {
             Obj* o = (Obj*) ((char*)v + L_SIZE);
             if (o) {
                 o->~Obj();
                 free(v);
                 *i = 0;
-                ++j;
             }
         }
     }
     __objects.remove(0);
+
+    // do the same for primaries
+    for (Mobj::iterator i = __prim.begin(); i != __prim.end(); i++) {
+        void* v = *i;
+        long* p = (long*) v;
+        if (!*p) {
+            void* o = (char*)v + L_SIZE;
+            if (o) {
+                free(v);
+                *i = 0;
+            }
+        }
+    }
+    __prim.remove(0);
 }

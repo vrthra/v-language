@@ -17,5 +17,5 @@ char* dup_str(const char* c,bool b) {
 
 void* __bottom_ptr = new char[0];
 bool invalid(void* p) {
-    return p <= __bottom_ptr;
+    return p <= 0;
 }
