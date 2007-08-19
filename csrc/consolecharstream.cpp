@@ -33,6 +33,7 @@ void ConsoleCharStream::read_nobuf() {
     if (_lexer->closed())
         printf("|");
     if(!fgets(_buf, MaxBuf, stdin)) {
+        _buf[0] = 0;
         _eof = true;
     }
 }
