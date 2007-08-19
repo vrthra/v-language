@@ -31,7 +31,7 @@ test:
 TEST
     f.puts <<CLEAN
 clean:
-\trm *.o
+\trm -f *.o
 
 CLEAN
 

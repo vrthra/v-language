@@ -2,7 +2,7 @@
 #define VSTACK_H
 #include "term.h"
 struct Quote;
-class VStack {
+class VStack : public virtual Obj {
     public:
         VStack();
         Node* now();

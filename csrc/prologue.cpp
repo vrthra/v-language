@@ -1474,6 +1474,6 @@ void Prologue::init(VFrame* frame) {
     // math
     frame->def("sqrt", new (collect) Csqrt);
 
-    Quote* libs = CmdQuote::getdef("'std' use");
+    P<Quote> libs = CmdQuote::getdef("'std' use");
     libs->eval(frame);
 }

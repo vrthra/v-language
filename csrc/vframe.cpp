@@ -5,6 +5,7 @@
 #include "quotestream.h"
 #include "term.h"
 #include "cmdquote.h"
+using namespace std;
 
 bool singleassign(); // defined in v.cpp
 int VFrame::_idcount = 0;
@@ -40,7 +41,7 @@ Quote* VFrame::words() {
     return new (collect) CmdQuote(nts); 
 }
 void VFrame::def(char* sym, Quote* q) {
-    char* s = Sym::lookup(sym);
+    P<char> s = Sym::lookup(sym);
     if (singleassign() && hasKey(s))
         throw VException("err:symbol_already_bound", new (collect) Term(TSymbol, s), s);
     _dict[s] = q;

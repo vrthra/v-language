@@ -4,7 +4,7 @@
 #include "token.h"
 class CharStream;
 class CNode;
-class Lexer {
+class Lexer : public virtual Obj {
     public:
         Lexer(CharStream* q);
         void lex();

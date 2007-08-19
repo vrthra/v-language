@@ -6,7 +6,7 @@
 class Quote;
 class VFrame;
 class Num;
-struct Token {
+struct Token : public virtual Obj {
     virtual char* value()=0;
     virtual Type type()=0;
     virtual bool bvalue()=0;

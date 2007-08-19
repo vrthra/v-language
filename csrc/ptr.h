@@ -1,16 +1,17 @@
 #ifndef PTR_H
 #define PTR_H
+bool invalid(void*);
 struct Ptr {
     long* getp(void* p) {
         return (long*)((char*)p - sizeof(long));
     }
     void attach(void* p) {
-        if (!p) return;
+        if (invalid(p)) return;
         long* i = getp(p);
         (*i)++;
     }
     void detach(void* p) {
-        if (!p) return;
+        if (invalid(p)) return;
         long* i = getp(p);
         (*i)--;
     }
@@ -24,7 +25,7 @@ template <class T, bool A=false> class P : public virtual Ptr {
         }
 
         P(const P<T,A> &p) :val(p.val){
-            //attach(p.val);
+            attach(p.val);
         }
 
         /* return raw pointer */

@@ -15,7 +15,7 @@ Term::Term(Type t,char val):_type(t),_hold(0) {
 
 Term::Term(Type t,char* val):_type(t),_hold(0) {
     _sval = val;
-    _hold = _sval;
+    _hold = val;
 }
 
 Term::Term(Type t,long val):_num(val),_type(t),_hold(0) {
@@ -28,12 +28,12 @@ Term::Term(Type t,double val):_num(val),_type(t),_hold(0) {
 
 Term::Term(Type t,Quote* val):_type(t),_hold(0) {
     _qval = val;
-    _hold = _qval;
+    _hold = val;
 }
 
 Term::Term(Type t,VFrame* val):_type(t),_hold(0) {
     _fval = val;
-    _hold = _fval;
+    _hold = val;
 }
 
 int Term::size() {

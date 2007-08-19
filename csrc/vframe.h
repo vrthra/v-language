@@ -5,8 +5,8 @@
 class Quote;
 class VStack;
 // constant strings, does not need cmp_str.
-typedef std::map<char*, Quote*> QMap;
-class VFrame {
+typedef std::map<P<char>, P<Quote> > QMap;
+class VFrame : public virtual Obj {
     public:
         int id();
 

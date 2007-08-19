@@ -25,7 +25,7 @@ Token* VStack::push(Token* t) {
 Token* VStack::pop() {
     if (!_now || !_now->data)
         throw VException("err:stack_empty", new (collect) Term(TInt, (long)0), "Empty Stack.");
-    Token* t = _now->data;
+    P<Token> t = _now->data;
     _now = _now->link;
     return t;
 }
@@ -77,7 +77,7 @@ void VStack::dequote(Quote* q) {
 }
 
 void VStack::dump() {
-    Node* s = getList();
+    P<Node> s = getList();
     printf("(");
     bool first = true;
     while(s) {

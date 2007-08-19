@@ -7,7 +7,7 @@ struct cmp_str {
     bool operator()(char const *a, char const* b) {return strcmp(a,b) < 0; }
 };
 
-typedef std::map<char*, char*, cmp_str> SymbolTable;
+typedef std::map<char*, P<char>, cmp_str> SymbolTable;
 
 SymbolTable __symbols;
 
