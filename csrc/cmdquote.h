@@ -1,6 +1,7 @@
 #ifndef CMDQUOTE_H
 #define CMDQUOTE_H
 #include "quote.h"
+#include "tokenstream.h"
 class VFrame;
 class VStack;
 class CmdQuote : public Quote {
@@ -13,7 +14,8 @@ class CmdQuote : public Quote {
         static Quote* getdef(char* def);
     private:
         bool cando(VStack* stack);
-        P<TokenStream> _tokens;
-        P<char,true> _val;
+        TokenStream_ _tokens;
+        Char_ _val;
 };
+
 #endif

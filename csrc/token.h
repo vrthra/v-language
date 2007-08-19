@@ -1,10 +1,9 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 #include "common.h"
+#include "defs.h"
 #include "type.h"
 #include "num.h"
-class Quote;
-class VFrame;
 class Num;
 struct Token : public virtual Obj {
     virtual char* value()=0;
@@ -19,9 +18,10 @@ struct Token : public virtual Obj {
     virtual Num numvalue()=0;
 };
 
+
 struct Node {
-    P<Token> data;
-    P<Node> link;
+    Token_ data;
+    Node_ link;
     Node(Token* e):data(e),link(0) {
     }
 };

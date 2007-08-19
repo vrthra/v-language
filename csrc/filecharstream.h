@@ -5,4 +5,5 @@ class FileCharStream : public BuffCharStream {
     public:
         FileCharStream(char* filename);
 };
+
 #endif

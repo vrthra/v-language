@@ -1,7 +1,6 @@
 #ifndef CONSOLECHARSTREAM_H
 #define CONSOLECHARSTREAM_H
 #include "charstream.h"
-struct Lexer;
 class ConsoleCharStream : public CharStream {
     public:
         ConsoleCharStream();
@@ -14,7 +13,7 @@ class ConsoleCharStream : public CharStream {
         char _buf[MaxBuf];
         int _index;
         bool _eof;
-        P<Lexer> _lexer;
+        Lexer_ _lexer;
         char _current;
         void read_nobuf();
         virtual int index();

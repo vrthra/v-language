@@ -1,7 +1,6 @@
 #ifndef VSTACK_H
 #define VSTACK_H
 #include "term.h"
-struct Quote;
 class VStack : public virtual Obj {
     public:
         VStack();
@@ -16,8 +15,8 @@ class VStack : public virtual Obj {
         void dequote(Quote* q);
         void dump();
     private:
-        P<Node> _now;
-        P<Node> _first;
+        Node_ _now;
+        Node_ _first;
         Node* getList();
 };
 

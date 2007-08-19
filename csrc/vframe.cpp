@@ -34,14 +34,14 @@ Quote* VFrame::lookup(char* key) {
     return 0;
 }
 Quote* VFrame::words() {
-    P<QuoteStream> nts = new (collect) QuoteStream();
+    QuoteStream_ nts = new (collect) QuoteStream();
     for(QMap::iterator i = _dict.begin(); i!= _dict.end(); i++) {
         nts->add(new (collect) Term(TSymbol, i->first));
     }
     return new (collect) CmdQuote(nts); 
 }
 void VFrame::def(char* sym, Quote* q) {
-    P<char> s = Sym::lookup(sym);
+    Char_ s = Sym::lookup(sym);
     if (singleassign() && hasKey(s))
         throw VException("err:symbol_already_bound", new (collect) Term(TSymbol, s), s);
     _dict[s] = q;

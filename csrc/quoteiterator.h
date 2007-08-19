@@ -1,6 +1,5 @@
 #ifndef QUOTEITERATOR_H
 #define QUOTEITERATOR_H
-#include "token.h"
 #include "tokeniterator.h"
 class QuoteIterator : public TokenIterator {
     public:
@@ -8,6 +7,6 @@ class QuoteIterator : public TokenIterator {
         virtual Token* next();
         QuoteIterator(Node* q);
     private:
-        P<Node> _qs;
+        Node_ _qs;
 };
 #endif

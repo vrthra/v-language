@@ -10,7 +10,7 @@ class BuffCharStream : public CharStream {
         virtual void lexer(Lexer* l);
         virtual bool eof();
     protected:
-        P<char,true> _buf;
+        Char_ _buf;
         int _current;
         int _len;
 };

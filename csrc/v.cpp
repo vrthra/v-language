@@ -64,21 +64,21 @@ class PQuote : public CmdQuote {
 
 void V::main(int argc, char** argv) {
     bool i = argc > 1 ? false : true;
-    P<VFrame> frame = new (collect) VFrame();
+    VFrame_ frame = new (collect) VFrame();
     for(int j=0; j<argc; ++j)
         frame->stack()->push(new (collect) Term(TString, argv[j]));
     // setup the world quote
 
     Prologue::init(frame);
     // do we have any args?
-    P<CharStream> cs = 0;
+    CharStream_ cs = 0;
     if (argc > 1) {
         cs = new (collect) FileCharStream(argv[1]);
     } else {
         banner();
         cs = new (collect) ConsoleCharStream();
     }
-    P<PQuote> program = new (collect) PQuote(new (collect) LexStream(cs), i);
+    PQuote_ program = new (collect) PQuote(new (collect) LexStream(cs), i);
     program->eval(frame->child());
 }
 

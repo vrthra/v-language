@@ -16,7 +16,7 @@ Node* VStack::now(Node* n) {
 }
 
 Token* VStack::push(Token* t) {
-    P<Node> n = new (collect) Node(t);
+    Node_ n = new (collect) Node(t);
     n->link = _now;
     _now = n;
     return _now->data;
@@ -25,7 +25,7 @@ Token* VStack::push(Token* t) {
 Token* VStack::pop() {
     if (!_now || !_now->data)
         throw VException("err:stack_empty", new (collect) Term(TInt, (long)0), "Empty Stack.");
-    P<Token> t = _now->data;
+    Token_ t = _now->data;
     _now = _now->link;
     return t;
 }
@@ -43,9 +43,9 @@ Token* VStack::peek() {
 }
 
 Node* VStack::getList() {
-    P<Node> current = _now;
-    P<Node> result = 0;
-    P<Node> t = 0;
+    Node_ current = _now;
+    Node_ result = 0;
+    Node_ t = 0;
     while (current && current->data) {
         t = new (collect) Node(current->data);
         t->link = result;
@@ -56,8 +56,8 @@ Node* VStack::getList() {
 }
 
 Quote* VStack::quote() {
-    P<Node> s = getList();
-    P<QuoteStream> qs = new (collect) QuoteStream();
+    Node_ s = getList();
+    QuoteStream_ qs = new (collect) QuoteStream();
     while(s) {
         qs->add(s->data);
         s = s->link;
@@ -66,8 +66,8 @@ Quote* VStack::quote() {
 }
 
 void VStack::dequote(Quote* q) {
-    P<Node> current = _now;
-    P<TokenIterator> it = q->tokens()->iterator();
+    Node_ current = _now;
+    TokenIterator_ it = q->tokens()->iterator();
 
     _now = new (collect) Node(0);
     _first = _now;
@@ -77,7 +77,7 @@ void VStack::dequote(Quote* q) {
 }
 
 void VStack::dump() {
-    P<Node> s = getList();
+    Node_ s = getList();
     printf("(");
     bool first = true;
     while(s) {

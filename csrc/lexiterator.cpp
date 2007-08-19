@@ -16,23 +16,23 @@ bool LexIterator::hasNext() {
     return true;
 }
 Token* LexIterator::next() {
-    P<Token> t = lex_next();
+    Token_ t = lex_next();
     if (t->type() == TOpen)
         return compound(t);
     return t;
 }
 Token* LexIterator::lex_next() {
     if (_current) {
-        P<Token> t = _current;
+        Token_ t = _current;
         _current = 0;
         return t;
     }
     return _lex->next();
 }
 Token* LexIterator::compound(Token* open) {
-    P<QuoteStream> local = new (collect) QuoteStream();
+    QuoteStream_ local = new (collect) QuoteStream();
     while(true) {
-        P<Token> t = lex_next();
+        Token_ t = lex_next();
         if (!t)
             throw VSynException("err:lex:close","Compound not closed");
         if (t->type() == TClose)
@@ -43,6 +43,6 @@ Token* LexIterator::compound(Token* open) {
         else
             local->add(t);
     }
-    P<CmdQuote> cq = new (collect) CmdQuote(local);
+    CmdQuote_ cq = new (collect) CmdQuote(local);
     return new (collect) Term(TQuote, cq);
 }

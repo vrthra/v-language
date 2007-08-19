@@ -2,10 +2,9 @@
 #define VFRAME_H
 #include <map>
 #include "common.h"
-class Quote;
-class VStack;
+#include "defs.h"
 // constant strings, does not need cmp_str.
-typedef std::map<P<char>, P<Quote> > QMap;
+typedef std::map<Char_, Quote_ > QMap;
 class VFrame : public virtual Obj {
     public:
         int id();
@@ -26,7 +25,7 @@ class VFrame : public virtual Obj {
         int _id;
         bool hasKey(char* key);
         QMap _dict;
-        P<VStack> _stack;
-        P<VFrame> _parent;
+        VStack_ _stack;
+        VFrame_ _parent;
 };
 #endif

@@ -14,8 +14,8 @@ CmdQuote::CmdQuote(TokenStream* tokens):_tokens(tokens),_val(0) {
 }
 
 void CmdQuote::eval(VFrame* scope) {
-    P<VStack> stack = scope->stack();
-    P<TokenIterator> stream = _tokens->iterator();
+    VStack_ stack = scope->stack();
+    TokenIterator_ stream = _tokens->iterator();
     while(stream->hasNext()) {
         stack->push(stream->next());
         if (cando(stack))
@@ -28,8 +28,8 @@ TokenStream* CmdQuote::tokens() {
 }
 
 void CmdQuote::dofunction(VFrame* scope) {
-    P<Token> sym = scope->stack()->pop();
-    P<Quote> q = scope->lookup(sym->svalue());
+    Token_ sym = scope->stack()->pop();
+    Quote_ q = scope->lookup(sym->svalue());
     if (!q)
         throw VException("err:undef_symbol", sym, sym->value());
     try {
@@ -52,7 +52,7 @@ char* CmdQuote::to_s() {
     if (!_val) {
         std::ostringstream outs;
         outs << '[';
-        P<TokenIterator> i = _tokens->iterator();
+        TokenIterator_ i = _tokens->iterator();
         while(i->hasNext()) {
             outs << i->next()->value();
             if (i->hasNext())

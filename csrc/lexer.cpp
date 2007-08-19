@@ -12,11 +12,6 @@
 // we need the cmp_str here since the pointers in the buffer
 // is different from the const string.
 
-struct CNode {
-    P<CNode> link;
-    char c;
-    CNode(char ch):link(0), c(ch) {}
-};
 
 Lexer::Lexer(CharStream* q):_stream(q),_wi(0),_has(true),
                             _first(0),_queue(0),_cstack(0) {
@@ -79,7 +74,7 @@ bool Lexer::closed() {
     return _cstack->link == 0;
 }
 void Lexer::dump() {
-    P<Node> i = _first->link;
+    Node_ i = _first->link;
     while(i) {
         V::out("%s;", i->data.val);
         i = i->link;
@@ -95,7 +90,7 @@ Token* Lexer::next() {
     // if we have return it from there.
     // else run lex and try again.
     if (_first->link != 0) {
-        P<Token> t = _first->link->data;
+        Token_ t = _first->link->data;
         _first = _first->link;
         return t;
     } else {
@@ -169,7 +164,7 @@ char Lexer::closeCompound(char c) {
 void Lexer::copen() {
     char c = _stream->current();
 
-    P<CNode> t = new (collect) CNode(closeCompound(c));
+    CNode_ t = new (collect) CNode(closeCompound(c));
     t->link = _cstack;
     _cstack = t;
 

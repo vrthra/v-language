@@ -1,13 +1,14 @@
 #include <map>
 #include "sym.h"
 #include "common.h"
+#include "defs.h"
 #include <string.h>
 
 struct cmp_str {
     bool operator()(char const *a, char const* b) {return strcmp(a,b) < 0; }
 };
 
-typedef std::map<char*, P<char>, cmp_str> SymbolTable;
+typedef std::map<char*, Char_, cmp_str> SymbolTable;
 
 SymbolTable __symbols;
 

@@ -2,8 +2,14 @@
 #define LEXER_H
 #include "common.h"
 #include "token.h"
-class CharStream;
-class CNode;
+#include "charstream.h"
+
+struct CNode {
+    CNode_ link;
+    char c;
+    CNode(char ch):link(0), c(ch) {}
+};
+
 class Lexer : public virtual Obj {
     public:
         Lexer(CharStream* q);
@@ -32,12 +38,12 @@ class Lexer : public virtual Obj {
         char _word[MaxBuf];
         int _wi;
 
-        P<CNode> _cstack;
+        CNode_ _cstack;
 
-        P<Node> _queue;
-        P<Node> _first;
+        Node_ _queue;
+        Node_ _first;
 
-        P<CharStream> _stream;
+        CharStream_ _stream;
         bool _has;
 };
 #endif
