@@ -1,4 +1,5 @@
 touch AUTHORS COPYING NEWS README ChangeLog
-aclocal -I /usr/local/share/aclocal
+export ACLOCAL="aclocal -I /usr/local/share/aclocal"
+aclocal
 autoreconf -fvi
 
