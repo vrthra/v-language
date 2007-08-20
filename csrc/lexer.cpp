@@ -13,8 +13,8 @@
 // is different from the const string.
 
 
-Lexer::Lexer(CharStream* q):_stream(q),_wi(0),_has(true),
-                            _first(0),_queue(0),_cstack(0) {
+Lexer::Lexer(CharStream* q):_wi(0),_cstack(0),_queue(0),_first(0)
+                            ,_stream(q),_has(true) {
     _stream->lexer(this);
     _first = _queue = new (collect) Node(0);
     _cstack = new (collect) CNode(0);

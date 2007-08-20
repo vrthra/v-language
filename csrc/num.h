@@ -21,7 +21,7 @@ struct Num {
         switch (type) {
             case 0:
                 return _i;
-            case 1:
+            default:
                 return (long)_d;
         }
     }

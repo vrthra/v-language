@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
-VException::VException(char* err, Token* t, char* msgfmt, ...):_token(t)
-   ,_err(0),_i(0) {
+VException::VException(char* err, Token* t, char* msgfmt, ...)
+    :_err(0),_token(t),_i(0) {
     va_list argp;
     va_start(argp, msgfmt);
     vsnprintf(_info + _i, MaxBuf * 16 - _i, msgfmt, argp);

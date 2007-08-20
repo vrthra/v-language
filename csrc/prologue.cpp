@@ -1375,6 +1375,17 @@ struct Csqrt : public Cmd {
     }
     char* to_s() {return "sqrt";}
 };
+
+struct Cstime : public Cmd {
+    void eval(VFrame* q) {
+        VStack_ p = q->stack();
+        Token_ t = p->pop();
+        bool val = t->bvalue();
+        V::showtime = val;
+    }
+    char* to_s() {return ".time!";}
+};
+
  
 void Prologue::init(VFrame* frame) {
 
@@ -1473,6 +1484,8 @@ void Prologue::init(VFrame* frame) {
 
     // math
     frame->def("sqrt", new (collect) Csqrt);
+
+    frame->def(".time!", new (collect) Cstime());
 
     Quote_ libs = CmdQuote::getdef("'std' use");
     libs->eval(frame);

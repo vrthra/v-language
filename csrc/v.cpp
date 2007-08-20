@@ -15,7 +15,7 @@
 
 const char* V::version = "0.004";
 bool V::singleassign = true;
-bool V::showtime = true;
+bool V::showtime = false;
 
 bool singleassign() {
     return V::singleassign;
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
         V::outln(e.message());
     }
     if (V::showtime) {
-        printf("time: %ld\n", time(0) - seconds);
+        printf("time: %ld\n", (long)(time(0) - seconds));
         printf("clock: %ld\n", clock());
     }
     return 0;

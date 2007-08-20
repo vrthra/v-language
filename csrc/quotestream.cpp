@@ -1,6 +1,6 @@
 #include "quotestream.h"
 #include "quoteiterator.h"
-QuoteStream::QuoteStream():_first(new (collect) Node(0)),_stream(0),_size(0) {
+QuoteStream::QuoteStream():_stream(0),_first(new (collect) Node(0)),_size(0) {
     _stream = _first;
 }
 void QuoteStream::add(Token* t) {

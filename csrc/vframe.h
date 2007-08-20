@@ -21,11 +21,11 @@ class VFrame : public virtual Obj {
         char* to_s();
     private:
         VFrame(VFrame* parent);
-        static int _idcount;
-        int _id;
         bool hasKey(char* key);
         QMap _dict;
-        VStack_ _stack;
         VFrame_ _parent;
+        VStack_ _stack;
+        int _id;
+        static int _idcount;
 };
 #endif

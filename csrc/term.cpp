@@ -18,11 +18,11 @@ Term::Term(Type t,char* val):_type(t),_hold(0) {
     _hold = val;
 }
 
-Term::Term(Type t,long val):_num(val),_type(t),_hold(0) {
+Term::Term(Type t,long val):_type(t),_hold(0),_num(val) {
     _lval = val;
 }
 
-Term::Term(Type t,double val):_num(val),_type(t),_hold(0) {
+Term::Term(Type t,double val):_type(t),_hold(0),_num(val) {
     _dval = val;
 }
 
@@ -50,7 +50,7 @@ char* Term::value() {
     //TSymbol, TQuote, TFrame, TString, TInt, TDouble, TChar,TBool,
     switch(_type) {
         case TInt:
-            std::sprintf(_buffer,"%d", ivalue());
+            std::sprintf(_buffer,"%ld", ivalue());
             break;
         case TDouble:
             std::sprintf(_buffer,"%f", dvalue());

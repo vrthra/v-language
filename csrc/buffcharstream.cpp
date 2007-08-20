@@ -1,7 +1,7 @@
 #include "buffcharstream.h"
 #include <string.h>
 
-BuffCharStream::BuffCharStream(char* buff):_current(-1), _len(0),_buf(0) {
+BuffCharStream::BuffCharStream(char* buff):_buf(0),_current(-1),_len(0){
     if (buff) {
         _len = strlen(buff);
         _buf = dup_str(buff);
