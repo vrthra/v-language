@@ -1,6 +1,7 @@
+SUBDIRS=csrc
+
 RELEASE=0.000
 
-	#javac -Xlint:unchecked -d pkg v/*.java
 all: native
 
 native:
