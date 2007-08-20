@@ -95,7 +95,23 @@ void show() {
                 total += *p;
         }
     }
-    //cout<<"unref :"<< zeros <<" ref :"<< more << " totalref :"<< total <<endl;
+    cout<<"\n Obj unref :"<< zeros <<" ref :"<< more << " totalref :"<< total <<endl;
+
+    for (Mobj::iterator i = __prim.begin(); i != __prim.end(); i++) {
+        long* p = (long*) *i;
+        switch (*p) {
+            case 0:
+                zeros++;
+                break;
+            default:
+                if (*p < 0)
+                    throw Vxcrit("Bad reference count.");
+                more++;
+                total += *p;
+        }
+    }
+    cout<<"\n Prim unref :"<< zeros <<" ref :"<< more << " totalref :"<< total <<endl;
+
 }
 
 // problems:
