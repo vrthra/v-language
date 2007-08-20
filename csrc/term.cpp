@@ -57,20 +57,20 @@ char* Term::value() {
             break;
         case TSymbol:
         case TString:
-            return svalue();
+            return dup_str(svalue());
         case TChar:
             _buffer[0] = '~';
             _buffer[1] = cvalue();
             _buffer[2] = 0;
             break;
         case TBool:
-            return (char*) (bvalue() ? "true": "false");
+            return dup_str((char*) (bvalue() ? "true": "false"));
         case TQuote:
             return qvalue()->to_s();
         case TFrame:
             return fvalue()->to_s();
         default:
-            return "<default>";
+            return dup_str("<default>");
     }
     return dup_str(_buffer);
 }
