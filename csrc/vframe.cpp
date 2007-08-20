@@ -5,7 +5,6 @@
 #include "quotestream.h"
 #include "term.h"
 #include "cmdquote.h"
-using namespace std;
 
 bool singleassign(); // defined in v.cpp
 int VFrame::_idcount = 0;

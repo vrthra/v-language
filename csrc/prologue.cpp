@@ -816,17 +816,34 @@ struct Cme : public Cmd {
     char* to_s() {return "$me";}
 };
 
+void usefile(VFrame* q, char* v, bool lib=false) {
+    Char_ val = 0;
+    char* l = LIBPATH;
+    if (lib) {
+        int len = strlen(v) + 1 + sizeof(l);
+        val = new (collect) char[len + 3];
+        std::sprintf(val,"%s/%s%s",l,v,".v");
+    } else {
+        val = dup_str(v);
+    }
+    CmdQuote_ module = new (collect) CmdQuote(new (collect) LexStream(new (collect) FileCharStream(val)));
+    module->eval(q->parent());
+}
+
 struct Cuse : public Cmd {
     void eval(VFrame* q) {
         VStack_ p = q->stack();
         Token_ file = p->pop();
         try {
-            Char_ v = file->svalue();
-            int len = strlen(v);
-            Char_ val = new (collect) char[len + 3];
-            std::sprintf(val,"%s%s",v.val,".v");
-            CmdQuote_ module = new (collect) CmdQuote(new (collect) LexStream(new (collect) FileCharStream(val)));
-            module->eval(q->parent());
+            if (file->type() == TQuote) {
+                TokenIterator_ files =file->qvalue()->tokens()->iterator();
+                while(files->hasNext()) {
+                    Token_ f = files->next();
+                    usefile(q, f->svalue());
+                }
+            } else {
+                usefile(q, file->svalue(), true);
+            }
         } catch (VException& e) {
             e.addLine("use %s", file->value());
             throw e;

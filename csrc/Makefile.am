@@ -25,3 +25,5 @@ v_SOURCES = allocator.cpp allocator.h \
 			vstack.cpp vstack.h
 
 
+AM_CXXFLAGS = -DVPATH="$(datadir)/v"
+

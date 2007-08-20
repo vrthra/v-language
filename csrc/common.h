@@ -11,4 +11,9 @@ static const int MaxBuf = 1024;
 char* dup_str(const char* c, bool b=true);
 
 #include "allocator.h"
+
+#define _STRINGIFY(s) #s
+#define V_STRINGIFY(s) _STRINGIFY(s)
+#define LIBPATH V_STRINGIFY(VPATH)
+
 #endif
