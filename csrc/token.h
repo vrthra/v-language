@@ -19,7 +19,7 @@ struct Token : public virtual Obj {
 };
 
 
-struct Node {
+struct Node : public virtual Obj {
     Token_ data;
     Node_ link;
     Node(Token* e):data(e),link(0) {

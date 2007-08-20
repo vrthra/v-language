@@ -4,7 +4,7 @@
 #include "token.h"
 #include "charstream.h"
 
-struct CNode {
+struct CNode : public virtual Obj {
     CNode_ link;
     char c;
     CNode(char ch):link(0), c(ch) {}
