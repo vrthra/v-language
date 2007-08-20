@@ -1386,7 +1386,7 @@ public class Prologue {
         iframe.def("?debug", _vdebug);
         iframe.def("?stack", _show);
         iframe.def("?frame", _dframe);
-        iframe.def("debug", _debug);
+        iframe.def(".debug", _debug);
 
         iframe.def("abort", _abort);
 
