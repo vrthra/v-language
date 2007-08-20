@@ -1,4 +1,6 @@
 bin_PROGRAMS = v
+vdir = $(datadir)/v
+v_SCRIPTS = std.v
 v_SOURCES = allocator.cpp allocator.h \
 			buffcharstream.cpp buffcharstream.h \
 			num.h defs.h charstream.h cmd.h \

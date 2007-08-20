@@ -1,15 +1,10 @@
 AC_PREREQ(2.59)
 AC_INIT(csrc/v.cpp)
-
-AM_INIT_AUTOMAKE(v,0.4,blufox@gmail.com)
-
+AM_INIT_AUTOMAKE(v,0.4m)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
-
 AC_PROG_CXX
-
-
 
 AC_CHECK_FUNCS([sqrt strchr])
 AC_CHECK_HEADERS([stdlib.h string.h])
