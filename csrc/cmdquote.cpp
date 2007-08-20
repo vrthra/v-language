@@ -33,7 +33,8 @@ void CmdQuote::dofunction(VFrame* scope) {
     if (!q)
         throw VException("err:undef_symbol", sym, sym->value());
     try {
-        q->eval(scope->child());
+        VFrame_ s = scope->child(); // kludge for keeping a ref.
+        q->eval(s);
         gc();
     } catch (VException& e) {
         e.addLine(sym->value());
