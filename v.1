@@ -11,112 +11,43 @@ language with single assignment syntax and is based on Combinatory Calculus.
 It comes with a simple integrated GC.
 
 .SH FUNCTIONS
-.SS .
-Define word
-.SS .&
-Define word in environment
-.SS &parent
-Get the parent of the provided environment token.
-.SS &words
-Get the words defined in the provided environment.
-.SS &i
-Dequote in the provided environment.
-.SS &use
-Load the library file in provided environment.
-.SS &eval
-Evaluate the string given in provided environment.
-.SS $me
-Capture the current environment.
-.SS module
-Create a module
-.SS put
-Put the value of token infront to stdout
-.SS puts
-Put the value of token infront to stdout followed by newline
-.SS i
-Dequote the provided quote value.
-.SS view
-Shuffle the stack based on the pattern given.
-.SS use
-Load the library file.
-.SS eval
-Evaluate the string given in V.
-.SS stack
-Collect the tokens in stack to quote.
-.SS unstack
-Replace the current stack with the tokens in the quote given.
-.SS true
-Boolean true
-.SS false
-Boolean false
-.SS +
-Add two numbers.
-.SS -
-Subtract two numbers.
-.SS *
-Multiply two numbers.
-.SS /
-Divide two numbers.
-.SS and
-Boolean and. 
-.SS or
-Boolean or.
-.SS not
-Boolean not.
-.SS choice
-Do action based on value of choice.
-.SS ifte
-If then else.
-.SS if
-If then.
-.SS while
-While loop.
-.SS =
-Equals.
-.SS ==
-Equals.
-.SS !=
-Not Equal to.
-.SS >
-Greater than.
-.SS <
-Lesser than.
-.SS >=
-Greater than or equal to.
-.SS <=
-Lesser than or equal to.
-.SS ?stack
-Show stack
-.SS ?
-Peek the last token.
-.SS ?frame
-Dump the current frame.
-.SS int?
-Integer predicate.
-.SS decimal?
-Decimal predicate.
-.SS bool?
-Boolean predicate.
-.SS symbol?
-Symbol predicate.
-.SS list?
-List predicate.
-.SS char?
-Character predicate.
-.SS number?
-Number predicate.
-.SS string?
-String predicate.
-.SS abort
-Abort execution.
-.SS size
-Size of the quote given.
-.SS in?
-Is the token in the quote?.
-.SS at
-Place the token in the quote.
+All functions that start with '?' are functions useful for debugging. They
+do not change the system's state or modify the stack. You can use them in the
+middle of expressions with out bothering about the effects. The functions that
+start with '$' capture some state of the system and make them available in the
+stack to be manipulated. The functions that start with '&' take an environment
+as the top term in the stack. The functions that end with '?' are predicates
+that leave a boolean value in the stack. Those that end with '!' consume the
+stack destructively compared to their counterparts (they will generally have a
+twin that does the same with out removing elements from stack). Functions that
+starts with '>' are convertion functions converting from one datatype to
+another.
 
+.SS meta
+&. . &parent $me module &words i &i use &use eval &eval $stack
+stack! let throw catch env
+.SS stack or list manipulation
+view trans drop take dup pop swap lroll rroll rollup rolldown rotate rollupd dip rolldownd rotated cons unit concat dupd popd swapd dipd x id uncons first rest xor of swons reverse shunt swoncat unitlist size at 
+.SS combinators
+binrec genrec linrec powerlist tailrec primrec treestep treeshunt treeflatten treerec treegenrec treereverse treemap
+.SS functional
+step! step map! map filter! filter split! split fold! fold 
+.SS predicates
+= != > < <= >= int? decimal? bool? symbol? list? char? number? string? in? zero? empty? null? small? has? leaf? all? some?
+.SS conversion
+>string >int >decimal >bool >char >def 
+.SS control structures
+and or not choice ifte if while
 
+.SS debug
+?? ?stack ? ?debug ?frame
+.SS arithmetic
++ - * / sqrt pred succ max min 
+.SS others
+abort puts put help .time! all! some! 
 .SH LIBRARIES
 .SS std
 Provides definitions for commonly used words.
+
+.SH SEE ALSO
+vfunctions(1), vtutorial(1)

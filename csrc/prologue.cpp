@@ -1425,8 +1425,8 @@ void Prologue::init(VFrame* frame) {
     frame->def("&use", new (collect) Cuseenv());
     frame->def("eval", new (collect) Ceval());
     frame->def("&eval", new (collect) Cevalenv());
-    frame->def("stack", new (collect) Cstack());
-    frame->def("unstack", new (collect) Cunstack());
+    frame->def("$stack", new (collect) Cstack());
+    frame->def("stack!", new (collect) Cunstack());
 
     frame->def("true", new (collect) Ctrue());
     frame->def("false", new (collect) Cfalse());
@@ -1502,7 +1502,7 @@ void Prologue::init(VFrame* frame) {
     // math
     frame->def("sqrt", new (collect) Csqrt);
 
-    frame->def(".time!", new (collect) Cstime());
+    frame->def(".time", new (collect) Cstime());
 
     Quote_ libs = CmdQuote::getdef("'std' use");
     libs->eval(frame);
