@@ -1,1 +1,21 @@
 See the manpages v.1 and vfunctions.1
+
+JAVA
+----
+To build the java pacakge, use 
+
+make -f makefile.j
+to test, 
+make -f makefile.j test
+to run
+make -f makefile.j run
+
+NATIVE
+------
+./configure && make && make install
+it installs the std.v in /usr/local/share/v by default.
+
+If necessary, the standard library path can be provided as an argument (-l).
+
+see http://code.google.com/p/v-language for further information.
+
