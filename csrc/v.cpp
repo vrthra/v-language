@@ -71,7 +71,7 @@ void usage() {
     exit(0);
 }
 void version() {
-    V::outln("v 0.004");
+    V::outln("v 0.005");
     exit(0);
 }
 

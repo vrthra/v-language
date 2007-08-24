@@ -3,7 +3,7 @@ package v;
 import java.util.*;
 
 public class V {
-    public static String version = "0.004";
+    public static String version = "0.005";
 
     public static boolean singleassign = true;
 
