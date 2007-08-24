@@ -7,7 +7,7 @@
 #include <string.h>
 
 VException::VException(char* err, Token* t, char* msgfmt, ...)
-    :_err(0),_token(t),_i(0) {
+    :_err(dup_str(err)),_token(t),_i(0) {
     va_list argp;
     va_start(argp, msgfmt);
     vsnprintf(_info + _i, MaxBuf * 16 - _i, msgfmt, argp);
@@ -34,7 +34,7 @@ void VException::addLine(char* v, ...) {
     _i = strchr(_info, '\0') - _info;
 }
 
-VSynException::VSynException(char* err, char* msgfmt, ...):_i(0) {
+VSynException::VSynException(char* err, char* msgfmt, ...):_err(dup_str(err)),_i(0) {
     va_list argp;
     va_start(argp, msgfmt);
     vsnprintf(_info + _i, MaxBuf * 16 - _i, msgfmt, argp);

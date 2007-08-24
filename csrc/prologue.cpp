@@ -816,7 +816,7 @@ struct Cme : public Cmd {
     char* to_s() {return "$me";}
 };
 
-void usefile(VFrame* q, char* v, bool lib=false) {
+char* usefile(VFrame* q, char* v, bool lib=false) {
     Char_ val = 0;
     char* l = LIBPATH;
     if (lib) {
@@ -826,8 +826,7 @@ void usefile(VFrame* q, char* v, bool lib=false) {
     } else {
         val = dup_str(v);
     }
-    CmdQuote_ module = new (collect) CmdQuote(new (collect) LexStream(new (collect) FileCharStream(val)));
-    module->eval(q->parent());
+    return val;
 }
 
 struct Cuse : public Cmd {
@@ -835,14 +834,19 @@ struct Cuse : public Cmd {
         VStack_ p = q->stack();
         Token_ file = p->pop();
         try {
+            CmdQuote_ module = 0;
             if (file->type() == TQuote) {
                 TokenIterator_ files =file->qvalue()->tokens()->iterator();
                 while(files->hasNext()) {
                     Token_ f = files->next();
-                    usefile(q, f->svalue());
+                    Char_ val = usefile(q, f->svalue());
+                    module = new (collect) CmdQuote(new (collect) LexStream(new (collect) FileCharStream(val)));
+                    module->eval(q->parent());
                 }
             } else {
-                usefile(q, file->svalue(), true);
+                Char_ val = usefile(q, file->svalue(), true);
+                module = new (collect) CmdQuote(new (collect) LexStream(new (collect) FileCharStream(val)));
+                module->eval(q->parent());
             }
         } catch (VException& e) {
             e.addLine("use %s", file->value());
@@ -860,12 +864,21 @@ struct Cuseenv : public Cmd {
         Token_ env = p->pop();
         Token_ file = p->pop();
         try {
-            Char_ v = file->svalue();
-            int len = strlen(v);
-            Char_ val = new (collect) char[len + 3];
-            std::sprintf(val,"%s%s",v.val,".v");
-            CmdQuote_ module = new (collect) CmdQuote(new (collect) LexStream(new (collect) FileCharStream(val)));
-            module->eval(env->fvalue());
+            CmdQuote_ module = 0;
+            if (file->type() == TQuote) {
+                TokenIterator_ files =file->qvalue()->tokens()->iterator();
+                while(files->hasNext()) {
+                    Token_ f = files->next();
+                    Char_ val = usefile(q, f->svalue());
+                    module = new (collect) CmdQuote(new (collect) LexStream(new (collect) FileCharStream(val)));
+                    module->eval(env->fvalue());
+                }
+            } else {
+                Char_ val = usefile(q, file->svalue(), true);
+                module = new (collect) CmdQuote(new (collect) LexStream(new (collect) FileCharStream(val)));
+                module->eval(env->fvalue());
+            }
+
         } catch (VException& e) {
             e.addLine("*use %s", file->value());
         } catch (...) {

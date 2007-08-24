@@ -23,6 +23,7 @@ class VSynException : public Vx {
         virtual char* message();
         virtual void addLine(char* v, ...);
     private:
+        Char_ _err;
         char _info[MaxBuf*16];
         int _i;
 };
