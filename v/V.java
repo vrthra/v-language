@@ -11,8 +11,15 @@ public class V {
         outln("\tV\t");
     }
 
+    static boolean _showtime = false;
+
+    public static void showtime(boolean val) {
+        _showtime = val;
+    }
+
 
     public static void main(final String[] args) {
+        long start = System.currentTimeMillis();
         final VFrame frame = new VFrame(); // our frame chain.
         for(String s : args)
             frame.stack().push(new Term<String>(Type.TString, s));
@@ -50,6 +57,8 @@ public class V {
             outln(e.getMessage());
             debug(e);
         }
+        if (_showtime)
+            outln("time: " + (System.currentTimeMillis() - start));
 
     }
 
@@ -73,7 +82,7 @@ public class V {
         if (_debug) outln(s);
     }
 
-    static boolean _debug = false;
+    static boolean _debug = true;
     static void debug(boolean val) {
         _debug = val;
     }

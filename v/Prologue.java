@@ -1251,17 +1251,29 @@ public class Prologue {
         public void eval(VFrame q) {
             VStack p = q.stack();
             Term file = p.pop();
-            String val = file.svalue() + ".v";
             try {
-                // Try and see if the file requested is any of the standard defined
-                String chars = Util.getresource(val);
-                CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
-
-                CmdQuote module = new CmdQuote(new LexStream(cs));
-                module.eval(q.parent());
+                if (file.type == Type.TQuote) {
+                    Iterator<Term> files = (Iterator<Term>)file.qvalue().tokens().iterator();
+                    while(files.hasNext()) {
+                        Term f = files.next();
+                        String val = f.svalue() + ".v";
+                        // Try and see if the file requested is any of the standard defined
+                        String chars = Util.getresource(val);
+                        CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
+                        CmdQuote module = new CmdQuote(new LexStream(cs));
+                        module.eval(q.parent());
+                    }
+                } else {
+                    String val = file.svalue() + ".v";
+                    // Try and see if the file requested is any of the standard defined
+                    String chars = Util.getresource(val);
+                    CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
+                    CmdQuote module = new CmdQuote(new LexStream(cs));
+                    module.eval(q.parent());
+                }
                 V.debug("use @ " + q.id());
             } catch (VException e) {
-                e.addLine("use " + val);
+                e.addLine("use " + file.value());
                 throw e;
             } catch (Exception e) {
                 throw new VException("err:use",file, file.value());
@@ -1274,17 +1286,29 @@ public class Prologue {
             VStack p = q.stack();
             Term env = p.pop();
             Term file = p.pop();
-            String val = file.svalue() + ".v";
             try {
-                // Try and see if the file requested is any of the standard defined
-                String chars = Util.getresource(val);
-                CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
-
-                CmdQuote module = new CmdQuote(new LexStream(cs));
-                module.eval(env.fvalue());
+                if (file.type == Type.TQuote) {
+                    Iterator<Term> files = (Iterator<Term>)file.qvalue().tokens().iterator();
+                    while(files.hasNext()) {
+                        Term f = files.next();
+                        String val = f.svalue() + ".v";
+                        // Try and see if the file requested is any of the standard defined
+                        String chars = Util.getresource(val);
+                        CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
+                        CmdQuote module = new CmdQuote(new LexStream(cs));
+                        module.eval(env.fvalue());
+                    }
+                } else {
+                    String val = file.svalue() + ".v";
+                    // Try and see if the file requested is any of the standard defined
+                    String chars = Util.getresource(val);
+                    CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
+                    CmdQuote module = new CmdQuote(new LexStream(cs));
+                    module.eval(env.fvalue());
+                }
                 V.debug("use @ " + q.id());
             } catch (VException e) {
-                e.addLine("*use " + val);
+                e.addLine("use " + file.value());
                 throw e;
             } catch (Exception e) {
                 throw new VException("err:*use",file,file.value());
@@ -1341,6 +1365,15 @@ public class Prologue {
         }
     };
 
+    static Cmd _time = new Cmd() {
+        public void eval(VFrame q) {
+            VStack p = q.stack();
+            Term t = p.pop();
+            boolean val = t.bvalue();
+            V.showtime(val);
+        }
+    };
+
     public static void init(final VFrame iframe) {
         // accepts a quote as an argument.
         //meta
@@ -1362,8 +1395,8 @@ public class Prologue {
         iframe.def("false", _false);
         iframe.def("catch", _catch);
         iframe.def("throw", _throw);
-        iframe.def("stack", _stack);
-        iframe.def("unstack", _unstack);
+        iframe.def("$stack", _stack);
+        iframe.def("stack!", _unstack);
 
         iframe.def("and", _and);
         iframe.def("or", _or);
@@ -1446,6 +1479,8 @@ public class Prologue {
 
         iframe.def("help", _help);
         iframe.def("env", _env);
+        
+        iframe.def(".time!", _time);
 
         Quote libs = Util.getdef("'std' use");
         libs.eval(iframe);
