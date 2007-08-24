@@ -3,7 +3,6 @@
 
 class V {
     public:
-        static const char* version;
         static bool singleassign;
         static bool showtime;
         static void banner();

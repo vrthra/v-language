@@ -13,7 +13,6 @@
 #include "prologue.h"
 #include "cmdquote.h"
 
-const char* V::version = "0.004";
 bool V::singleassign = true;
 bool V::showtime = false;
 static char* _libpath = LIBPATH;
@@ -68,7 +67,11 @@ class PQuote : public CmdQuote {
 };
 
 void usage() {
-    V::outln("usage: v [-l libpath] [source.v]");
+    V::outln("usage: v [-l libpath] [-h] [-v] [source.v]");
+    exit(0);
+}
+void version() {
+    V::outln("v 0.004");
     exit(0);
 }
 
@@ -81,6 +84,7 @@ void V::main(int argc, char** argv) {
         if (haslib) _libpath = argv[j];
         if (!strcmp(argv[j], "-l")) haslib = true;
         if (!strcmp(argv[j], "-h")) usage();
+        if (!strcmp(argv[j], "-v")) version();
         frame->stack()->push(new (collect) Term(TString, dup_str(argv[j])));
     }
     // setup the world quote
