@@ -2,13 +2,21 @@
 .SH NAME
 V \- A concatenative programming language
 .SH SYNOPSIS
-.B v [source.v]
+.B v [-l libpath] [source.v]
 .SH DESCRIPTION
 V is a concatenative (stack based) language. The style is similar
 to Postscript and Joy. It provides the primitives for handling stack,
 local definitions, modules and exceptions. It is a purely functional
 language with single assignment syntax and is based on Combinatory Calculus.
 It comes with a simple integrated GC.
+.PP
+.SH OPTIONS
+.TP
+\-l
+Provide the library path (location of std.v)
+.TP
+\-h
+display a short help text
 
 .SH FUNCTIONS
 All functions that start with '?' are functions useful for debugging. They
@@ -49,8 +57,11 @@ abort puts put help .time! all! some!
 .SS std
 Provides definitions for commonly used words.
 
+.SH AUTHOR
+    rahul <blufox at gmail dot com>
+
 .SH SEE ALSO
 vfunctions(1), vtutorial(1)
 
 .SH BUGS
-
+The -l libpath option only takes a single value. It should take an argument in PATH format.

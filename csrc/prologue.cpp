@@ -818,11 +818,10 @@ struct Cme : public Cmd {
 
 char* usefile(VFrame* q, char* v, bool lib=false) {
     Char_ val = 0;
-    char* l = LIBPATH;
     if (lib) {
-        int len = strlen(v) + 1 + strlen(l);
+        int len = strlen(v) + 1 + strlen(V::libpath());
         val = new (collect) char[len + 3];
-        std::sprintf(val,"%s/%s%s",l,v,".v");
+        std::sprintf(val,"%s/%s%s",V::libpath(),v,".v");
     } else {
         val = dup_str(v);
     }

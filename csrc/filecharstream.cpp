@@ -6,7 +6,6 @@
 #include "vexception.h"
 #include "filecharstream.h"
 #include "buffcharstream.h"
-
 FileCharStream::FileCharStream(char* filename):BuffCharStream(0) {
     std::stringstream os;
     std::filebuf fb;

@@ -16,6 +16,7 @@
 const char* V::version = "0.004";
 bool V::singleassign = true;
 bool V::showtime = false;
+static char* _libpath = LIBPATH;
 
 bool singleassign() {
     return V::singleassign;
@@ -27,6 +28,10 @@ void V::out(char *var, ...) {
     vfprintf(stdout, var, argp);
     va_end(argp);
 
+}
+
+char* V::libpath() {
+    return _libpath;
 }
 
 void V::outln(char *var, ...) {
@@ -62,17 +67,28 @@ class PQuote : public CmdQuote {
         }
 };
 
+void usage() {
+    V::outln("usage: v [-l libpath] [source.v]");
+    exit(0);
+}
+
 void V::main(int argc, char** argv) {
     bool i = argc > 1 ? false : true;
+    bool haslib = false;
     VFrame_ frame = new (collect) VFrame();
-    for(int j=0; j<argc; ++j)
-        frame->stack()->push(new (collect) Term(TString, argv[j]));
+    for(int j=0; j<argc; ++j) {
+        // todo getopt.
+        if (haslib) _libpath = argv[j];
+        if (!strcmp(argv[j], "-l")) haslib = true;
+        if (!strcmp(argv[j], "-h")) usage();
+        frame->stack()->push(new (collect) Term(TString, dup_str(argv[j])));
+    }
     // setup the world quote
 
     Prologue::init(frame);
     // do we have any args?
     CharStream_ cs = 0;
-    if (argc > 1) {
+    if ((argc > 1 && !haslib) || (argc > 3 && haslib)) {
         cs = new (collect) FileCharStream(argv[1]);
     } else {
         banner();
