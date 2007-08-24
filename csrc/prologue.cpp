@@ -1514,7 +1514,7 @@ void Prologue::init(VFrame* frame) {
     // math
     frame->def("sqrt", new (collect) Csqrt);
 
-    frame->def(".time", new (collect) Cstime());
+    frame->def(".time!", new (collect) Cstime());
 
     Quote_ libs = CmdQuote::getdef("'std' use");
     libs->eval(frame);

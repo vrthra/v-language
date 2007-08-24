@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
+#include <unistd.h>
 #include "type.h"
 #include "term.h"
 #include "vstack.h"
@@ -76,29 +77,37 @@ void version() {
 }
 
 void V::main(int argc, char** argv) {
-    bool i = argc > 1 ? false : true;
-    bool haslib = false;
+    int ch;
+    bool interactive = true;
     VFrame_ frame = new (collect) VFrame();
-    for(int j=0; j<argc; ++j) {
-        // todo getopt.
-        if (haslib) _libpath = argv[j];
-        if (!strcmp(argv[j], "-l")) haslib = true;
-        if (!strcmp(argv[j], "-h")) usage();
-        if (!strcmp(argv[j], "-v")) version();
-        frame->stack()->push(new (collect) Term(TString, dup_str(argv[j])));
+    while((ch = getopt(argc, argv, "vhl:")) != -1) {
+        switch(ch) {
+            case 'v':
+                version();
+            case 'h':
+                usage();
+            case 'l':
+                _libpath = optarg;
+                break;
+        }
     }
+    argc -= optind;
+    argv += optind;
+    interactive = !argc;
+    for(int j=0; j<argc; ++j)
+        frame->stack()->push(new (collect) Term(TString, dup_str(argv[j])));
     // setup the world quote
 
     Prologue::init(frame);
     // do we have any args?
     CharStream_ cs = 0;
-    if ((argc > 1 && !haslib) || (argc > 3 && haslib)) {
-        cs = new (collect) FileCharStream(argv[1]);
+    if (!interactive) {
+        cs = new (collect) FileCharStream(dup_str(argv[0]));
     } else {
         banner();
         cs = new (collect) ConsoleCharStream();
     }
-    PQuote_ program = new (collect) PQuote(new (collect) LexStream(cs), i);
+    PQuote_ program = new (collect) PQuote(new (collect) LexStream(cs), interactive);
     program->eval(frame->child());
 }
 
