@@ -82,7 +82,7 @@ public class V {
         if (_debug) outln(s);
     }
 
-    static boolean _debug = true;
+    static boolean _debug = false;
     static void debug(boolean val) {
         _debug = val;
     }
