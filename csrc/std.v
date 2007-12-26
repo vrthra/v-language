@@ -1,4 +1,5 @@
 # Standard definitions.
+[nl '' puts].
 
 [pred 1 -].
 [succ 1 +].
