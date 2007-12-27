@@ -1,5 +1,5 @@
 # Standard definitions.
-[nl '' puts].
+[newline '' puts].
 
 [pred 1 -].
 [succ 1 +].
