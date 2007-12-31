@@ -495,6 +495,36 @@ public class Prologue {
         }
     };
 
+    static Cmd _when = new Cmd() {
+        public void eval(VFrame q) {
+            VStack p = q.stack();
+
+            Term wquote = p.pop();
+
+            Iterator<Term> fstream = wquote.qvalue().tokens().iterator();
+
+            while (fstream.hasNext()) {
+                // extract the relevant element from list,
+                Term cond = fstream.next();
+                Term action = fstream.next();
+
+                if (cond.type == Type.TQuote) {
+                    Node<Term> n = p.now;
+                    cond.qvalue().eval(q);
+                    // and get it back from stack.
+                    cond = p.pop();
+                    p.now = n;
+                }
+
+                // apply the action
+                if (cond.bvalue()) {
+                    action.qvalue().eval(q);
+                    break;
+                }
+            }
+        }
+    };
+
     static Cmd _choice = new Cmd() {
         public void eval(VFrame q) {
             VStack p = q.stack();
@@ -1405,6 +1435,7 @@ public class Prologue {
         //control structures
         iframe.def("ifte", _ifte);
         iframe.def("if", _if);
+        iframe.def("when", _when);
         iframe.def("while", _while);
         iframe.def("choice", _choice);
 

@@ -565,6 +565,33 @@ struct Cchoice : public Cmd {
     char* to_s() {return "choice";}
 };
 
+struct Cwhen : public Cmd {
+    void eval(VFrame* q) {
+        VStack_ p = q->stack();
+        Token_ wquote = p->pop();
+
+        TokenIterator_ fstream = wquote->qvalue()->tokens()->iterator();
+
+        while(fstream->hasNext()) {
+            Token_ cond = fstream->next();
+            Token_ action = fstream->next();
+
+            if (cond->type() == TQuote) {
+                Node_ n = p->now();
+                cond->qvalue()->eval(q);
+                cond = p->pop();
+                p->now(n);
+            }
+            if (cond->bvalue()) {
+                action->qvalue()->eval(q);
+                break;
+            }
+        }
+    }
+    char* to_s() {return "when";}
+};
+
+
 struct Cif : public Cmd {
     void eval(VFrame* q) {
         VStack_ p = q->stack();
@@ -1455,6 +1482,7 @@ void Prologue::init(VFrame* frame) {
     frame->def("choice", new (collect) Cchoice());
     frame->def("ifte", new (collect) Cifte());
     frame->def("if", new (collect) Cif());
+    frame->def("when", new (collect) Cwhen());
     frame->def("while", new (collect) Cwhile());
     
     frame->def("=", new (collect) Ceq());
