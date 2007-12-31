@@ -5,7 +5,7 @@ import java.util.*;
 public class V {
     public static String version = "0.005";
 
-    public static boolean singleassign = true;
+    public static boolean singleassign = false;
 
     static void banner() {
         outln("\tV\t");
