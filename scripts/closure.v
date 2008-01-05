@@ -11,6 +11,6 @@ closure [a] &i
 
 # duplicate a closure and rebind the value of a in it,
 # then check that the rebound value is present in the original
-# closure
+# closure. Note that this will work only if singleassignment is false.
 closure dup [[a 101].] &i [a] &i
 
