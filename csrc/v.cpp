@@ -14,7 +14,7 @@
 #include "prologue.h"
 #include "cmdquote.h"
 
-bool V::singleassign = false;
+bool V::singleassign = true;
 bool V::showtime = false;
 static char* _libpath = LIBPATH;
 
