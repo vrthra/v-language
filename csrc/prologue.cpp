@@ -637,13 +637,14 @@ struct Cwhile : public Cmd {
         Token_ action = p->pop();
         Token_ cond = p->pop();
         while(true) {
+            Token_ ncond = cond;
             if (cond->type() == TQuote) {
                 Node_ n = p->now();
                 cond->qvalue()->eval(q);
-                cond = p->pop();
+                ncond = p->pop();
                 p->now(n);
             }
-            if (cond->bvalue())     
+            if (ncond->bvalue())     
                 action->qvalue()->eval(q);
             else
                 break;

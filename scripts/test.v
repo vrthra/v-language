@@ -136,6 +136,10 @@ true .time!
 [3 = swap 3 = and] [1 2 3 [+] dip] 'dip' test
 
 #==============================================================================
+"loops" puts
+[10 =] [1 [dup puts 10 <] [succ] while] 'while' test
+
+#==============================================================================
 # basic stack operations
 [333 =] [111  222 +] ' simple addition ' test
 [21 =] [1  2  +  3  4  +  *] ' operations on stack (1)' test

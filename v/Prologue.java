@@ -571,15 +571,16 @@ public class Prologue {
             Term action = p.pop();
             Term cond = p.pop();
             while(true) {
+                Term ncond = cond;
                 if (cond.type == Type.TQuote) {
                     Node<Term> n = p.now;
                     cond.qvalue().eval(q);
                     // and get it back from stack.
-                    cond = p.pop();
+                    ncond = p.pop();
                     p.now = n;
                 }
                 // dequote the action and push it to stack.
-                if (cond.bvalue())
+                if (ncond.bvalue())
                     action.qvalue().eval(q);
                 else
                     break;

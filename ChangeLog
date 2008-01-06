@@ -1,3 +1,7 @@
+6.1.2008 rahul
+	scripts/test.v: add while testcase
+	csrc/prologue.cpp: correct the while logic
+	v/Prologue.java: correct the while logic
 6.1.2008 rahul (310)
 	scripts/test.v: add when scripts
 	v/V.java: dump exception trace on file exec.
