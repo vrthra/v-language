@@ -1,0 +1,6 @@
+6.1.2008 rahul (310)
+	scripts/test.v: add when scripts
+	v/V.java: dump exception trace on file exec.
+
+1.1.2008 rahul
+	baselined

@@ -53,6 +53,9 @@ public class V {
                 }
             };
             program.eval(frame.child()); // we save the original defs.
+        } catch (VException e) {
+            outln(e.message());
+            debug(e);
         } catch (Exception e) {
             outln(e.getMessage());
             debug(e);

@@ -117,6 +117,14 @@ true .time!
 [2 =] [false [1] [2] ifte] 'ifte' test
 [2 =] [1 [zero?] [1] [2] ifte swap pop] 'ifte' test
 [1 =] [0 [zero?] [1] [2] ifte swap pop] 'ifte' test
+
+[300 =] [3 [
+  [1 =] [1 *]
+  [2 =] [10 *]
+  [3 =] [100 *]
+  [4 =] [1000 *]
+] when] 'when' test
+
 [1 =] [0 1 max] 'max' test
 [1 =] [1 0 max] 'max' test
 [0 =] [0 1 min] 'min' test
