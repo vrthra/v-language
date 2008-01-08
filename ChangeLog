@@ -1,14 +1,16 @@
 9.1.2008 rahul
-    csrc/vx.h: add stack method
-    csrc/allocator.cpp: add stack method
-    csrc/vexception.h: add stack method
-    csrc/v.cpp: print the exception stack also
-    csrc/vexception.cpp: add stack method
-    v/V.java: print the exception stack also
-    v/VSynException.java: add stack method
-    v/VException.java: add stack method
-    v/Prologue.java: change i to use a new scope.
-    v/Vx.java: add stack method
+	sicp: add sicp examples.
+9.1.2008 rahul
+	csrc/vx.h: add stack method
+	csrc/allocator.cpp: add stack method
+	csrc/vexception.h: add stack method
+	csrc/v.cpp: print the exception stack also
+	csrc/vexception.cpp: add stack method
+	v/V.java: print the exception stack also
+	v/VSynException.java: add stack method
+	v/VException.java: add stack method
+	v/Prologue.java: change i to use a new scope.
+	v/Vx.java: add stack method
 
 6.1.2008 rahul
 	scripts/test.v: add while testcase
