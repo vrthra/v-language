@@ -8,6 +8,7 @@ class VException : public Vx {
     public:
         VException(char* err, Token* t, char* msgfmt, ...);
         virtual char* message();
+        virtual char* stack();
         virtual void addLine(char* v, ...);
         Token* token();
     private:
@@ -21,6 +22,7 @@ class VSynException : public Vx {
     public:
         VSynException(char* err, char* msgfmt, ...);
         virtual char* message();
+        virtual char* stack();
         virtual void addLine(char* v, ...);
     private:
         Char_ _err;

@@ -43,11 +43,17 @@ public class V {
                     if (interactive) {
                         try {
                             super.dofunction(scope);
+                        } catch (VException e) {
+                            outln(">" + e.message());
+                            outln(" " + e.stack());
+                            frame.dump();
+                            //frame.reinit();
+                            V.debug(e);
                         } catch (Exception e) {
                             outln(">" + e.getMessage());
                             frame.dump();
                             //frame.reinit();
-                            V.debug(e);
+                            e.printStackTrace();
                         }
                     } else super.dofunction(scope);
                 }
@@ -55,6 +61,7 @@ public class V {
             program.eval(frame.child()); // we save the original defs.
         } catch (VException e) {
             outln(e.message());
+            outln(e.stack());
             debug(e);
         } catch (Exception e) {
             outln(e.getMessage());

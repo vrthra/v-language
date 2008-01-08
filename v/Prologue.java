@@ -1027,7 +1027,7 @@ public class Prologue {
             VStack p = q.stack();
 
             Term prog = p.pop();
-            prog.qvalue().eval(q.parent()); // apply on parent
+            prog.qvalue().eval(q); // apply on parent
         }
     };
 

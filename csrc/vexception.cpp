@@ -16,6 +16,10 @@ VException::VException(char* err, Token* t, char* msgfmt, ...)
 }
 
 char* VException::message() {
+    return _err;
+}
+
+char* VException::stack() {
     return _info;
 }
 
@@ -43,6 +47,10 @@ VSynException::VSynException(char* err, char* msgfmt, ...):_err(dup_str(err)),_i
 }
 
 char* VSynException::message() {
+    return _err;
+}
+
+char* VSynException::stack() {
     return _info;
 }
 

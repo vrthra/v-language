@@ -14,6 +14,9 @@ class Vxcrit : public Vx {
     char* message() {
         return _msg;
     }
+    char* stack() {
+        return "";
+    }
 };
 
 int GcInterval = 1024*1024;

@@ -56,6 +56,7 @@ class PQuote : public CmdQuote {
                     CmdQuote::dofunction(scope);
                 } catch (Vx& e) {
                     V::outln(">%s", e.message());
+                    V::outln(" %s", e.stack());
                     scope->dump();
                 }
             } else {
@@ -118,6 +119,7 @@ int main(int argc, char** argv) {
         V::main(argc, argv);
     } catch (Vx& e) {
         V::outln(e.message());
+        V::outln(e.stack());
     }
     if (V::showtime) {
         printf("time: %ld\n", (long)(time(0) - seconds));

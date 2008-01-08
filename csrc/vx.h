@@ -5,6 +5,7 @@
 
 struct Vx : public virtual Obj {
     virtual char* message() = 0;
+    virtual char* stack() = 0;
     virtual void addLine(char* v, ...) = 0;
 };
 

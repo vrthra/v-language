@@ -22,5 +22,9 @@ public class VException extends Vx {
     public String message() {
         return _info.toString();
     }
+
+    public String stack() {
+        return _err;
+    }
 }
 

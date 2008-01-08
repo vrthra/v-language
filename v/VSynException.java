@@ -9,6 +9,9 @@ public class VSynException extends Vx {
     String message() {
         return _err;
     }
+    String stack() {
+        return _info.toString();
+    }
     public void addLine(String s) {
         _info.append("\n\t" + s);
     }
