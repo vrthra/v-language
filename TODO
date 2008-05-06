@@ -1,0 +1,11 @@
+* Integrate green-threads branch (trampolined threads)
+* Expose continuations
+* Redo exception-handling using continuations
+
+* Single assignment predeclared bindings (Oz style) rather than current &parent style
+* Linda style messaging (implement remote calls)
+
+* match using same syntax as current view but producing boolean
+* Implement tiny-clos style MOP
+* implement better GC for native V
+
