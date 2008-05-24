@@ -662,29 +662,6 @@ public class Prologue {
         }
     };
 
-    static Cmd _step = new Cmd() {
-        public void eval(VFrame q) {
-            VStack p = q.stack();
-
-            Term action = p.pop();
-            Term list = p.pop();
-
-            Iterator<Term> fstream = list.qvalue().tokens().iterator();
-
-            while (fstream.hasNext()) {
-                // extract the relevant element from list,
-                Term t = fstream.next();
-                // push it on our current stack
-                p.push(t);
-
-                // apply the action
-                // We dont do the walk here since the action is in the form of a quote.
-                // we will have to dequote it, and walk one by one if we are to do this.
-                action.qvalue().eval(q);
-            }
-        }
-    };
-
     // this map is not a stack invariant. specifically 
     // 1 2 3 4  [a b c d] [[] cons cons] map => [[4 a] [3 b] [2 c] [1 d]]
     static Cmd _map = new Cmd() {
@@ -816,68 +793,6 @@ public class Prologue {
             }
             p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts1)));
             p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts2)));
-        }
-    };
-
-    static Cmd _filter = new Cmd() {
-        public void eval(VFrame q) {
-            VStack p = q.stack();
-
-            Term action = p.pop();
-            Term list = p.pop();
-
-            Iterator<Term> fstream = list.qvalue().tokens().iterator();
-
-            // copy the rest of tokens to our own stream.
-            QuoteStream nts = new QuoteStream();
-            while (fstream.hasNext()) {
-                // extract the relevant element from list,
-                Term t = fstream.next();
-                // push it on our current stack
-                p.push(t);
-
-                // apply the action
-                // We dont do the walk here since the action is in the form of a quote.
-                // we will have to dequote it, and walk one by one if we are to do this.
-                action.qvalue().eval(q);
-                // pop it back into a new quote
-                Term res = p.pop();
-                if (res.bvalue())
-                    nts.add(t);
-            }
-            p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
-        }
-    };
-
-    static Cmd _filter_i = new Cmd() {
-        public void eval(VFrame q) {
-            VStack p = q.stack();
-
-            Term action = p.pop();
-            Term list = p.pop();
-
-            Iterator<Term> fstream = list.qvalue().tokens().iterator();
-
-            // copy the rest of tokens to our own stream.
-            QuoteStream nts = new QuoteStream();
-            while (fstream.hasNext()) {
-                // extract the relevant element from list,
-                Term t = fstream.next();
-                // push it on our current stack
-                Node<Term> n = p.now;
-                p.push(t);
-
-                // apply the action
-                // We dont do the walk here since the action is in the form of a quote.
-                // we will have to dequote it, and walk one by one if we are to do this.
-                action.qvalue().eval(q);
-                // pop it back into a new quote
-                Term res = p.pop();
-                p.now = n;
-                if (res.bvalue())
-                    nts.add(t);
-            }
-            p.push(new Term<Quote>(Type.TQuote, new CmdQuote(nts)));
         }
     };
 
@@ -1464,11 +1379,8 @@ public class Prologue {
 
 
         // on list
-        iframe.def("step", _step);
         iframe.def("map!", _map);
         iframe.def("map", _map_i);
-        iframe.def("filter!", _filter);
-        iframe.def("filter", _filter_i);
         iframe.def("split!", _split);
         iframe.def("split", _split_i);
         iframe.def("fold!", _fold);

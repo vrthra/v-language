@@ -53,6 +53,11 @@
 [some? map false [or] fold].
 [some! map! false [or] fold].
 
+[filter split pop].
+[filter! split! pop].
+
+[step [swap] dip fold].
+
 
 [xor [a b : a b a b] view or [and not] dip and].
 
