@@ -93,7 +93,7 @@ public class Helper {
             case TQuote:
                 return getArrayObj(t);
             default:
-                throw new VException("err:java:obj",t, "Unable to convert value" + t.value());
+                throw new VException("err:java:obj",t, "Unable to convert value :" + t.value() + " " + t.type);
         }
     }
 

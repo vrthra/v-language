@@ -206,6 +206,21 @@ public class Prologue {
         }
     };
 
+    static Cmd _set = new Cmd() {
+        public void eval(VFrame q) {
+            // eval is passed in the quote representing the current scope.
+            VStack p = q.stack();
+            Term t = p.pop();
+            Map.Entry<String, CmdQuote> entry = splitdef(t.qvalue());
+            String symbol = entry.getKey();
+
+            // we define it on the enclosing scope. because the evaluation
+            // is done on child scope.
+            V.debug("Set! [" + symbol + "] @ " + q.id());
+            q.parent().set(symbol, entry.getValue());
+        }
+    };
+
     static Cmd _me = new Cmd() {
         public void eval(VFrame q) {
             VStack p = q.stack();
@@ -1325,6 +1340,7 @@ public class Prologue {
         //meta
         iframe.def(".", _def);
         iframe.def("&.", _defenv);
+        iframe.def(".!", _set);
         iframe.def("module", _defmodule);
         iframe.def("&words", _words);
         iframe.def("&parent", _parent);

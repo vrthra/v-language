@@ -44,6 +44,20 @@ public class VFrame {
                 throw new VException("err:symbol_already_bound", new Term<String>(Type.TString, s),s);
         _dict.put(s,q);
     }
+    private VFrame getDefinedScope(String sym) {
+        if (_dict.containsKey(sym))
+            return this;
+        if (_parent == null)
+            return null;
+        return _parent.getDefinedScope(sym);
+    }
+    public void set(String sym, Quote q) {
+        VFrame dframe = getDefinedScope(sym);
+        if (dframe != null)
+            dframe.def(sym, q);
+        else
+            throw new VException("err:symbol_not_defined", new Term<String>(Type.TString, sym),sym);
+    }
     public VFrame parent() {
         return _parent;
     }
