@@ -867,51 +867,6 @@ public class Prologue {
         }
     };
 
-    static Cmd _size = new Cmd() {
-        public void eval(VFrame q) {
-            VStack p = q.stack();
-            Term list = p.pop();
-            int count = 0;
-            for(Term t: list.qvalue().tokens())
-                ++count;
-
-            p.push(new Term<Integer>(Type.TInt , count));
-        }
-    };
-
-    static Cmd _isin = new Cmd() {
-        public void eval(VFrame q) {
-            VStack p = q.stack();
-            Term i = p.pop();
-            Term list = p.pop();
-            for(Term t: list.qvalue().tokens()) {
-                if (t.type() == i.type() && t.value() == i.value()) {
-                    p.push(new Term<Boolean>(Type.TBool, true));
-                    return;
-                }
-            }
-            p.push(new Term<Boolean>(Type.TBool, false));
-        }
-    };
-
-    static Cmd _at = new Cmd() {
-        public void eval(VFrame q) {
-            VStack p = q.stack();
-            Term i = p.pop();
-            int idx = i.ivalue();
-            Term list = p.pop();
-            int count = 0;
-            for(Term t: list.qvalue().tokens()) {
-                if (count == idx) {
-                    p.push(t);
-                    return;
-                }
-                ++count;
-            }
-            throw new VException("err:at:overflow",i, "[" + list.value() + "]:" + idx);
-        }
-    };
-
     static Cmd _drop = new Cmd() {
         public void eval(VFrame q) {
             VStack p = q.stack();
@@ -1387,9 +1342,6 @@ public class Prologue {
         iframe.def("abort", _abort);
 
         //list
-        iframe.def("size", _size);
-        iframe.def("in?", _isin);
-        iframe.def("at", _at);
         iframe.def("drop", _drop);
         iframe.def("take", _take);
 

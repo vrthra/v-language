@@ -40,7 +40,11 @@
 [empty? size zero?].
 [null? [number?] [zero?] [empty?] ifte].
 [small? [list?] [dup size swap pop dup zero? swap 1 = or] [dup zero? swap 1 = or] ifte].
-[has? swap in?].
+[has? [=] split pop size zero? not swap pop].
+[in? swap has?].
+[at dup 1 + swap [take] dip drop i].
+
+[size 0 [pop 1 +] fold].
 
 [leaf? list? not].
 
