@@ -1,47 +1,111 @@
 # beginings of an MOP based on tiny-clos from AMOP
 
 # loosen the strings a little.
-false [v.V singleassign$] cons java
-
-# create an 'n' element list
-[make-list
-    [] swap [zero? not] [swap true swap cons swap pred] while pop
-].
+false [v.V singleassign$] cons java pop
 
 [%allocate-instance
     #(class nfields)
     true swap ["Not a procedure. can not apply" throw] swap
-    %allocate-instance-internal
+    %mop:allocate-instance-internal
 ].
+# [scripts/mop/tiny] use
+# 'class' 5 %allocate-instance
+# 'class2' 5 %allocate-instance
+# %mop:instances
+# 1 %mop:set-instance-class-to-self!
 
 [%allocate-entity
     #(class nfields)
     false swap ["Tried to call an entity before proc is set." throw] swap
-    %allocate-instance-internal
+    %mop:allocate-instance-internal
 ].
 
 # bootstrapping, these will get redefined soon.
+[%mop
+    [allocate-instance-internal instance? instance-class
+    set-instance-class-to-self! set-instance-proc! instance-ref
+    instance-set! get-instance instances]
 
-[%allocate-instance-internal []].
-[%instance? []].
-[%instance-class []].
-[%set-instance-class-to-self []].
 
-[%set-instance-proc []].
-[%instance-ref []].
-[%instance-set! []].
-
-# create a closure for our MOP internal objects
-[
-    [instances []].
-    [%instance
-        #(closure)
+    [-instances []].
+    
+    # closure id.
+    [-clid 0].
+    [instances -instances].
+    [filter-instance
+        #(id)
         # return the matching element in instances.
+        # used instead of get-vector, returns a quote [id instance]
+        # so that we can use size on it to check for null.
+        -instances [first =] filter swap pop
     ].
 
-    [%allocate-instance-internal
-        #(class lock proc nfields)
-        [class lock proc nfields] let
-        [vector nfields 3 + make-list].
+    [get-instance
+        filter-instance i i swap pop
     ].
-] i
+
+    # create an 'n' element list
+    [make-list
+        [] swap [zero? not] [swap false swap cons swap pred] while pop
+    ].
+
+    [set-class
+        [[proc lock class *rest] newcl : [proc lock newcl *rest]] view
+    ].
+
+    [set-proc
+        [[proc lock class *rest] newproc : [newproc lock class *rest]] view
+    ].
+    #[set-val
+    #    [[proc lock class *rest] newproc : [newproc lock class *rest]] view
+    #].
+
+    [update-instance
+        #(clid newcl)
+        swap -instances [ [first =] [pop swap unit cons] if] map
+        swap pop swap pop unit [-instances] swap concat .!
+    ].
+
+
+    [allocate-instance-internal
+        #(class lock proc nfields)
+        [class lock proc nfields : [[proc lock class] nfields make-list concat]] view i
+        # create the next instance.
+        [-clid] -clid succ unit concat .!
+
+        -clid swap unit cons
+        # add the created vector to the list of instances
+        -instances cons unit [-instances] swap concat .!
+    ].
+
+    [instance?
+        #(clid)
+        filter-instance size zero? not
+    ].
+    
+    [instance-class
+        #(clid)
+        get-instance 2 at
+    ].
+    
+    [set-instance-class-to-self!
+        #(clid)
+        dup dup get-instance swap set-class update-instance
+    ].
+
+    [set-instance-proc!
+        #(clid proc)
+        swap dup get-instance [swap] dip swap set-proc update-instance
+    ].
+
+    [instance-ref
+        #(clid idx)
+        swap get-instance 3 + at
+    ].
+
+    [instance-set!
+        #(clid idx newval)
+        #[clid idx newval : clid newval idx clid] view get-instance set-val update-instance
+    ].
+] module
+
