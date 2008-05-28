@@ -56,9 +56,11 @@ false [v.V singleassign$] cons java pop
     [set-proc
         [[proc lock class *rest] newproc : [newproc lock class *rest]] view
     ].
-    #[set-val
-    #    [[proc lock class *rest] newproc : [newproc lock class *rest]] view
-    #].
+
+    [set-val
+        #(lst newval idx)
+        3 + [swap] dip lset
+    ].
 
     [update-instance
         #(clid newcl)
@@ -105,7 +107,7 @@ false [v.V singleassign$] cons java pop
 
     [instance-set!
         #(clid idx newval)
-        #[clid idx newval : clid newval idx clid] view get-instance set-val update-instance
+        [clid idx newval : clid newval idx clid] view get-instance [nw idx lst : lst nw idx] view set-val update-instance
     ].
 ] module
 
