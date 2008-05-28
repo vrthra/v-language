@@ -44,6 +44,11 @@
 [in? swap has?].
 [at dup 1 + swap [take] dip drop i].
 
+[lset
+#(val [lst] idx)
+   [val lst idx : [lst idx take val lst idx 1 + drop ] ] view i cons concat
+].
+
 [size 0 [pop 1 +] fold].
 
 [leaf? list? not].
