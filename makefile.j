@@ -8,9 +8,12 @@ all:
 	(cd pkg && jar -cmf v.mf v.jar v)
 
 run:
-	(cd pkg && java -jar v.jar)
+	(java -jar pkg/v.jar)
 test:
-	cd pkg && java -jar v.jar ../scripts/test.v
+	ava -jar pkg/v.jar ../scripts/test.v
+
+utils:
+	java -jar pkg/v.jar scripts/utils.v
 
 release: all test
 	rm -rf pkg/v_$(RELEASE)
