@@ -8,11 +8,6 @@ false [v.V singleassign$] cons java pop
     true swap ["Not a procedure. can not apply" throw] swap
     %mop:allocate-instance-internal
 ].
-# [scripts/mop/tiny] use
-# 'class' 5 %allocate-instance
-# 'class2' 5 %allocate-instance
-# %mop:instances
-# 1 %mop:set-instance-class-to-self!
 
 [%allocate-entity
     #(class nfields)
