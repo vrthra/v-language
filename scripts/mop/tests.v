@@ -20,7 +20,7 @@
 [[
     [2 [[Not a procedure. can not apply throw] true class2 false false false false false]]
     [1 [[Not a procedure. can not apply throw] true class1 false false false false false]]
-] =] [%mop:instances] '%mop:instances - alloc 2' test
+] =] [%mop:instances] '%allocate-instance - alloc 2' test
 
 'class3' 5 %allocate-entity
 [[
@@ -29,34 +29,34 @@
     [1 [[Not a procedure. can not apply throw] true class1 false false false false false]]
 ] =] [%mop:instances] '%allocate-entity' test
 
-1 %mop:set-instance-class-to-self!
+1 %set-instance-class-to-self!
 [[
     [3 [[Tried to call an entity before proc is set. throw] false class3 false false false false false]]
     [2 [[Not a procedure. can not apply throw] true class2 false false false false false]]
     [1 [[Not a procedure. can not apply throw] true 1 false false false false false]]
-] =] [%mop:instances] '%mop:set-instance-class-to-self' test
+] =] [%mop:instances] '%set-instance-class-to-self' test
 
 [
     [[Not a procedure. can not apply throw] true 1 false false false false false]
 =] [1 %mop:get-instance] '%mop:get-instance' test
 
-[ true =] [2 %mop:instance?] '%mop:instance? - 1' test
-[ false =] [4 %mop:instance?] '%mop:instance? - 2' test
+[ true =] [2 %instance?] '%instance? - 1' test
+[ false =] [4 %instance?] '%instance? - 2' test
 
 
-2 [new proc] %mop:set-instance-proc!
+2 [new proc] %set-instance-proc!
 [[
     [3 [[Tried to call an entity before proc is set. throw] false class3 false false false false false]]
     [2 [[new proc] true class2 false false false false false]]
     [1 [[Not a procedure. can not apply throw] true 1 false false false false false]]
-] =] [%mop:instances] '%mop:set-instance-proc!' test
+] =] [%mop:instances] '%set-instance-proc!' test
 
-3 2 'new val' %mop:instance-set!
+3 2 'new val' %instance-set!
 [[
     [3 [[Tried to call an entity before proc is set. throw] false class3 false false 'new val' false false]]
     [2 [[new proc] true class2 false false false false false]]
     [1 [[Not a procedure. can not apply throw] true 1 false false false false false]]
-] ?? =] [%mop:instances] '%mop:instance-set!' test
+] ?? =] [%mop:instances] '%instance-set!' test
 
 "_____________________
 Success

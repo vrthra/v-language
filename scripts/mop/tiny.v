@@ -106,3 +106,11 @@ false [v.V singleassign$] cons java pop
     ].
 ] module
 
+[%allocate-instance-internal %mop:allocate-instance-internal].
+[%instance? %mop:instance?].
+[%instance-class %mop:instance-class].
+[%set-instance-class-to-self! %mop:set-instance-class-to-self!].
+[%set-instance-proc! %mop:set-instance-proc!].
+[%instance-ref %mop:instance-ref].
+[%instance-set! %mop:instance-set!].
+
