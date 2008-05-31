@@ -1153,7 +1153,10 @@ public class Prologue {
         }
     };
 
-
+    private static String getFileName(String s) {
+        if (s.endsWith(".v")) return s;
+        return s + ".v";
+    }
     /* stdlib.v
      * [stdlib 
      *      [qsort  xxx yyy].
@@ -1172,7 +1175,7 @@ public class Prologue {
                     Iterator<Term> files = (Iterator<Term>)file.qvalue().tokens().iterator();
                     while(files.hasNext()) {
                         Term f = files.next();
-                        String val = f.svalue() + ".v";
+                        String val = getFileName(f.svalue());
                         // Try and see if the file requested is any of the standard defined
                         String chars = Util.getresource(val);
                         CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
@@ -1180,7 +1183,7 @@ public class Prologue {
                         module.eval(q.parent());
                     }
                 } else {
-                    String val = file.svalue() + ".v";
+                    String val = getFileName(file.svalue());
                     // Try and see if the file requested is any of the standard defined
                     String chars = Util.getresource(val);
                     CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
@@ -1207,7 +1210,7 @@ public class Prologue {
                     Iterator<Term> files = (Iterator<Term>)file.qvalue().tokens().iterator();
                     while(files.hasNext()) {
                         Term f = files.next();
-                        String val = f.svalue() + ".v";
+                        String val = getFileName(f.svalue());
                         // Try and see if the file requested is any of the standard defined
                         String chars = Util.getresource(val);
                         CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
@@ -1215,7 +1218,7 @@ public class Prologue {
                         module.eval(env.fvalue());
                     }
                 } else {
-                    String val = file.svalue() + ".v";
+                    String val = getFileName(file.svalue());
                     // Try and see if the file requested is any of the standard defined
                     String chars = Util.getresource(val);
                     CharStream cs = chars == null? new FileCharStream(val) : new BuffCharStream(chars);
