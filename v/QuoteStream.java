@@ -5,6 +5,10 @@ import java.util.*;
 public class QuoteStream implements TokenStream {
     List<Term> _terms = null;
     public QuoteStream() {
+        /* We use an Array here as the quotes are immutable.
+         * thus unlike lisp, we can provide O(1) access time
+         * to any indexed element.
+         * */
         _terms = new ArrayList<Term>();
     }
 
