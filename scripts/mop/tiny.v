@@ -1,4 +1,8 @@
 # beginings of an MOP based on tiny-clos from AMOP
+# as of now, we store the instances in our own little list and
+# give out the instance ids to the requesters to play with.
+# this has the obvious disadvantage that we dont know when the
+# object lifetime is over. This will get changed in future versions.
 
 # loosen the strings a little.
 false [v.V singleassign$] cons java pop
@@ -70,14 +74,16 @@ false [v.V singleassign$] cons java pop
         # create the next instance.
         [-clid] -clid succ unit concat .!
 
-        -clid swap unit cons
+        -clid [<class>] cons swap unit cons
         # add the created vector to the list of instances
         -instances cons unit [-instances] swap concat .!
     ].
 
     [instance?
         #(clid)
-        filter-instance size zero? not
+        [list?]
+            [filter-instance size zero? not]
+        [false] ifte
     ].
     
     [instance-class
@@ -113,4 +119,19 @@ false [v.V singleassign$] cons java pop
 [%set-instance-proc! %mop:set-instance-proc!].
 [%instance-ref %mop:instance-ref].
 [%instance-set! %mop:instance-set!].
+
+[class-of
+    #(id)
+    [   [%instance?] [%instance-class]
+        [null?] [pop '<null>']
+        [boolean?] [pop '<boolean>']
+        [symbol?] [pop '<symbol>']
+        [list?] [pop '<list>']
+        [integer?] [pop '<integer>']
+        [double?] [pop '<double>']
+        [char?] [pop '<char>']
+        [string?] [pop '<string>']
+    ] when
+].
+
 
