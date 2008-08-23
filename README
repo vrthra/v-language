@@ -12,6 +12,16 @@ make -f makefile.j run
 
 NATIVE
 ------
+    Quick:
+        to build
+        make -f makefile.native
+        to run
+        make -f makefile.native run
+        to test
+        make -f makefile.native test
+
+    Standard:
+
 ./configure && make && make install
 it installs the std.v in /usr/local/share/v by default.
 
