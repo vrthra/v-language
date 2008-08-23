@@ -10,7 +10,7 @@ all:
 run:
 	(java -jar pkg/v.jar)
 test:
-	ava -jar pkg/v.jar ../scripts/test.v
+	java -jar pkg/v.jar ../scripts/test.v
 
 utils:
 	java -jar pkg/v.jar scripts/utils.v

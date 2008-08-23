@@ -1,0 +1,34 @@
+CXX=g++
+
+VSRC=       csrc/allocator.cpp \
+			csrc/buffcharstream.cpp \
+			csrc/cmdquote.cpp \
+			csrc/common.cpp \
+			csrc/consolecharstream.cpp \
+			csrc/filecharstream.cpp \
+			csrc/lexer.cpp \
+			csrc/lexiterator.cpp \
+			csrc/lexstream.cpp \
+			csrc/prologue.cpp \
+			csrc/quoteiterator.cpp \
+			csrc/quotestream.cpp \
+			csrc/sym.cpp \
+			csrc/term.cpp \
+			csrc/v.cpp \
+			csrc/vexception.cpp \
+			csrc/vframe.cpp \
+			csrc/vstack.cpp
+
+
+
+CFLAGS= -DVPATH="./csrc"
+
+build/v : $(VSRC)
+	mkdir -p build
+	$(CXX) -o build/v $(CFLAGS) $(VSRC)
+
+test:
+	./build/v ./scripts/test.v
+
+run:
+	./build/v
