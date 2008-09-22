@@ -280,6 +280,17 @@ struct Cdiv : public Cmd {
     char* to_s() {return "/";}
 };
 
+struct Cmod : public Cmd {
+    void eval(VFrame* q) {
+        VStack_ p = q->stack();
+        Token_ b = p->pop();
+        Token_ a = p->pop();
+        long ires = a->numvalue().i() % b->numvalue().i();
+        p->push(new (collect) Term(TInt, ires));
+    }
+    char* to_s() {return "/";}
+};
+
 struct Cand : public Cmd {
     void eval(VFrame* q) {
         VStack_ p = q->stack();
@@ -1475,6 +1486,7 @@ void Prologue::init(VFrame* frame) {
     frame->def("-", new (collect) Csub());
     frame->def("*", new (collect) Cmul());
     frame->def("/", new (collect) Cdiv());
+    frame->def("%", new (collect) Cmod());
     
     frame->def("and", new (collect) Cand());
     frame->def("or", new (collect) Cor());
