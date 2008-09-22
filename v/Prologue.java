@@ -982,6 +982,16 @@ public class Prologue {
         }
     };
 
+    static Cmd _mod = new Cmd() {
+        public void eval(VFrame q) {
+            VStack p = q.stack();
+            Term b = p.pop();
+            Term a = p.pop();
+            int ires = a.numvalue().intValue() % b.numvalue().intValue();
+            p.push(new Term<Integer>(Type.TInt, ires));
+        }
+    };
+
     static Cmd _gt = new Cmd() {
         public void eval(VFrame q) {
             VStack p = q.stack();
@@ -1362,6 +1372,7 @@ public class Prologue {
         iframe.def("-", _sub);
         iframe.def("*", _mul);
         iframe.def("/", _div);
+        iframe.def("%", _mod);
 
         //bool
         iframe.def("=", _eq);
