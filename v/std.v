@@ -45,7 +45,6 @@
 [at dup 1 + swap [take] dip drop i].
 
 [lset
-#(val [lst] idx)
    [val lst idx : [lst idx take val lst idx 1 + drop ] ] view i cons concat
 ].
 

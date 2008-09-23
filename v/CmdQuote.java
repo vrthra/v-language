@@ -11,7 +11,12 @@ public class CmdQuote implements Quote {
 
     // Our symbols to evaluate.
     TokenStream _tokens = null;
+    char _c = '[';
 
+    public CmdQuote(TokenStream tokens, char c) {
+        _tokens = tokens;
+        _c = c;
+    }
     public CmdQuote(TokenStream tokens) {
         _tokens = tokens;
     }
@@ -64,14 +69,14 @@ public class CmdQuote implements Quote {
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("[");
+        sb.append("" +_c);
         Iterator<Term> i = _tokens.iterator();
         while(i.hasNext()) {
             sb.append(i.next().value());
             if (i.hasNext())
                 sb.append(" ");
         }
-        sb.append("]");
+        sb.append(Lexer.closeCompound(_c));
         return sb.toString();
     }
 

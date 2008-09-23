@@ -189,6 +189,10 @@ public class Prologue {
                         throw new VException("err:view:eq",eterm, t.value() + " != " +eterm.value());
             }
         }
+        if (estream.hasNext()) {
+            Term t = estream.next();
+            throw new VException("err:view:more",t, t.value() + " is not allowed.");
+        }
     }
 
     static Cmd _def = new Cmd() {
