@@ -1,5 +1,6 @@
 # Standard definitions.
 [newline '' puts].
+[vi view i].
 
 [pred 1 -].
 [succ 1 +].
