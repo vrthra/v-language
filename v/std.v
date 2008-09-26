@@ -212,3 +212,13 @@
 [treereverse [] [reverse] [map] treegenrec].
 [treemap [] [map] treegenrec].
 #[treemap [map] treerec].
+
+[range
+    [4rolldown [a b c d : b c d a] view].
+    [4rollup [a b c d : d a b c] view].
+    [3pop pop pop pop].
+    [from to : [] to from to] view
+    [> not]
+        [4rolldown [dup] dip cons 4rollup pred]
+    while 3pop].
+
