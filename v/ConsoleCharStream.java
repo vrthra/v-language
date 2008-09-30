@@ -3,9 +3,25 @@ import java.io.*;
 
 public class ConsoleCharStream implements CharStream {
     BufferedReader _reader = null;
+    static ConsoleCharStream _i = null;
 
-    public ConsoleCharStream() {
+    // console stream is always static.
+    static ConsoleCharStream getInstance() {
+        if (_i == null)
+            _i = new ConsoleCharStream();
+        return _i;
+    }
+
+    private ConsoleCharStream() {
         _reader = new BufferedReader(new InputStreamReader(System.in));
+    }
+
+    public String gets() {
+        try {
+            return reader().readLine();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     Lexer _lexer = null;

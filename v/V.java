@@ -35,7 +35,7 @@ public class V {
                 cs = new FileCharStream(args[0]);
             } else {
                 banner();
-                cs = new ConsoleCharStream();
+                cs = ConsoleCharStream.getInstance();
             }
 
             CmdQuote program = new CmdQuote(new LexStream(cs)) {
@@ -82,6 +82,10 @@ public class V {
 
     public void outln(Term term) {
         outln(term.value());
+    }
+
+    public static String gets() {
+        return ConsoleCharStream.getInstance().gets();
     }
 
     public static void debug(Exception e) {

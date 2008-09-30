@@ -624,6 +624,13 @@ public class Prologue {
         }
     };
 
+    static Cmd _gets = new Cmd() {
+        public void eval(VFrame q) {
+            VStack p = q.stack();
+            p.push(new Term<String>(Type.TString, V.gets()));
+        }
+    };
+
     static Cmd _peek = new Cmd() {
         public void eval(VFrame q) {
             VStack p = q.stack();
@@ -1347,6 +1354,7 @@ public class Prologue {
         iframe.def("put", _print);
         iframe.def("puts", _println);
 
+        iframe.def("gets", _gets);
 
         //others
         iframe.def("?", _peek);
