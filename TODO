@@ -1,8 +1,13 @@
+* use haskellish io (gets!, puts! with anything containing it restricted to use a name ending with !)
+
 * Integrate green-threads branch (trampolined threads)
 * Expose continuations
 * Redo exception-handling using continuations
 
 * Single assignment predeclared bindings (Oz style) rather than current &parent style
+* or use quotes only as a namespace with all things bound separately from the invoking of it
+    i.e [A [B _]. _]. B should be bound during the binding of A and not during invocation of A
+    thus disallowing variables.
 * Linda style messaging (implement remote calls)
 
 * match using same syntax as current view but producing boolean
