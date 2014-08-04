@@ -1,5 +1,6 @@
 #include <map>
 #include <ctype.h>
+#include <cstring>
 #include <stdlib.h>
 #include "lexer.h"
 #include "type.h"
@@ -217,7 +218,7 @@ void Lexer::character() {
 }
 bool isint(char* v) {
     if (*v == '-') ++v;
-    if(!strlen(v))
+    if(!std::strlen(v))
         return false;
     while(*v) {
         if (!isdigit(*v))
@@ -228,7 +229,7 @@ bool isint(char* v) {
 }
 bool isfloat(char* v) {
     if (*v == '-') ++v;
-    int len = strlen(v);
+    int len = std::strlen(v);
     if (len < 2)
         return false;
     char* one = strchr(v, '.');

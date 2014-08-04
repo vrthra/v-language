@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "term.h"
 #include "quote.h"
 #include "quotestream.h"

@@ -1,5 +1,8 @@
 #include <stack>
 #include <map>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
 #include "prologue.h"
 #include "token.h"
 #include "term.h"
@@ -34,7 +37,7 @@ SymPair splitdef(Quote* qval) {
 }
 
 char* special(char* name) {
-    int len = strlen(name);
+    int len = std::strlen(name);
     Char_ buf = new (collect) char[len + 2];
     buf[0] = '$';
     std::strcpy(buf+1, name);
@@ -94,7 +97,7 @@ void evaltmpl(TokenStream* tmpl, TokenStream* elem, SymbolMap& symbols) {
                             while(estream->hasNext())
                                 nlist->add(estream->next());
                         }
-                        if (strlen(value) > 1) { // do we have a named list?
+                        if (std::strlen(value) > 1) { // do we have a named list?
                             symbols[value] = new (collect) Term(TQuote, new (collect) CmdQuote(nlist));
                         }
                     } else {
@@ -419,7 +422,7 @@ struct Ctoint : public Cmd {
                 p->push(new (collect) Term(TInt, a->cvalue()));
                 break;
             case TString:
-                p->push(new (collect) Term(TInt, atol(a->svalue())));
+                p->push(new (collect) Term(TInt, std::atol(a->svalue())));
             default:
                 throw VException("err:>int", a,"%s cant convert", a->value());
         }
@@ -858,7 +861,7 @@ struct Cme : public Cmd {
 char* usefile(VFrame* q, char* v, bool lib=false) {
     Char_ val = 0;
     if (lib) {
-        int len = strlen(v) + 1 + strlen(V::libpath());
+        int len = std::strlen(v) + 1 + std::strlen(V::libpath());
         val = new (collect) char[len + 3];
         std::sprintf(val,"%s/%s%s",V::libpath(),v,".v");
     } else {
@@ -989,10 +992,10 @@ struct Cmodule : public Cmd {
         TokenIterator_ i = pub->tokens()->iterator();
         while(i->hasNext()) {
             Char_ s = i->next()->svalue();
-            Char_ def = new (collect) char[strlen(s) + strlen(module) + 9]; // sizeof("$ [ ] &i");
-            sprintf(def, "$%s[%s] &i", module.val, s.val);
+            Char_ def = new (collect) char[std::strlen(s) + std::strlen(module) + 9]; // sizeof("$ [ ] &i");
+            std::sprintf(def, "$%s[%s] &i", module.val, s.val);
             Quote_ libs = CmdQuote::getdef(def);
-            sprintf(def, "%s:%s", module.val, s.val);
+            std::sprintf(def, "%s:%s", module.val, s.val);
             q->parent()->def(def, libs);
         }
     }

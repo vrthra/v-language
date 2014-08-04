@@ -21,7 +21,7 @@ VSRC=       csrc/allocator.cpp \
 
 
 
-CFLAGS= -DVPATH="./csrc"
+CFLAGS= -DVPATH="./csrc" -fpermissive -Wwrite-strings
 
 build/v : $(VSRC)
 	mkdir -p build

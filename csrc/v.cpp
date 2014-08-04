@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
@@ -70,11 +71,11 @@ class PQuote : public CmdQuote {
 
 void usage() {
     V::outln("usage: v [-l libpath] [-h] [-v] [source.v]");
-    exit(0);
+    std::exit(0);
 }
 void version() {
     V::outln("v 0.005");
-    exit(0);
+    std::exit(0);
 }
 
 void V::main(int argc, char** argv) {
