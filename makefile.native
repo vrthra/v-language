@@ -23,9 +23,13 @@ VSRC=       csrc/allocator.cpp \
 
 CFLAGS= -DVPATH="./csrc" -fpermissive -Wwrite-strings
 
-build/v : $(VSRC)
+build/v : $(VSRC:.cpp.o)
 	mkdir -p build
 	$(CXX) -o build/v $(CFLAGS) $(VSRC)
+
+build/%.o : csrc/%.cpp
+	mkdir -p build
+	$(CXX) -c $< $(CFLAGS) -o build/$*.o
 
 test:
 	./build/v ./scripts/test.v
